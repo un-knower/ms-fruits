@@ -2,11 +2,7 @@ package wowjoy.fruits.ms.dao.dict;
 
 import com.google.common.collect.Lists;
 import org.springframework.stereotype.Service;
-import wowjoy.fruits.ms.module.dict.entity.FruitDict;
-import wowjoy.fruits.ms.module.plan.entity.FruitPlan;
-import wowjoy.fruits.ms.module.project.entity.FruitProject;
-import wowjoy.fruits.ms.module.task.entity.FruitTask;
-import wowjoy.fruits.ms.util.CommonEnum;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -15,7 +11,7 @@ import java.util.List;
  * Created by wangziwen on 2017/8/24.
  */
 @Service
-public class DataDictDaoImpl extends AbstractDict {
+public class DataDictDaoImpl extends AbstractDaoDict {
 
     private List<FruitDict> data;
 
@@ -35,7 +31,7 @@ public class DataDictDaoImpl extends AbstractDict {
 
     private DataDictDaoImpl commonEnum() {
         /*基础*/
-        for (Field field : CommonEnum.class.getFields()) {
+        for (Field field : FruitDict.Dict.class.getFields()) {
             FruitDict data = new FruitDict();
             data.setDictCode(field.getName());
             data.setDictName(field.getName());
@@ -46,7 +42,7 @@ public class DataDictDaoImpl extends AbstractDict {
 
     private DataDictDaoImpl planEnum() {
         /*计划*/
-        for (FruitPlan.Dict fruitPlan : FruitPlan.Dict.class.getEnumConstants()) {
+        for (FruitDict.PlanDict fruitPlan : FruitDict.PlanDict.class.getEnumConstants()) {
             FruitDict data = new FruitDict();
             data.setDictParentCode(fruitPlan.getParentCode());
             data.setDictCode(fruitPlan.name());
@@ -58,7 +54,7 @@ public class DataDictDaoImpl extends AbstractDict {
 
     private DataDictDaoImpl projectEnum() {
         /*项目*/
-        for (FruitProject.Dict dict : FruitProject.Dict.class.getEnumConstants()) {
+        for (FruitDict.ProjectDict dict : FruitDict.ProjectDict.class.getEnumConstants()) {
             FruitDict data = new FruitDict();
             data.setDictParentCode(dict.getParentCode());
             data.setDictCode(dict.name());
@@ -70,7 +66,7 @@ public class DataDictDaoImpl extends AbstractDict {
 
     private DataDictDaoImpl taskEnum() {
         /*任务*/
-        for (FruitTask.Dict dict : FruitTask.Dict.class.getEnumConstants()) {
+        for (FruitDict.TaskDict dict : FruitDict.TaskDict.class.getEnumConstants()) {
             FruitDict data = new FruitDict();
             data.setDictParentCode(dict.getParentCode());
             data.setDictCode(dict.name());
@@ -80,13 +76,50 @@ public class DataDictDaoImpl extends AbstractDict {
         return this;
     }
 
+    private DataDictDaoImpl milestoneEnum() {
+        /*里程碑*/
+        for (FruitDict.MilestoneDict dict : FruitDict.MilestoneDict.class.getEnumConstants()) {
+            FruitDict data = new FruitDict();
+            data.setDictParentCode(dict.getParentCode());
+            data.setDictCode(dict.name());
+            data.setDictName(dict.getValue());
+            this.addData(data);
+        }
+        return this;
+    }
+
+    private DataDictDaoImpl taskUserEnum() {
+        /*任务-用户*/
+        for (FruitDict.TaskUserDict dict : FruitDict.TaskUserDict.class.getEnumConstants()) {
+            FruitDict data = new FruitDict();
+            data.setDictParentCode(dict.getParentCode());
+            data.setDictCode(dict.name());
+            data.setDictName(dict.getValue());
+            this.addData(data);
+        }
+        return this;
+    }
+
+    private DataDictDaoImpl planUserEnum() {
+        /*计划-用户*/
+        for (FruitDict.PlanUserDict dict : FruitDict.PlanUserDict.class.getEnumConstants()) {
+            FruitDict data = new FruitDict();
+            data.setDictParentCode(dict.getParentCode());
+            data.setDictCode(dict.name());
+            data.setDictName(dict.getValue());
+            this.addData(data);
+        }
+        return this;
+    }
+
+
     /**
      * PUBLIC
      */
 
     @Override
     public List<FruitDict> find() {
-        return this.commonEnum().planEnum().taskEnum().projectEnum().getData();
+        return this.commonEnum().planEnum().taskEnum().projectEnum().milestoneEnum().taskUserEnum().planUserEnum().getData();
     }
 
 }

@@ -9,7 +9,7 @@ import wowjoy.fruits.ms.module.plan.entity.FruitPlan;
  * Created by wangziwen on 2017/8/25.
  */
 @Service
-public class DataPlanDaoImpl extends AbstractPlan {
+public class DataPlanDaoImpl extends AbstractDaoPlan {
     private List<FruitPlan> data;
 
     public List<FruitPlan> finds() {

@@ -1,6 +1,7 @@
 package wowjoy.fruits.ms.module.team.entity;
 
-import wowjoy.fruits.ms.util.AbstractEntity;
+
+import wowjoy.fruits.ms.module.AbstractEntity;
 
 /**
  * Created by wangziwen on 2017/8/24.

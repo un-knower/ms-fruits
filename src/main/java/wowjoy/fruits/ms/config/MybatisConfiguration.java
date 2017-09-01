@@ -15,7 +15,7 @@ import javax.sql.DataSource;
  * Create d by wangz iwen on 2017/8/21.
  */
 @Configuration
-@MapperScan("wowjoy.fruits.ms")
+@MapperScan("wowjoy.fruits.ms.module")
 public class MybatisConfiguration {
     private final static String SQLSESSIONFACTORYBEAN_TYPEALIASESPACKAGE = "wowjoy.fruits.ms";
     @Autowired
