@@ -1,8 +1,5 @@
 package wowjoy.fruits.ms.module;
 
-import com.google.common.reflect.TypeToken;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
 import wowjoy.fruits.ms.dao.InterfaceArgument;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
@@ -17,6 +14,7 @@ public abstract class AbstractEntity extends InterfaceArgument {
         this.setUuid(UUID.randomUUID().toString().replace("-", ""));
         this.setIsDeleted(FruitDict.Dict.N.name());
     }
+
     private String uuid;
     private Date modifyDateTime;
     private Date createDateTime;
@@ -53,6 +51,10 @@ public abstract class AbstractEntity extends InterfaceArgument {
 
     public String getIsDeleted() {
         return isDeleted;
+    }
+
+    public boolean isNotEmpty(){
+        return true;
     }
 
 }

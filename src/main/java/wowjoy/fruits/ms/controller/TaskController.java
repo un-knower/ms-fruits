@@ -23,8 +23,7 @@ public class TaskController {
 
     @RequestMapping(method = RequestMethod.POST)
     public RestResult insert(@JsonArgument(type = FruitTask.class) FruitTask data) {
-        abstractDaoTask.setTask(data);
-        abstractDaoTask.getUserRelation().setUuid("123");
+        abstractDaoTask.setTask(data).setUserId("sss").insert();
         return RestResult.getInstance().setData(data.getUuid());
     }
 

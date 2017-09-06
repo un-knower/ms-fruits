@@ -2,20 +2,62 @@ package wowjoy.fruits.ms.dao.user;
 
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.module.user.FruitUser;
-
-import java.util.LinkedList;
-import java.util.List;
+import wowjoy.fruits.ms.module.user.FruitUserEmpty;
+import wowjoy.fruits.ms.util.ApplicationContextUtils;
 
 /**
  * Created by wangziwen on 2017/8/25.
  */
 public abstract class AbstractDaoUser implements InterfaceDao {
 
-    public abstract void insert(FruitUser... user);
+    /*********************************************************************************
+     * 抽象接口，私有，因为对外的公共接口用来书写业务层，如果真的不需要业务，也可以开放为公共接口 *
+     *********************************************************************************/
 
-    public abstract LinkedList<FruitUser> build();
+    protected abstract void insert(FruitUser... user);
 
-    public abstract List<FruitUser> findByUser(FruitUser user);
+    protected abstract FruitUser findByUser();
 
-    public abstract FruitUser findByUserId(String userId);
+    /**********************************************
+     *  FIELD 变量 ，尽量使用final变量、私有，编程习惯 *
+     **********************************************/
+
+    private FruitUser fruitUser;
+    private ExtraDataParset dataParset;
+
+    protected FruitUser getFruitUser() {
+        return fruitUser != null ? fruitUser : FruitUserEmpty.getInstance("");
+    }
+
+    private AbstractDaoUser setFruitUser(FruitUser fruitUser) {
+        this.fruitUser = fruitUser;
+        return this;
+    }
+
+    /***********************
+     * PUBLIC 函数，公共接口 *
+     ***********************/
+
+    public ExtraDataParset getDataParset() {
+        return dataParset = ApplicationContextUtils.getContext().getBean(ExtraDataParset.class);
+    }
+
+    /**
+     * 加载用户信息
+     */
+    public void build() {
+        this.insert(this.getDataParset().build().getList().toArray(new FruitUser[this.getDataParset().getList().size()]));
+    }
+
+    /**
+     * 根据用户id查询
+     *
+     * @param user
+     * @return
+     */
+    public FruitUser findByUser(FruitUser user) {
+        return this.setFruitUser(user).findByUser();
+    }
+
+
 }

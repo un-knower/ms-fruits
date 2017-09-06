@@ -11,6 +11,11 @@ import java.util.Date;
  */
 public class FruitUser extends AbstractEntity {
     public FruitUser() {
+        this(null);
+    }
+
+    public FruitUser(String userId) {
+        this.userId = userId;
         this.setUserSex(FruitDict.Dict.MAN.name());
     }
 
@@ -68,4 +73,5 @@ public class FruitUser extends AbstractEntity {
     public String getJobTitle() {
         return jobTitle;
     }
+
 }

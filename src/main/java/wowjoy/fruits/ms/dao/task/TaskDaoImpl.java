@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wowjoy.fruits.ms.module.task.FruitTask;
 import wowjoy.fruits.ms.module.task.mapper.FruitTaskMapper;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.util.List;
 
@@ -18,8 +19,9 @@ public class TaskDaoImpl extends AbstractDaoTask {
     private FruitTaskMapper taskMapper;
 
     @Override
-    public void insert(FruitTask task) {
-        taskMapper.insertSelective(task);
+    public void insert() {
+        /*插入任务*/
+        taskMapper.insertSelective(this.getTask());
     }
 
     @Override

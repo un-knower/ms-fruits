@@ -5,6 +5,18 @@ package wowjoy.fruits.ms.util;
  */
 public class RestResult {
     RestResult() {
+        this(1000,null,null,true);
+    }
+
+    public RestResult(Object data, boolean success) {
+        this(1000,null,data,success);
+    }
+
+    public RestResult(Integer code, String msg, Object data, boolean success) {
+        this.code = code;
+        this.msg = msg;
+        this.data = data;
+        this.success = success;
     }
 
     private Integer code = 1000;
@@ -25,8 +37,9 @@ public class RestResult {
         return this;
     }
 
-    public void setSuccess(boolean success) {
+    public RestResult setSuccess(boolean success) {
         this.success = success;
+        return this;
     }
 
     public Integer getCode() {

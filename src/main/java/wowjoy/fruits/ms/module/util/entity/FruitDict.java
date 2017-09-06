@@ -50,6 +50,8 @@ public class FruitDict extends AbstractEntity {
         TASK("任务"),
         TASKUSER("任务-用户"),
         MEILESTONE("里程碑"),
+        USERTEAM("用户-团队"),
+        USERPROJECT("用户-项目"),
 
         /**
          * 系统字典
@@ -299,5 +301,72 @@ public class FruitDict extends AbstractEntity {
             this.setValue(value);
         }
     }
+
+    /**
+     * userTeamRelation 用户团队关联字典管理
+     */
+    public enum UserTeamDict {
+        LEADER("领导者"),
+        EXECUTOR("执行者");
+
+
+        private String parentCode;
+        private String value;
+
+        private void setParentCode(String parentCode) {
+            this.parentCode = parentCode;
+        }
+
+        private void setValue(String value) {
+            this.value = value;
+        }
+
+        public String getParentCode() {
+            return parentCode;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        UserTeamDict(String value) {
+            this.setParentCode(Dict.USERTEAM.name());
+            this.setValue(value);
+        }
+    }
+
+    /**
+     * userProjectRelation 用户项目关联字典管理
+     */
+    public enum UserProjectDict {
+        PRINCIPAL("负责人"),
+        PARTICIPANT("参与者");
+
+
+        private String parentCode;
+        private String value;
+
+        private void setParentCode(String parentCode) {
+            this.parentCode = parentCode;
+        }
+
+        private void setValue(String value) {
+            this.value = value;
+        }
+
+        public String getParentCode() {
+            return parentCode;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        UserProjectDict(String value) {
+            this.setParentCode(Dict.USERTEAM.name());
+            this.setValue(value);
+        }
+    }
+
 
 }
