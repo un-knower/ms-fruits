@@ -27,7 +27,7 @@ public class UserController {
             final RestResult restResult = RestResult.getInstance();
             restResult.setSuccess(false);
             restResult.setCode(4000);
-            restResult.setMsg("13");
+            restResult.setMsg(((FruitUserEmpty) data).getMsg());
             return restResult;
         }
         return RestResult.getInstance().setData(data);
