@@ -1,5 +1,6 @@
 package wowjoy.fruits.ms.config;
 
+import com.zaxxer.hikari.HikariDataSource;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +22,7 @@ public class MybatisConfiguration {
     @Autowired
     private Environment environment;
 
-    @Bean
+//    @Bean
     DataSource dataSource() {
         DataSourceBuilder dataSourceBuilder = DataSourceBuilder.create();
         dataSourceBuilder.url(environment.getProperty("jdbc.uri"));
@@ -29,6 +30,21 @@ public class MybatisConfiguration {
         dataSourceBuilder.password(environment.getProperty("jdbc.password"));
         dataSourceBuilder.driverClassName(environment.getProperty("jdbc.classDriverName"));
         return dataSourceBuilder.build();
+    }
+
+    /**
+     * 采用hikari连接池
+     * @return
+     */
+    @Bean
+    HikariDataSource hikariDataSource(){
+        final HikariDataSource hikariDataSource = new HikariDataSource();
+        hikariDataSource.setJdbcUrl(environment.getProperty("jdbc.uri"));
+        hikariDataSource.setUsername(environment.getProperty("jdbc.username"));
+        hikariDataSource.setPassword(environment.getProperty("jdbc.password"));
+        hikariDataSource.setDriverClassName(environment.getProperty("jdbc.classDriverName"));
+        hikariDataSource.setIdleTimeout(60000);
+        return hikariDataSource;
     }
 
 
@@ -43,7 +59,7 @@ public class MybatisConfiguration {
     @Bean
     DataSourceTransactionManager dataSourceTransactionManager() {
         DataSourceTransactionManager dataSourceTransactionManager = new DataSourceTransactionManager();
-        dataSourceTransactionManager.setDataSource(dataSource());
+        dataSourceTransactionManager.setDataSource(hikariDataSource());
         return dataSourceTransactionManager;
     }
 
