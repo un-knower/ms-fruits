@@ -16,7 +16,7 @@ import wowjoy.fruits.ms.util.RestResult;
  * Created by wangziwen on 2017/9/6.
  */
 @RestController
-@RequestMapping("/project")
+@RequestMapping("/v1/api/project")
 public class ProjectController {
 
     @Qualifier("projectDaoImpl")
@@ -46,15 +46,11 @@ public class ProjectController {
         return RestResult.getInstance().setData(projectVo.getUuid());
     }
 
-    @RequestMapping(value = "underway/{uuid}", method = RequestMethod.PUT)
-    public RestResult underway(@PathVariable("uuid") String uuid) {
-        projectDaoImpl.updateStatus(uuid, FruitDict.ProjectDict.UNDERWAY);
-        return RestResult.getInstance().setData(uuid);
-    }
-
-    @RequestMapping(value = "complete/{uuid}", method = RequestMethod.PUT)
-    public RestResult complete(@PathVariable("uuid") String uuid) {
-        projectDaoImpl.updateStatus(uuid, FruitDict.ProjectDict.COMPLETE);
+    @RequestMapping(value = "/status/{uuid}", method = RequestMethod.PATCH)
+    public RestResult updateStatus(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitProjectVo.class) FruitProjectVo fruitProjectVo) {
+        fruitProjectVo.checkStatus();
+        fruitProjectVo.setUuid(uuid);
+        projectDaoImpl.updateStatus(fruitProjectVo);
         return RestResult.getInstance().setData(uuid);
     }
 }

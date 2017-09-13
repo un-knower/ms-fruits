@@ -81,13 +81,10 @@ public abstract class AbstractDaoProject<T extends FruitProject> implements Inte
         this.setFruitProject(fruitProject).update();
     }
 
-    public void updateStatus(String uuid, FruitDict.ProjectDict projectDict) {
-        if (StringUtils.isBlank(uuid))
+    public void updateStatus(T fruitProject) {
+        if (StringUtils.isBlank(fruitProject.getUuid()))
             throw new CheckProjectException("【uuid】无效。");
-        final FruitProject data = FruitProjectVo.getInstance();
-        data.setUuid(uuid);
-        data.setProjectStatus(projectDict.name());
-        this.setFruitProject((T) data).updateStatus();
+        this.setFruitProject(fruitProject).updateStatus();
     }
 
     /*******************************************************

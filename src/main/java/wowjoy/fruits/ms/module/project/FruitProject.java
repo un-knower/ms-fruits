@@ -1,9 +1,11 @@
 package wowjoy.fruits.ms.module.project;
 
 
+import org.apache.commons.lang3.EnumUtils;
 import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.team.FruitTeam;
 import wowjoy.fruits.ms.module.user.FruitUser;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.util.Date;
 import java.util.List;
@@ -61,6 +63,11 @@ public class FruitProject extends AbstractEntity {
 
     public Date getEndDateTime() {
         return endDateTime;
+    }
+
+    public void checkStatus() {
+        if (!EnumUtils.isValidEnum(FruitDict.ProjectDict.class, this.getProjectStatus()))
+            throw new EntityCheckException("【用户-项目】角色不存在.");
     }
 
     public String getTitle() {

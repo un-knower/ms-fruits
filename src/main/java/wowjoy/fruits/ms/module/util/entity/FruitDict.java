@@ -1,6 +1,7 @@
 package wowjoy.fruits.ms.module.util.entity;
 
 
+import org.apache.commons.lang3.EnumUtils;
 import wowjoy.fruits.ms.module.AbstractEntity;
 
 /**

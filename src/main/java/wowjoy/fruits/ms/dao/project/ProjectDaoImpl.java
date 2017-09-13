@@ -79,7 +79,6 @@ public class ProjectDaoImpl extends AbstractDaoProject {
         final FruitProjectExample example = new FruitProjectExample();
         example.createCriteria().andUuidEqualTo(this.getFruitProject().getUuid());
         final FruitProject data = FruitProject.getInstance();
-        data.setUuid(this.getFruitProject().getUuid());
         data.setProjectStatus(this.getFruitProject().getProjectStatus());
         projectMapper.updateByExampleSelective(data, example);
     }
