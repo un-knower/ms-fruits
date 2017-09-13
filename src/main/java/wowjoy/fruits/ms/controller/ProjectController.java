@@ -46,7 +46,7 @@ public class ProjectController {
         return RestResult.getInstance().setData(projectVo.getUuid());
     }
 
-    @RequestMapping(value = "/status/{uuid}", method = RequestMethod.PATCH)
+    @RequestMapping(value = "/status/{uuid}", method = RequestMethod.PUT)
     public RestResult updateStatus(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitProjectVo.class) FruitProjectVo fruitProjectVo) {
         fruitProjectVo.checkStatus();
         fruitProjectVo.setUuid(uuid);
