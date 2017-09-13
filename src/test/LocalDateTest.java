@@ -1,19 +1,12 @@
-import com.google.gson.JsonArray;
-import com.google.gson.JsonParser;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClients;
 import org.junit.Test;
 import wowjoy.fruits.ms.module.project.FruitProject;
-import wowjoy.fruits.ms.module.relation.entity.UserProjectRelation;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.sql.Date;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.Stack;
 
 /**
  * Created by wangziwen on 2017/8/24.
@@ -22,47 +15,105 @@ import java.util.Stack;
 public class LocalDateTest {
     @Test
     public void project() throws Exception {
-        final JsonArray parse = new JsonParser().parse(urlClient()).getAsJsonObject().get("result").getAsJsonArray();
-        Stack<FruitProject> stackProject = new Stack<FruitProject>();
-        Stack<UserProjectRelation> userProjectRelations = new Stack<>();
-        parse.forEach((i) -> {
-            final FruitProject project = new FruitProject();
-            project.setUuid(i.getAsJsonObject().get("projectId").getAsString());
-            project.setPredictEndDate(Date.from(LocalDate.parse(i.getAsJsonObject().get("endTime").getAsString()).atStartOfDay(ZoneId.systemDefault()).toInstant()));
-            project.setProjectStatus(FruitDict.ProjectDict.UNDERWAY.name());
-            project.setTitle(i.getAsJsonObject().get("name").getAsString());
-            stackProject.add(project);
-            final UserProjectRelation leader = new UserProjectRelation();
-            leader.setProjectId(project.getUuid());
-            leader.setUserId(i.getAsJsonObject().get("leader").getAsString());
-            leader.setUpRole(FruitDict.UserProjectDict.PRINCIPAL.name());
-            userProjectRelations.add(leader);
-            System.out.println(leader.getUserId());
-            i.getAsJsonObject().get("userList").getAsJsonArray().forEach((j)->{
-                if (!j.getAsJsonObject().get("userId").getAsString().equals(leader.getUserId())) {
-                    final UserProjectRelation cyz = new UserProjectRelation();
-                    cyz.setUpRole(FruitDict.UserProjectDict.PARTICIPANT.name());
-                    cyz.setUserId(j.getAsJsonObject().get("userId").getAsString());
-                    cyz.setProjectId(project.getUuid());
-                    userProjectRelations.add(cyz);
-                    System.out.println(cyz.getUserId());
-                }
-            });
-
-        });
 
     }
 
     private InputStreamReader urlClient() throws IOException {
-        final HttpGet httpGet = new HttpGet("https://fruits.rubikstack.com/project/getList");
-        httpGet.setHeader("Cookie", "JSESSIONID-SSO=7955bb8f-0370-488f-a525-3a0b1770f10b; JSESSIONID-CONF=eeeb525a-9ffc-49ab-aa69-87a62e0dc4bf");
+        final HttpGet httpGet = new HttpGet("https://fruits.rubikstack.com/plan");
+        httpGet.setHeader("Cookie", "JSESSIONID-CONF=5ec0d09c-ca49-41a9-b274-774082c46b53");
         final CloseableHttpResponse execute = HttpClients.createDefault().execute(httpGet);
         final InputStreamReader input = new InputStreamReader(execute.getEntity().getContent());
-        StringBuffer result = new StringBuffer();
-//        while (input.ready()){
-//            result.append((char) input.read());
-//        }
-//        return result.toString();
         return input;
     }
+
+//    @Autowired
+//    private RestTemplate restTemplate;
+//
+//    @Autowired
+//    private PlanUserRelationMapper userRelationMapper;
+//    @Autowired
+//    private FruitPlanMapper fruitPlanMapper;
+//
+//    @Autowired
+//    private PlanProjectRelationMapper planProjectRelationMapper;
+//
+//    @Autowired
+//    private FruitPlanSummaryMapper summaryMapper;
+//
+//    @RequestMapping("insert")
+//    public void insert(){
+//        final JsonObject parse = new JsonParser().parse(urlClient()).getAsJsonObject().get("result").getAsJsonObject();
+//        final List<FruitPlan> planInfo = Lists.newLinkedList();
+//        final LinkedList<PlanProjectRelation> planProjectInfo = Lists.newLinkedList();
+//        final LinkedList<List<PlanUserRelation>> planUserRelation = Lists.newLinkedList();
+//        final List<FruitPlanSummary> fruitPlanSummaryInfo = Lists.newLinkedList();
+//        parse.get("plan").getAsJsonArray().forEach((i) -> {
+//            final FruitPlan fruitPlan = AbstractEntity.getFruitPlan();
+//            fruitPlan.setUuid(i.getAsJsonObject().get("planId").getAsString());
+//            fruitPlan.setEndDate(LocalDate.parse(i.getAsJsonObject().get("endTime").getAsString()));
+//            fruitPlan.setPercent(Integer.parseInt(i.getAsJsonObject().get("percentage").getAsString()));
+//            fruitPlan.setTitle(i.getAsJsonObject().get("content").getAsString());
+//            fruitPlan.setDescription(i.getAsJsonObject().get("desc").getAsString());
+//            fruitPlan.setParentId(i.getAsJsonObject().get("monthPlanId").getAsString());
+//            final String state = i.getAsJsonObject().get("state").getAsString();
+//            if (state.equals("1")) {
+//                fruitPlan.setPlanStatus(FruitDict.PlanDict.PENDING.name());
+//            } else if (state.equals("2")) {
+//                fruitPlan.setPlanStatus(FruitDict.PlanDict.COMPLETE.name());
+//            } else if (state.equals("3")) {
+//                fruitPlan.setPlanStatus(FruitDict.PlanDict.END.name());
+//            }
+//            planProjectInfo.add(AbstractEntity.newPlanProjectRelation(fruitPlan.getUuid(),i.getAsJsonObject().get("projectId").getAsString()));
+//            final List<PlanUserRelation> planUserRelations = Lists.newLinkedList();
+//            for (JsonElement j : parse.get("relation").getAsJsonArray()) {
+//                boolean boo = false;
+//                if (i.getAsJsonObject().get("planId").getAsString().equals(j.getAsJsonObject().get("planId").getAsString())) {
+//                    for (PlanUserRelation user : planUserRelations) {
+//                        System.out.println(j.getAsJsonObject().get("teamId"));
+//                        if (user.getUserId().equals(j.getAsJsonObject().get("teamId").getAsString()))
+//                            boo = true;
+//                    }
+//                    if (!boo)
+//                        planUserRelations.add(AbstractEntity.newPlanUserRelation(j.getAsJsonObject().get("teamId").getAsString(),fruitPlan.getUuid(),FruitDict.PlanUserDict.PRINCIPAL));
+//                }
+//            }
+//            planUserRelation.add(planUserRelations);
+//            planInfo.add(fruitPlan);
+//        });
+//        parse.get("desc").getAsJsonArray().forEach((i) -> {
+//            final FruitPlanSummary fruitPlanSummary = AbstractEntity.getFruitPlanSummary();
+//            fruitPlanSummary.setPlanId(i.getAsJsonObject().get("planId").getAsString());
+//            fruitPlanSummary.setPercent(Integer.parseInt(!i.getAsJsonObject().has("percentage") ? "0" : i.getAsJsonObject().get("percentage").getAsString()));
+//            fruitPlanSummary.setDescription(i.getAsJsonObject().get("complete").getAsString());
+//            fruitPlanSummaryInfo.add(fruitPlanSummary);
+//        });
+//        System.out.println(planInfo);
+//
+//        planInfo.forEach((i)->{
+//            fruitPlanMapper.insertSelective(i);
+//        });
+//
+//        fruitPlanSummaryInfo.forEach((i)->{
+//            summaryMapper.insert(i);
+//        });
+//
+//        planUserRelation.forEach((i)->{
+//            i.forEach((j)->{
+//                userRelationMapper.insertSelective(j);
+//            });
+//        });
+//
+//        planProjectInfo.forEach((i)->{
+//            planProjectRelationMapper.insertSelective(i);
+//        });
+//    }
+//
+//    private String urlClient() {
+//        final HttpHeaders httpHeaders = new HttpHeaders();
+//        httpHeaders.set("Cookie","JSESSIONID-SSO=ba4f3133-8115-4364-a5fd-6003321c665a; JSESSIONID-CONF=dcc0d776-67cf-4bcf-b8a0-d36705b7b173");
+//        final HttpEntity httpEntity = new HttpEntity(httpHeaders);
+//        final ResponseEntity<String> exchange = restTemplate.exchange("https://fruits.rubikstack.com/plan", HttpMethod.GET, httpEntity, String.class);
+//        return exchange.getBody();
+//    }
+
 }

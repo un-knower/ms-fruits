@@ -85,12 +85,10 @@ public class FruitDict extends AbstractEntity {
     public enum PlanDict {
         //进行中
         PENDING("进行中"),
-        //准时完成
-        COMPLETE("准时完成"),
-        //延期完成
-        OUTTIMECOMPLET("延期完成"),
+        //已完成
+        COMPLETE("已完成"),
         //终止
-        END("以终止");
+        END("已终止");
 
         private String parentCode;
         private String value;
@@ -123,10 +121,6 @@ public class FruitDict extends AbstractEntity {
     public enum ProjectDict {
         //进行中
         UNDERWAY("进行中"),
-        //暂停
-        STOP("已暂停"),
-        //终止
-        END("已终止"),
         //已完成
         COMPLETE("已完成");
 
@@ -368,5 +362,38 @@ public class FruitDict extends AbstractEntity {
         }
     }
 
+    /**
+     * ProjectTeamRelation 项目团队关联字典管理
+     */
+    public enum ProjectTeamDict {
+        PRINCIPAL("负责团队"),
+        PARTICIPANT("参与团队");
+
+
+        private String parentCode;
+        private String value;
+
+        private void setParentCode(String parentCode) {
+            this.parentCode = parentCode;
+        }
+
+        private void setValue(String value) {
+            this.value = value;
+        }
+
+        public String getParentCode() {
+            return parentCode;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        ProjectTeamDict(String value) {
+            this.setParentCode(Dict.USERTEAM.name());
+            this.setValue(value);
+        }
+
+    }
 
 }

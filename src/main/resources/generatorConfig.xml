@@ -18,7 +18,7 @@
             <property name="forceBigDecimals" value="false"/>
         </javaTypeResolver>
 
-        <javaModelGenerator targetPackage="wowjoy.fruits.ms.module.relation.entity" targetProject="MAVEN">
+        <javaModelGenerator targetPackage="wowjoy.fruits.ms.module.relation" targetProject="MAVEN">
             <property name="enableSubPackages" value="true"/>
             <property name="trimStrings" value="true"/>
         </javaModelGenerator>
@@ -31,6 +31,9 @@
             <property name="enableSubPackages" value="true"/>
         </javaClientGenerator>
 
+        <table schema="userProjectRelation" tableName="user_project_relation" domainObjectName="UserProjectRelation">
+            <ignoreColumn column="inc_id"/>
+        </table>
         <table schema="projectTeamRelation" tableName="project_team_relation" domainObjectName="ProjectTeamRelation">
             <ignoreColumn column="inc_id"/>
         </table>

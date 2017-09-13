@@ -23,9 +23,4 @@ public class TaskDaoImpl extends AbstractDaoTask {
         /*插入任务*/
         taskMapper.insertSelective(this.getTask());
     }
-
-    @Override
-    public List<FruitTask> findByUser() {
-        return taskMapper.selectByUser();
-    }
 }

@@ -1,16 +1,19 @@
 package wowjoy.fruits.ms.module;
 
-import wowjoy.fruits.ms.dao.InterfaceArgument;
+import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
+import java.text.MessageFormat;
 import java.util.Date;
 import java.util.UUID;
 
 /**
  * 实体类基类
  */
-public abstract class AbstractEntity extends InterfaceArgument {
+public abstract class AbstractEntity {
+
     protected AbstractEntity() {
+        /*利大于弊，我选择保留，如果有更好的方法，可以尝试*/
         this.setUuid(UUID.randomUUID().toString().replace("-", ""));
         this.setIsDeleted(FruitDict.Dict.N.name());
     }
@@ -53,8 +56,17 @@ public abstract class AbstractEntity extends InterfaceArgument {
         return isDeleted;
     }
 
-    public boolean isNotEmpty(){
+    public boolean isNotEmpty() {
         return true;
     }
 
+    /****************
+     * 实体类异常内部类 *
+     ****************/
+
+    protected static class EntityCheckException extends CheckException {
+        public EntityCheckException(String message) {
+            super("【Entity exception】：" + message);
+        }
+    }
 }

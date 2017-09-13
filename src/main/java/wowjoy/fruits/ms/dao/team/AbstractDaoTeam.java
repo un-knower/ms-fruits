@@ -1,45 +1,34 @@
 package wowjoy.fruits.ms.dao.team;
 
 import wowjoy.fruits.ms.dao.InterfaceDao;
-import wowjoy.fruits.ms.dao.relation.AbstractDaoRelation;
-import wowjoy.fruits.ms.dao.relation.UserTeamDaoImpl;
-import wowjoy.fruits.ms.module.relation.entity.UserTeamRelation;
 import wowjoy.fruits.ms.module.team.FruitTeam;
-import wowjoy.fruits.ms.util.ApplicationContextUtils;
-
-import java.util.List;
 
 /**
  * Created by wangziwen on 2017/9/5.
  */
-public abstract class AbstractDaoTeam implements InterfaceDao {
+public abstract class AbstractDaoTeam<T extends FruitTeam> implements InterfaceDao {
+    /*********************************************************************************
+     * 抽象接口，私有，因为对外的公共接口用来书写业务层，发布api必须在自己的控制范围内，不发布无用的接口。*
+     *********************************************************************************/
 
-    protected abstract void insert();
+    protected abstract void finds();
 
-    protected abstract List<FruitTeam> findByTeam();
+    /**********************************************
+     *  FIELD 变量 ，尽量使用final变量、私有，编程习惯 *
+     **********************************************/
+    private T fruitTeam;
 
-    private FruitTeam fruitTeam;
-
-    private AbstractDaoRelation getUserTeamRelation() {
-        return ApplicationContextUtils.getContext().getBean(UserTeamDaoImpl.class);
+    public T getFruitTeam() {
+        return fruitTeam != null ? fruitTeam : (T) FruitTeam.newEmpty(null);
     }
 
-    protected FruitTeam getFruitTeam() {
-        return fruitTeam;
-    }
-
-    private AbstractDaoTeam setFruitTeam(FruitTeam fruitTeam) {
+    public void setFruitTeam(T fruitTeam) {
         this.fruitTeam = fruitTeam;
-        return this;
     }
 
-    public List<FruitTeam> findByTeam(FruitTeam team) {
-        final List<FruitTeam> result = this.setFruitTeam(team).findByTeam();
-        result.forEach((i) -> {
-            i.setUsers(this.getUserTeamRelation()
-                    .setAbstractEntity(new UserTeamRelation("", i.getUuid(), ""))
-                    .findByEntity());
-        });
-        return result;
-    }
+    /*******************************
+     * PUBLIC 函数，公共接口         *
+     * 尽量保证规范，不直接调用dao接口 *
+     *******************************/
+
 }

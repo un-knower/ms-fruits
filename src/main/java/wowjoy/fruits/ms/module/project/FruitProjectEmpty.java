@@ -4,11 +4,11 @@ package wowjoy.fruits.ms.module.project;
  * Created by wangziwen on 2017/9/6.
  */
 public class FruitProjectEmpty extends FruitProject {
-    public FruitProjectEmpty() {
+    protected FruitProjectEmpty() {
         this(null);
     }
 
-    public FruitProjectEmpty(String msg) {
+    protected FruitProjectEmpty(String msg) {
         this.msg = msg;
     }
 
@@ -27,7 +27,4 @@ public class FruitProjectEmpty extends FruitProject {
         return false;
     }
 
-    public static FruitProjectEmpty getInstance(String msg) {
-        return new FruitProjectEmpty(msg);
-    }
 }

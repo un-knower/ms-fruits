@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import wowjoy.fruits.ms.module.user.FruitUser;
 import wowjoy.fruits.ms.module.user.FruitUserEmpty;
-import wowjoy.fruits.ms.module.user.example.FruitUserExample;
+import wowjoy.fruits.ms.module.user.FruitUserExample;
 import wowjoy.fruits.ms.module.user.mapper.FruitUserMapper;
 
 import java.util.List;

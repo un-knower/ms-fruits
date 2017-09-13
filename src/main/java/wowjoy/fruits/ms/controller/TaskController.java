@@ -27,9 +27,4 @@ public class TaskController {
         return RestResult.getInstance().setData(data.getUuid());
     }
 
-    @RequestMapping(value = "/user/{userId}", method = RequestMethod.GET)
-    public RestResult findByUser(@PathVariable String userId, @JsonArgument(type = FruitTask.class) FruitTask datas) {
-        return RestResult.getInstance().setData(abstractDaoTask.findByUser());
-    }
-
 }

@@ -22,7 +22,6 @@ public class FruitTask extends AbstractEntity {
     private String taskLevel;
     private String title;
     private String taskStatus;
-    private Date startDate;
     private Date endDate;
 
     public void setTitle(String title) {
@@ -31,14 +30,6 @@ public class FruitTask extends AbstractEntity {
 
     public void setTaskStatus(String taskStatus) {
         this.taskStatus = taskStatus;
-    }
-
-    public void setStartDate(Date startDate) {
-        this.startDate = startDate;
-    }
-
-    public void setStartDate(LocalDate startDate) {
-        this.setStartDate(Date.from(startDate.atStartOfDay(ZoneId.systemDefault()).toInstant()));
     }
 
     public void setEndDate(Date endDate) {
@@ -63,10 +54,6 @@ public class FruitTask extends AbstractEntity {
 
     public String getTaskStatus() {
         return taskStatus;
-    }
-
-    public Date getStartDate() {
-        return startDate;
     }
 
     public String getListId() {

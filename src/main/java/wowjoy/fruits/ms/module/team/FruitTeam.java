@@ -30,4 +30,8 @@ public class FruitTeam extends AbstractEntity {
         return title;
     }
 
+    public static FruitTeam newEmpty(String msg) {
+        return new FruitTeamEmpty(msg);
+    }
+
 }

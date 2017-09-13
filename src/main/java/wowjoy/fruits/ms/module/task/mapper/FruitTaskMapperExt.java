@@ -10,5 +10,4 @@ import wowjoy.fruits.ms.module.task.FruitTask;
  */
 @Mapper
 public interface FruitTaskMapperExt {
-    List<FruitTask> selectByUser();
 }

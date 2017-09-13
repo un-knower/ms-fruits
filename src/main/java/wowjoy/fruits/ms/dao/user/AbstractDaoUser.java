@@ -23,7 +23,6 @@ public abstract class AbstractDaoUser implements InterfaceDao {
      **********************************************/
 
     private FruitUser fruitUser;
-    private ExtraDataParset dataParset;
 
     protected FruitUser getFruitUser() {
         return fruitUser != null ? fruitUser : FruitUserEmpty.getInstance("");
@@ -37,17 +36,6 @@ public abstract class AbstractDaoUser implements InterfaceDao {
     /***********************
      * PUBLIC 函数，公共接口 *
      ***********************/
-
-    public ExtraDataParset getDataParset() {
-        return dataParset = ApplicationContextUtils.getContext().getBean(ExtraDataParset.class);
-    }
-
-    /**
-     * 加载用户信息
-     */
-    public void build() {
-        this.insert(this.getDataParset().build().getList().toArray(new FruitUser[this.getDataParset().getList().size()]));
-    }
 
     /**
      * 根据用户id查询

@@ -11,8 +11,6 @@ import java.util.List;
 public abstract class AbstractDaoTask implements InterfaceDao {
     public abstract void insert();
 
-    public abstract List<FruitTask> findByUser();
-
     private FruitTask task;
     private String userId;
 

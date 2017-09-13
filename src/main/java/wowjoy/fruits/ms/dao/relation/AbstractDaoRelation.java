@@ -1,25 +1,36 @@
 package wowjoy.fruits.ms.dao.relation;
 
 import wowjoy.fruits.ms.dao.InterfaceDao;
-import wowjoy.fruits.ms.module.AbstractEntity;
-import wowjoy.fruits.ms.module.user.FruitUser;
-
-import java.util.List;
+import wowjoy.fruits.ms.exception.CheckException;
 
 /**
- * Created by wangziwen on 2017/9/5.
+ * Created by wangziwen on 2017/9/12.
  */
-public abstract class AbstractDaoRelation implements InterfaceDao {
-    private AbstractEntity abstractEntity;
+public abstract class AbstractDaoRelation<T> implements InterfaceDao{
 
-    protected AbstractEntity getAbstractEntity(){
-        return abstractEntity;
+    /**
+     * 单条记录删除
+     *
+     * @param relation
+     */
+    public abstract void insert(T relation);
+
+    /**
+     * 采用物理删除 或者 物理删除
+     *
+     * 基本采用物理删除，有特殊需求采用逻辑删除
+     *
+     * @param relation
+     */
+    public abstract void remove(T relation);
+
+    /**
+     * 仅用于实现类。内部类尽量采用static，非静态类不利于垃圾回收。
+     */
+    protected static class CheckRelationException extends CheckException{
+        public CheckRelationException(String message) {
+            super("【Relation Exception】"+message);
+        }
     }
 
-    public AbstractDaoRelation setAbstractEntity(AbstractEntity abstractEntity) {
-        this.abstractEntity = abstractEntity;
-        return this;
-    }
-
-    public abstract List<FruitUser> findByEntity();
 }

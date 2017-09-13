@@ -11,6 +11,7 @@ import wowjoy.fruits.ms.util.JsonArgument;
 import wowjoy.fruits.ms.util.RestResult;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  */
@@ -32,4 +33,5 @@ public class UserController {
         }
         return RestResult.getInstance().setData(data);
     }
+
 }
