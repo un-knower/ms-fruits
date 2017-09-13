@@ -19,10 +19,8 @@ public class FruitProjectVo extends FruitProject {
         this.uuidVo = uuidVo;
     }
 
-    @Override
-    public String getUuid() {
-        super.setUuid(StringUtils.isNotBlank(this.uuidVo) ? this.uuidVo : super.getUuid());
-        return super.getUuid();
+    public String getUuidVo() {
+        return uuidVo;
     }
 
     public List<ProjectTeamRelation> getTeamVo() {

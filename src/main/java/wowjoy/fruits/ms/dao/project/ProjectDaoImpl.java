@@ -53,8 +53,8 @@ public class ProjectDaoImpl extends AbstractDaoProject {
                 criteria.andTitleEqualTo(this.getFruitProject().getTitle());
             if (StringUtils.isNotBlank(this.getFruitProject().getProjectStatus()))
                 criteria.andProjectStatusEqualTo(this.getFruitProject().getProjectStatus());
-            if (StringUtils.isNotBlank(this.getFruitProject().getUuid()))
-                criteria.andUuidEqualTo(this.getFruitProject().getUuid());
+            if (StringUtils.isNotBlank(this.getFruitProject().getUuidVo()))
+                criteria.andUuidEqualTo(this.getFruitProject().getUuidVo());
         }
         return projectMapper.selectUserRelationByExample(example);
     }
@@ -62,12 +62,10 @@ public class ProjectDaoImpl extends AbstractDaoProject {
 
     @Override
     protected void update() {
-        if (this.finds().isEmpty())
-            throw new CheckProjectException("【update】目标不存在");
         /*修改项目信息*/
         FruitProjectExample example = new FruitProjectExample();
         example.createCriteria().andUuidEqualTo(this.getFruitProject().getUuid());
-        projectMapper.updateByExample(this.getFruitProject(), example);
+        projectMapper.updateByExampleSelective(this.getFruitProject(), example);
         /*删除关联*/
         removeUserRelation().removeTeamRelation();
         /*添加关联*/

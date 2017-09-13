@@ -61,13 +61,12 @@ public abstract class AbstractDaoProject<T extends FruitProject> implements Inte
     }
 
     public List<FruitProject> finds(T project) {
-        final List<FruitProject> data = this.setFruitProject(project).finds();
-        return data;
+        return this.setFruitProject(project).finds();
     }
 
     public FruitProject findByUUID(String uuid) {
-        final FruitProject projet = FruitProject.getInstance();
-        projet.setUuid(uuid);
+        final FruitProjectVo projet = FruitProjectVo.getInstance();
+        projet.setUuidVo(uuid);
         final List data = this.setFruitProject((T) projet).finds();
         if (data.isEmpty())
             throw new CheckProjectException("【findByUUID】无匹配信息");
@@ -75,8 +74,11 @@ public abstract class AbstractDaoProject<T extends FruitProject> implements Inte
     }
 
     public void update(T fruitProject) {
+        final FruitProjectVo term = FruitProjectVo.getInstance();
+        term.setUuidVo(fruitProject.getUuid());
+        if (this.setFruitProject((T) term).finds().isEmpty())
+            throw new CheckProjectException("【update】目标不存在");
         this.setFruitProject(fruitProject).update();
-        this.finds();
     }
 
     public void updateStatus(String uuid, FruitDict.ProjectDict projectDict) {

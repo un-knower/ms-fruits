@@ -39,8 +39,9 @@ public class ProjectController {
         return RestResult.getInstance().setData(projectVo.getUuid());
     }
 
-    @RequestMapping(method = RequestMethod.PUT)
-    public RestResult update(@JsonArgument(type = FruitProjectVo.class) FruitProjectVo projectVo) {
+    @RequestMapping(value = "{uuid}", method = RequestMethod.PUT)
+    public RestResult update(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitProjectVo.class) FruitProjectVo projectVo) {
+        projectVo.setUuid(uuid);
         projectDaoImpl.update(projectVo);
         return RestResult.getInstance().setData(projectVo.getUuid());
     }
