@@ -44,6 +44,7 @@ public class MybatisConfiguration {
         hikariDataSource.setPassword(environment.getProperty("jdbc.password"));
         hikariDataSource.setDriverClassName(environment.getProperty("jdbc.classDriverName"));
         hikariDataSource.setIdleTimeout(60000);
+        hikariDataSource.setMaxLifetime(60000);
         return hikariDataSource;
     }
 
