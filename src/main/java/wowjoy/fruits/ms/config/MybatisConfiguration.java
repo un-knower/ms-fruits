@@ -52,7 +52,7 @@ public class MybatisConfiguration {
     @Bean
     SqlSessionFactoryBean sessionFactoryBean() {
         SqlSessionFactoryBean factoryBean = new SqlSessionFactoryBean();
-        factoryBean.setDataSource(dataSource());
+        factoryBean.setDataSource(hikariDataSource());
         factoryBean.setTypeAliasesPackage(SQLSESSIONFACTORYBEAN_TYPEALIASESPACKAGE);
         return factoryBean;
     }
