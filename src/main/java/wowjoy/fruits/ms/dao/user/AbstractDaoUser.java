@@ -1,8 +1,10 @@
 package wowjoy.fruits.ms.dao.user;
 
+import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.exception.NullException;
+import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.user.FruitUser;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.user.FruitUserVo;
@@ -30,7 +32,9 @@ public abstract class AbstractDaoUser implements InterfaceDao {
 
     public FruitUser find(FruitUserVo vo) {
         final FruitUserDao dao = FruitUser.getFruitUserDao();
-        dao.setUserId(vo.getUserId());
+        if (StringUtils.isBlank(vo.getUserEmail()))
+            throw new NullUserException("邮箱不能为空");
+        dao.setUserEmail(vo.getUserEmail());
         return this.find(dao);
     }
 

@@ -29,7 +29,12 @@ public class UserDaoImpl extends AbstractDaoUser {
     protected FruitUser find(FruitUserDao dao) {
         final FruitUserExample example = new FruitUserExample();
         final FruitUserExample.Criteria criteria = example.createCriteria();
-        criteria.andUserIdEqualTo(dao.getUserId());
+        if (StringUtils.isNotBlank(dao.getUserId()))
+            criteria.andUserIdEqualTo(dao.getUserId());
+        if (StringUtils.isNotBlank(dao.getUserName()))
+            criteria.andUserNameEqualTo(dao.getUserName());
+        if (StringUtils.isNotBlank(dao.getUserEmail()))
+            criteria.andUserEmailEqualTo(dao.getUserEmail());
         final List<FruitUser> result = mapper.selectByExample(example);
         if (result.isEmpty() || result.size() > 1) throw new NullUserException("用户不存在");
         return result.get(0);
