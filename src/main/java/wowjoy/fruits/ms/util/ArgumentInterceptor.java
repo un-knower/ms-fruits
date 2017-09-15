@@ -55,7 +55,8 @@ public class ArgumentInterceptor implements HandlerMethodArgumentResolver {
         final InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
         while (inputStreamReader.ready())
             parameter.append((char) inputStreamReader.read());
-        return new JsonParser().parse(parameter.toString());
+        final JsonElement parse = new JsonParser().parse(parameter.toString());
+        return parse.isJsonNull() ? new JsonObject() : parse;
     }
 
     private JsonObject findGet(Map<String, String[]> parameterMap) {

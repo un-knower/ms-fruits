@@ -5,9 +5,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import wowjoy.fruits.ms.controller.vo.FruitProjectVo;
 import wowjoy.fruits.ms.dao.relation.AbstractDaoRelation;
 import wowjoy.fruits.ms.module.project.FruitProject;
+import wowjoy.fruits.ms.module.project.FruitProjectDao;
 import wowjoy.fruits.ms.module.project.FruitProjectExample;
 import wowjoy.fruits.ms.module.project.mapper.FruitProjectMapper;
 import wowjoy.fruits.ms.module.relation.entity.ProjectTeamRelation;
@@ -31,98 +31,102 @@ public class ProjectDaoImpl extends AbstractDaoProject {
     @Autowired
     private AbstractDaoRelation userDao;
 
-
     @Override
-    protected void insert() {
-        projectMapper.insertSelective(this.getFruitProject());
-        this.insertTeamRelation();
-        this.insertUserRelation();
+    protected void insert(FruitProjectDao dao) {
+        projectMapper.insertSelective(dao);
+        Relation.getInstance(teamDao, userDao, dao).insertTeamRelation().insertUserRelation();
     }
 
     @Override
-    protected FruitProjectVo getFruitProject() {
-        return (FruitProjectVo) super.getFruitProject();
-    }
-
-    @Override
-    protected List<FruitProject> finds() {
+    protected List<FruitProject> finds(FruitProjectDao dao) {
         FruitProjectExample example = new FruitProjectExample();
         final FruitProjectExample.Criteria criteria = example.createCriteria();
-        if (this.getFruitProject().isNotEmpty()) {
-            if (StringUtils.isNotBlank(this.getFruitProject().getTitle()))
-                criteria.andTitleEqualTo(this.getFruitProject().getTitle());
-            if (StringUtils.isNotBlank(this.getFruitProject().getProjectStatus()))
-                criteria.andProjectStatusEqualTo(this.getFruitProject().getProjectStatus());
-            if (StringUtils.isNotBlank(this.getFruitProject().getUuidVo()))
-                criteria.andUuidEqualTo(this.getFruitProject().getUuidVo());
-        }
+        if (StringUtils.isNotBlank(dao.getTitle()))
+            criteria.andTitleEqualTo(dao.getTitle());
+        if (StringUtils.isNotBlank(dao.getProjectStatus()))
+            criteria.andProjectStatusEqualTo(dao.getProjectStatus());
+        if (StringUtils.isNotBlank(dao.getUuid()))
+            criteria.andUuidEqualTo(dao.getUuid());
         return projectMapper.selectUserRelationByExample(example);
     }
 
 
     @Override
-    protected void update() {
+    protected void update(FruitProjectDao dao) {
         /*修改项目信息*/
         FruitProjectExample example = new FruitProjectExample();
-        example.createCriteria().andUuidEqualTo(this.getFruitProject().getUuid());
-        projectMapper.updateByExampleSelective(this.getFruitProject(), example);
+        example.createCriteria().andUuidEqualTo(dao.getUuid());
+        projectMapper.updateByExampleSelective(dao, example);
         /*删除关联*/
-        removeUserRelation().removeTeamRelation();
+        Relation.getInstance(teamDao,userDao,dao).removeUserRelation().removeTeamRelation();
         /*添加关联*/
-        insertUserRelation().insertTeamRelation();
+        Relation.getInstance(teamDao,userDao,dao).insertTeamRelation().insertUserRelation();
     }
 
     @Override
-    protected void updateStatus() {
-        if (StringUtils.isBlank(this.getFruitProject().getUuid()))
-            throw new CheckProjectException("【uuid】无效。");
+    protected void updateStatus(FruitProjectDao dao) {
+        if (StringUtils.isBlank(dao.getUuid()))
+            throw new CheckProjectException("【updateStatus】uuid无效。");
         final FruitProjectExample example = new FruitProjectExample();
-        example.createCriteria().andUuidEqualTo(this.getFruitProject().getUuid());
-        final FruitProject data = FruitProject.getInstance();
-        data.setUuid(this.getFruitProject().getUuid());
-        data.setProjectStatus(this.getFruitProject().getProjectStatus());
-        projectMapper.updateByExampleSelective(data, example);
+        example.createCriteria().andUuidEqualTo(dao.getUuid());
+        projectMapper.updateByExampleSelective(dao, example);
     }
 
     /**
-     * 删除所有关联用户
+     * 非静态类，对外部类提供关联功能
      */
-    private ProjectDaoImpl removeUserRelation() {
-        userDao.remove(UserProjectRelation.newInstance(this.getFruitProject().getUuid(), null));
-        return this;
+    private static class Relation {
+        private final AbstractDaoRelation TeamDao;
+        private final AbstractDaoRelation UserDao;
+        private final FruitProjectDao Dao;
+
+        public Relation(AbstractDaoRelation teamDao, AbstractDaoRelation userDao, FruitProjectDao dao) {
+            this.TeamDao = teamDao;
+            this.UserDao = userDao;
+            this.Dao = dao;
+        }
+
+        public static Relation getInstance(AbstractDaoRelation teamDao, AbstractDaoRelation userDao, FruitProjectDao dao) {
+            return new Relation(teamDao, userDao, dao);
+        }
+
+        /**
+         * 删除所有关联用户
+         */
+        private Relation removeUserRelation() {
+            UserDao.remove(UserProjectRelation.newInstance(Dao.getUuid(), null));
+            return this;
+        }
+
+        /**
+         * 删除所有关联团队
+         */
+        private Relation removeTeamRelation() {
+            TeamDao.remove(ProjectTeamRelation.newInstance(Dao.getUuid(), null));
+            return this;
+        }
+
+        /**
+         * 添加用户关联
+         */
+        private Relation insertUserRelation() {
+            Dao.getUserDao().forEach((i) -> {
+                i.setProjectId(Dao.getUuid());
+                UserDao.insert(i);
+            });
+            return this;
+        }
+
+        /**
+         * 添加团队关联
+         */
+        private Relation insertTeamRelation() {
+            Dao.getTeamDao().forEach((i) -> {
+                i.setProjectId(Dao.getUuid());
+                TeamDao.insert(i);
+            });
+            return this;
+        }
     }
 
-    /**
-     * 删除所有关联团队
-     */
-    private ProjectDaoImpl removeTeamRelation() {
-        teamDao.remove(ProjectTeamRelation.newInstance(this.getFruitProject().getUuid(), null));
-        return this;
-    }
-
-    /**
-     * 添加用户关联
-     */
-    private ProjectDaoImpl insertUserRelation() {
-        final FruitProjectVo data = (FruitProjectVo) this.getFruitProject();
-        if (data.isNullUserVo()) return null;
-        data.getUserVo().forEach((i) -> {
-            i.setProjectId(this.getFruitProject().getUuid());
-            userDao.insert(i);
-        });
-        return this;
-    }
-
-    /**
-     * 添加团队关联
-     */
-    private ProjectDaoImpl insertTeamRelation() {
-        final FruitProjectVo data = (FruitProjectVo) this.getFruitProject();
-        if (data.isNullTeamVo()) return null;
-        data.getTeamVo().forEach((i) -> {
-            i.setProjectId(this.getFruitProject().getUuid());
-            teamDao.insert(i);
-        });
-        return this;
-    }
 }

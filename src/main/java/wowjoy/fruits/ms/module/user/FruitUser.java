@@ -1,6 +1,7 @@
 package wowjoy.fruits.ms.module.user;
 
 
+import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
@@ -74,4 +75,19 @@ public class FruitUser extends AbstractEntity {
         return jobTitle;
     }
 
+    public static FruitUserDao getFruitUserDao() {
+        return new FruitUserDao();
+    }
+
+    public static FruitUser getFruitUserVo() {
+        return new FruitUserVo();
+    }
+
+    public static FruitUserEmpty newEmpty(String msg) {
+        return new FruitUserEmpty(msg);
+    }
+
+    public static FruitUser getInstance() {
+        return new FruitUser();
+    }
 }

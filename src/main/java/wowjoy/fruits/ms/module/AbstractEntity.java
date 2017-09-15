@@ -1,6 +1,7 @@
 package wowjoy.fruits.ms.module;
 
 import wowjoy.fruits.ms.exception.CheckException;
+import wowjoy.fruits.ms.exception.NullException;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.text.MessageFormat;
@@ -64,8 +65,14 @@ public abstract class AbstractEntity {
      * 实体类异常内部类 *
      ****************/
 
-    protected static class EntityCheckException extends CheckException {
-        public EntityCheckException(String message) {
+    protected static class CheckEntityException extends CheckException {
+        public CheckEntityException(String message) {
+            super("【Entity exception】：" + message);
+        }
+    }
+
+    protected static class NullEntityException extends NullException {
+        public NullEntityException(String message) {
             super("【Entity exception】：" + message);
         }
     }

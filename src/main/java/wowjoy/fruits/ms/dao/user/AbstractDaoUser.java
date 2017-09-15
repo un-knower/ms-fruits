@@ -1,9 +1,13 @@
 package wowjoy.fruits.ms.dao.user;
 
 import wowjoy.fruits.ms.dao.InterfaceDao;
+import wowjoy.fruits.ms.exception.CheckException;
+import wowjoy.fruits.ms.exception.NullException;
 import wowjoy.fruits.ms.module.user.FruitUser;
-import wowjoy.fruits.ms.module.user.FruitUserEmpty;
-import wowjoy.fruits.ms.util.ApplicationContextUtils;
+import wowjoy.fruits.ms.module.user.FruitUserDao;
+import wowjoy.fruits.ms.module.user.FruitUserVo;
+
+import java.util.List;
 
 /**
  * Created by wangziwen on 2017/8/25.
@@ -16,35 +20,32 @@ public abstract class AbstractDaoUser implements InterfaceDao {
 
     protected abstract void insert(FruitUser... user);
 
-    protected abstract FruitUser findByUser();
+    protected abstract FruitUser find(FruitUserDao dao);
 
-    /**********************************************
-     *  FIELD 变量 ，尽量使用final变量、私有，编程习惯 *
-     **********************************************/
-
-    private FruitUser fruitUser;
-
-    protected FruitUser getFruitUser() {
-        return fruitUser != null ? fruitUser : FruitUserEmpty.getInstance("");
-    }
-
-    private AbstractDaoUser setFruitUser(FruitUser fruitUser) {
-        this.fruitUser = fruitUser;
-        return this;
-    }
+    protected abstract List<FruitUser> finds(FruitUserDao dao);
 
     /***********************
      * PUBLIC 函数，公共接口 *
      ***********************/
 
-    /**
-     * 根据用户id查询
-     *
-     * @param user
-     * @return
-     */
-    public FruitUser findByUser(FruitUser user) {
-        return this.setFruitUser(user).findByUser();
+    public FruitUser find(FruitUserVo vo) {
+        final FruitUserDao dao = FruitUser.getFruitUserDao();
+        dao.setUserId(vo.getUserId());
+        return this.find(dao);
+    }
+
+    public List<FruitUser> finds(FruitUserVo vo) {
+        final FruitUserDao dao = FruitUser.getFruitUserDao();
+        dao.setUserEmail(vo.getUserEmail());
+        dao.setUserName(vo.getUserName());
+        return this.finds(dao);
+    }
+
+    protected class NullUserException extends NullException {
+
+        public NullUserException(String message) {
+            super("【User exception】" + message);
+        }
     }
 
 

@@ -1,11 +1,9 @@
 package wowjoy.fruits.ms.module.project;
 
 
-import org.apache.commons.lang3.EnumUtils;
 import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.team.FruitTeam;
 import wowjoy.fruits.ms.module.user.FruitUser;
-import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.util.Date;
 import java.util.List;
@@ -65,17 +63,22 @@ public class FruitProject extends AbstractEntity {
         return endDateTime;
     }
 
-    public void checkStatus() {
-        if (!EnumUtils.isValidEnum(FruitDict.ProjectDict.class, this.getProjectStatus()))
-            throw new EntityCheckException("【用户-项目】角色不存在.");
-    }
-
     public String getTitle() {
         return title;
     }
 
+    /***********************
+     * 静态工厂函数-创建实例  *
+     ***********************/
     public static FruitProject getInstance() {
         return new FruitProject();
+    }
+
+    public static FruitProjectDao getProjectDao() {
+        return new FruitProjectDao();
+    }
+    public static FruitProject getProjectVo() {
+        return new FruitProjectVo();
     }
 
     public static FruitProject newEmpty(String msg) {

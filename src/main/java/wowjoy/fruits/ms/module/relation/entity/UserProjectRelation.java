@@ -44,6 +44,6 @@ public class UserProjectRelation extends AbstractEntity {
 
     public void checkUpRole() {
         if (!EnumUtils.isValidEnum(FruitDict.UserProjectDict.class, this.upRole))
-            throw new EntityCheckException("【用户-项目】角色不存在.");
+            throw new CheckEntityException("【用户-项目】角色不存在.");
     }
 }

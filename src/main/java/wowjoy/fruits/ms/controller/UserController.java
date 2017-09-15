@@ -7,31 +7,31 @@ import wowjoy.fruits.ms.dao.user.AbstractDaoUser;
 import wowjoy.fruits.ms.dao.user.UserDaoImpl;
 import wowjoy.fruits.ms.module.user.FruitUser;
 import wowjoy.fruits.ms.module.user.FruitUserEmpty;
+import wowjoy.fruits.ms.module.user.FruitUserVo;
 import wowjoy.fruits.ms.util.JsonArgument;
 import wowjoy.fruits.ms.util.RestResult;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.lang.reflect.Type;
 
 /**
  */
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/v1/api/user")
 public class UserController {
     @Resource(type = UserDaoImpl.class)
     private AbstractDaoUser dataUserDao;
 
     @RequestMapping(method = RequestMethod.POST)
-    public RestResult findByUserId(@JsonArgument(type = FruitUser.class) FruitUser user) {
-        final FruitUser data = dataUserDao.findByUser(user);
-        if (!data.isNotEmpty()){
-            final RestResult restResult = RestResult.getInstance();
-            restResult.setSuccess(false);
-            restResult.setCode(4000);
-            restResult.setMsg(((FruitUserEmpty) data).getMsg());
-            return restResult;
-        }
+    public RestResult find(@JsonArgument(type = FruitUserVo.class) FruitUserVo vo) {
+        final FruitUser data = dataUserDao.find(vo);
         return RestResult.getInstance().setData(data);
+    }
+
+    @RequestMapping(method = RequestMethod.GET)
+    public RestResult finds(@JsonArgument(type = FruitUserVo.class) FruitUserVo vo) {
+        return RestResult.getInstance().setData(dataUserDao.finds(vo));
     }
 
 }

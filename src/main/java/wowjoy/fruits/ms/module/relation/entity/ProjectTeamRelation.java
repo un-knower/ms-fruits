@@ -49,7 +49,7 @@ public class ProjectTeamRelation extends AbstractEntity {
         try{
             FruitDict.UserProjectDict.valueOf(this.getTpRole());
         }catch(Exception ex){
-            throw new EntityCheckException("后验条件错误.【团队-项目】中担任角色不存在.");
+            throw new CheckEntityException("后验条件错误.【团队-项目】中担任角色不存在.");
         }
     }
 }
