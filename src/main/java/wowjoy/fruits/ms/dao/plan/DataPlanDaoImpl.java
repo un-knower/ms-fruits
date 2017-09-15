@@ -1,9 +1,11 @@
 package wowjoy.fruits.ms.dao.plan;
 
+import com.github.pagehelper.PageHelper;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import wowjoy.fruits.ms.module.plan.FruitPlan;
+import wowjoy.fruits.ms.module.plan.FruitPlanDao;
 import wowjoy.fruits.ms.module.plan.example.FruitPlanExample;
 import wowjoy.fruits.ms.module.plan.mapper.FruitPlanMapper;
 
@@ -19,19 +21,25 @@ public class DataPlanDaoImpl extends AbstractDaoPlan {
     private FruitPlanMapper mapper;
 
     @Override
-    protected List<FruitPlan> finds() {
-        final FruitPlanExample example = new FruitPlanExample();
-        final FruitPlanExample.Criteria criteria = example.createCriteria();
-        if (this.getFruitPlan().isNotEmpty()) {
-            if (StringUtils.isNotBlank(this.getFruitPlan().getParentId()))
-                criteria.andParentIdEqualTo(this.getFruitPlan().getParentId());
-            if (StringUtils.isNotBlank(this.getFruitPlan().getTitle()))
-                criteria.andTitleEqualTo(this.getFruitPlan().getTitle());
-            if (StringUtils.isNotBlank(this.getFruitPlan().getPlanStatus()))
-                criteria.andPlanStatusEqualTo(this.getFruitPlan().getPlanStatus());
-            if (StringUtils.isNotBlank(this.getFruitPlan().getUuid()))
-                criteria.andPlanStatusEqualTo(this.getFruitPlan().getUuid());
-        }
-        return mapper.selectByExampleWithBLOBs(example);
+    protected List<FruitPlan> finds(FruitPlanDao dao) {
+        return null;
     }
+
+//    @Override
+//    protected List<FruitPlan> finds() {
+//        final FruitPlanExample example = new FruitPlanExample();
+//        final FruitPlanExample.Criteria criteria = example.createCriteria();
+//        if (this.getFruitPlan().isNotEmpty()) {
+//            if (StringUtils.isNotBlank(this.getFruitPlan().getParentId()))
+//                criteria.andParentIdEqualTo(this.getFruitPlan().getParentId());
+//            if (StringUtils.isNotBlank(this.getFruitPlan().getTitle()))
+//                criteria.andTitleEqualTo(this.getFruitPlan().getTitle());
+//            if (StringUtils.isNotBlank(this.getFruitPlan().getPlanStatus()))
+//                criteria.andPlanStatusEqualTo(this.getFruitPlan().getPlanStatus());
+//            if (StringUtils.isNotBlank(this.getFruitPlan().getUuid()))
+//                criteria.andPlanStatusEqualTo(this.getFruitPlan().getUuid());
+//        }
+//        PageHelper.startPage(1,10);
+//        return mapper.selectByExampleWithBLOBs(example);
+//    }
 }

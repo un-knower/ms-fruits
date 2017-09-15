@@ -1,10 +1,14 @@
 package wowjoy.fruits.ms.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import wowjoy.fruits.ms.dao.plan.AbstractDaoPlan;
+import wowjoy.fruits.ms.dao.plan.DataPlanDaoImpl;
 import wowjoy.fruits.ms.module.plan.FruitPlan;
 import wowjoy.fruits.ms.module.team.FruitTeam;
 import wowjoy.fruits.ms.util.JsonArgument;
@@ -16,6 +20,12 @@ import wowjoy.fruits.ms.util.JsonArgument;
 @RequestMapping("/plan")
 @Transactional
 public class PlanController {
+
+
+    @Qualifier("dataPlanDaoImpl")
+    @Autowired
+    private AbstractDaoPlan dataPlanDao;
+
     /**
      * 详情
      */
@@ -30,7 +40,7 @@ public class PlanController {
      */
     @RequestMapping(method = RequestMethod.GET)
     public void findByUUID(@JsonArgument FruitPlan fruitPlan) {
-
+//        dataPlanDao.finds(fruitPlan);
     }
 
     /**

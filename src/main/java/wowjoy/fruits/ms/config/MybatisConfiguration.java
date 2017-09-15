@@ -1,5 +1,6 @@
 package wowjoy.fruits.ms.config;
 
+import com.github.pagehelper.autoconfigure.PageHelperProperties;
 import com.zaxxer.hikari.HikariDataSource;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.annotation.MapperScan;
@@ -22,7 +23,7 @@ public class MybatisConfiguration {
     @Autowired
     private Environment environment;
 
-//    @Bean
+    //    @Bean
     DataSource dataSource() {
         DataSourceBuilder dataSourceBuilder = DataSourceBuilder.create();
         dataSourceBuilder.url(environment.getProperty("jdbc.uri"));
@@ -34,10 +35,11 @@ public class MybatisConfiguration {
 
     /**
      * 采用hikari连接池
+     *
      * @return
      */
     @Bean
-    HikariDataSource hikariDataSource(){
+    HikariDataSource hikariDataSource() {
         final HikariDataSource hikariDataSource = new HikariDataSource();
         hikariDataSource.setJdbcUrl(environment.getProperty("jdbc.uri"));
         hikariDataSource.setUsername(environment.getProperty("jdbc.username"));
@@ -63,6 +65,5 @@ public class MybatisConfiguration {
         dataSourceTransactionManager.setDataSource(hikariDataSource());
         return dataSourceTransactionManager;
     }
-
 
 }
