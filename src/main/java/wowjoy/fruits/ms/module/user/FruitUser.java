@@ -1,8 +1,10 @@
 package wowjoy.fruits.ms.module.user;
 
 
+import com.google.gson.annotations.Expose;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.module.AbstractEntity;
+import wowjoy.fruits.ms.module.relation.entity.UserProjectRelation;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.util.Date;

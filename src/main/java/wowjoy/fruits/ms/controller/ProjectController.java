@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import wowjoy.fruits.ms.module.project.FruitProject;
 import wowjoy.fruits.ms.module.project.FruitProjectVo;
 import wowjoy.fruits.ms.dao.project.AbstractDaoProject;
 import wowjoy.fruits.ms.util.JsonArgument;
@@ -22,6 +23,11 @@ public class ProjectController {
     @Autowired
     private AbstractDaoProject projectDaoImpl;
 
+    @RequestMapping(value = "/relation", method = RequestMethod.GET)
+    public RestResult findRelation(@JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
+        return RestResult.getInstance().setData(projectDaoImpl.findRelation(vo));
+    }
+
     @RequestMapping(method = RequestMethod.GET)
     public RestResult finds(@JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
         return RestResult.getInstance().setData(projectDaoImpl.finds(vo));
@@ -29,7 +35,9 @@ public class ProjectController {
 
     @RequestMapping(value = "{uuid}", method = RequestMethod.GET)
     public RestResult findByUUID(@PathVariable("uuid") String uuid) {
-        return RestResult.getInstance().setData(projectDaoImpl.findByUUID(uuid));
+        FruitProjectVo projectVo = FruitProject.getProjectVo();
+        projectVo.setUuidVo(uuid);
+        return RestResult.getInstance().setData(projectDaoImpl.findByUUID(projectVo));
     }
 
     @RequestMapping(method = RequestMethod.POST)

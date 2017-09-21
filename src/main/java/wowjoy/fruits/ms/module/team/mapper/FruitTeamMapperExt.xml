@@ -21,7 +21,7 @@
         <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
-        <collection property="users" ofType="wowjoy.fruits.ms.module.user.FruitUser" resultMap="UserResultMap" columnPrefix="user_"/>
+        <collection property="userRelation" ofType="wowjoy.fruits.ms.module.user.FruitUser" resultMap="UserResultMap" columnPrefix="user_"/>
     </resultMap>
     <sql id="Example_Where_Clause">
         <where>

@@ -2,8 +2,10 @@ package wowjoy.fruits.ms.module.project;
 
 
 import wowjoy.fruits.ms.module.AbstractEntity;
+import wowjoy.fruits.ms.module.relation.entity.UserProjectRelation;
 import wowjoy.fruits.ms.module.team.FruitTeam;
 import wowjoy.fruits.ms.module.user.FruitUser;
+import wowjoy.fruits.ms.module.user.FruitUserDao;
 
 import java.util.Date;
 import java.util.List;
@@ -16,24 +18,6 @@ public class FruitProject extends AbstractEntity {
     private Date predictEndDate;
     private Date endDateTime;
     private String projectStatus;
-    private List<FruitUser> users;
-    private List<FruitTeam> teams;
-
-    public List<FruitTeam> getTeams() {
-        return teams;
-    }
-
-    public void setTeams(List<FruitTeam> teams) {
-        this.teams = teams;
-    }
-
-    public List<FruitUser> getUsers() {
-        return users;
-    }
-
-    public void setUsers(List<FruitUser> users) {
-        this.users = users;
-    }
 
     public void setPredictEndDate(Date predictEndDate) {
         this.predictEndDate = predictEndDate;
@@ -77,7 +61,8 @@ public class FruitProject extends AbstractEntity {
     public static FruitProjectDao getProjectDao() {
         return new FruitProjectDao();
     }
-    public static FruitProject getProjectVo() {
+
+    public static FruitProjectVo getProjectVo() {
         return new FruitProjectVo();
     }
 

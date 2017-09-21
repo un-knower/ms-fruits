@@ -2,6 +2,7 @@ package wowjoy.fruits.ms.config;
 
 import com.github.pagehelper.autoconfigure.PageHelperProperties;
 import com.zaxxer.hikari.HikariDataSource;
+import org.apache.ibatis.logging.LogFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;

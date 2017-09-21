@@ -42,9 +42,6 @@ public class ProjectTeamRelation extends AbstractEntity {
         this.tpRole = tpRole;
     }
 
-    /***************
-     * 后验条件     *
-     ***************/
     public void checkTpRole(){
         try{
             FruitDict.UserProjectDict.valueOf(this.getTpRole());

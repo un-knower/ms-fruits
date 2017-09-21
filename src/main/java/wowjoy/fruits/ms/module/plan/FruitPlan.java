@@ -1,11 +1,7 @@
 package wowjoy.fruits.ms.module.plan;
 
 
-import java.util.List;
-
 import wowjoy.fruits.ms.module.AbstractEntity;
-import wowjoy.fruits.ms.module.project.FruitProject;
-import wowjoy.fruits.ms.module.user.FruitUser;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -20,16 +16,6 @@ public class FruitPlan extends AbstractEntity {
     private Date endDate;
     private String planStatus;
     private String parentId;
-
-    private List<FruitUser> users;
-
-    public List<FruitUser> getUsers() {
-        return users;
-    }
-
-    public void setUsers(List<FruitUser> users) {
-        this.users = users;
-    }
 
     public Date getEndDate() {
         return endDate;
@@ -91,7 +77,7 @@ public class FruitPlan extends AbstractEntity {
         return new FruitPlanDao();
     }
 
-    public static FruitPlan getFruitPlanVo() {
+    public static FruitPlanVo getFruitPlanVo() {
         return new FruitPlanVo();
     }
 }
