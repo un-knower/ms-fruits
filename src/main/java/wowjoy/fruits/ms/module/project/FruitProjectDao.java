@@ -14,8 +14,8 @@ import java.util.List;
  */
 public class FruitProjectDao extends FruitProject {
 
-    private List<ProjectTeamRelation> teamDao;
-    private List<UserProjectRelation> userDao;
+    private List<ProjectTeamRelation> teamRelation;
+    private List<UserProjectRelation> userRelation;
 
     protected FruitProjectDao() {
         setUuid(null);
@@ -34,19 +34,19 @@ public class FruitProjectDao extends FruitProject {
             this.setEndDateTime(java.sql.Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
     }
 
-    public List<ProjectTeamRelation> getTeamDao() {
-        return teamDao;
+    public List<ProjectTeamRelation> getTeamRelation() {
+        return teamRelation;
     }
 
-    public void setTeamDao(List<ProjectTeamRelation> teamDao) {
-        this.teamDao = teamDao;
+    public void setTeamRelation(List<ProjectTeamRelation> teamRelation) {
+        this.teamRelation = teamRelation;
     }
 
-    public List<UserProjectRelation> getUserDao() {
-        return userDao;
+    public List<UserProjectRelation> getUserRelation() {
+        return userRelation;
     }
 
-    public void setUserDao(List<UserProjectRelation> userDao) {
-        this.userDao = userDao;
+    public void setUserRelation(List<UserProjectRelation> userRelation) {
+        this.userRelation = userRelation;
     }
 }

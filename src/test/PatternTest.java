@@ -11,4 +11,5 @@ public class PatternTest {
         final boolean matches = Pattern.matches("/static/\\w{0,}", "/static/sssss");
         System.out.println(matches);
     }
+
 }

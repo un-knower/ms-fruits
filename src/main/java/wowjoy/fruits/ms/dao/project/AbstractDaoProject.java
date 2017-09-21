@@ -2,17 +2,11 @@ package wowjoy.fruits.ms.dao.project;
 
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import wowjoy.fruits.ms.dao.InterfaceDao;
-import wowjoy.fruits.ms.dao.relation.AbstractDaoRelation;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.project.FruitProject;
 import wowjoy.fruits.ms.module.project.FruitProjectDao;
 import wowjoy.fruits.ms.module.project.FruitProjectVo;
-import wowjoy.fruits.ms.module.relation.entity.ProjectTeamRelation;
-import wowjoy.fruits.ms.module.relation.entity.UserProjectRelation;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 /**
@@ -35,7 +29,11 @@ public abstract class AbstractDaoProject implements InterfaceDao {
      * 1、根据标题查询
      * 2、根据项目状态查询
      */
-    protected abstract List<FruitProject> finds(FruitProjectDao dao);
+    protected abstract List<FruitProjectDao> findRelation(FruitProjectDao dao);
+
+    protected abstract List<FruitProjectDao> finds(FruitProjectDao dao);
+
+    protected abstract FruitProject findByUUID(String uuid);
 
     protected abstract void update(FruitProjectDao dao);
 
@@ -46,20 +44,28 @@ public abstract class AbstractDaoProject implements InterfaceDao {
      * 尽量保证规范，不直接调用dao接口 *
      *******************************/
 
-    public void insert(FruitProjectVo vo) {
+    public final void insert(FruitProjectVo vo) {
         final FruitProjectDao dao = FruitProject.getProjectDao();
         dao.setUuid(vo.getUuid());
         dao.setTitle(vo.getTitle());
         dao.setProjectStatus(vo.getProjectStatus());
         dao.setPredictEndDate(vo.getPredictEndDate());
         dao.setDescription(vo.getDescription());
-        dao.setTeamDao(vo.getTeamVo());
-        dao.setUserDao(vo.getUserVo());
+        dao.setTeamRelation(vo.getTeamVo());
+        dao.setUserRelation(vo.getUserVo());
         dao.setProjectStatus(FruitDict.ProjectDict.UNDERWAY.name());
         this.insert(dao);
     }
 
-    public List<FruitProject> finds(FruitProjectVo vo) {
+    public final List<FruitProjectDao> findRelation(FruitProjectVo vo) {
+        final FruitProjectDao dao = FruitProject.getProjectDao();
+        dao.setUuid(vo.getUuidVo());
+        dao.setTitle(vo.getTitle());
+        dao.setProjectStatus(vo.getProjectStatus());
+        return this.findRelation(dao);
+    }
+
+    public final List<FruitProjectDao> finds(FruitProjectVo vo) {
         final FruitProjectDao dao = FruitProject.getProjectDao();
         dao.setUuid(vo.getUuidVo());
         dao.setTitle(vo.getTitle());
@@ -67,30 +73,29 @@ public abstract class AbstractDaoProject implements InterfaceDao {
         return this.finds(dao);
     }
 
-    public FruitProject findByUUID(String uuid) {
-        final FruitProjectDao dao = FruitProject.getProjectDao();
-        dao.setUuid(uuid);
-        final List data = this.finds(dao);
-        if (data.isEmpty())
-            throw new CheckProjectException("【findByUUID】无匹配信息");
-        return (FruitProject) data.get(0);
+    public final FruitProject findByUUID(FruitProjectVo vo) {
+        return this.findByUUID(vo.getUuidVo());
     }
 
-    public void update(FruitProjectVo vo) {
+    public final void update(FruitProjectVo vo) {
+        if (!this.findByUUID(vo.getUuidVo()).isNotEmpty())
+            throw new CheckProjectException("项目不存在");
         final FruitProjectDao dao = FruitProject.getProjectDao();
-        dao.setUuid(this.findByUUID(vo.getUuidVo()).getUuid());
+        dao.setUuid(vo.getUuidVo());
         dao.setTitle(vo.getTitle());
         dao.setDescription(vo.getDescription());
         dao.setPredictEndDate(vo.getPredictEndDate());
         dao.setProjectStatus(vo.getProjectStatus());
-        dao.setTeamDao(vo.getTeamVo());
-        dao.setUserDao(vo.getUserVo());
+        dao.setTeamRelation(vo.getTeamVo());
+        dao.setUserRelation(vo.getUserVo());
         this.update(dao);
     }
 
-    public void updateStatus(FruitProjectVo vo) {
+    public final void updateStatus(FruitProjectVo vo) {
+        if (!this.findByUUID(vo.getUuidVo()).isNotEmpty())
+            throw new CheckProjectException("项目不存在");
         final FruitProjectDao data = FruitProject.getProjectDao();
-        data.setUuid(this.findByUUID(vo.getUuidVo()).getUuid());
+        data.setUuid(vo.getUuidVo());
         data.setProjectStatus(vo.getProjectStatus());
         this.updateStatus(data);
     }
