@@ -16,7 +16,7 @@
         <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
-        <collection resultMap="UserResultMap" property="userRelation"
+        <collection resultMap="UserResultMap" property="users"
                     columnPrefix="user_">
         </collection>
     </resultMap>

@@ -3,6 +3,8 @@ package wowjoy.fruits.ms.module.project;
 import org.apache.commons.lang3.StringUtils;
 import wowjoy.fruits.ms.module.relation.entity.ProjectTeamRelation;
 import wowjoy.fruits.ms.module.relation.entity.UserProjectRelation;
+import wowjoy.fruits.ms.module.user.FruitUser;
+import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.time.LocalDateTime;
@@ -14,11 +16,22 @@ import java.util.List;
  */
 public class FruitProjectDao extends FruitProject {
 
+    protected FruitProjectDao() {
+        setUuid(null);
+    }
+
     private List<ProjectTeamRelation> teamRelation;
     private List<UserProjectRelation> userRelation;
 
-    protected FruitProjectDao() {
-        setUuid(null);
+    private List<FruitUserDao> users;
+    private FruitUserDao principal;
+
+    public List<FruitUserDao> getUsers() {
+        return users;
+    }
+
+    public void setUsers(List<FruitUserDao> users) {
+        this.users = users;
     }
 
     @Override
@@ -32,6 +45,14 @@ public class FruitProjectDao extends FruitProject {
         super.setProjectStatus(projectStatus);
         if (FruitDict.ProjectDict.COMPLETE.equals(projectStatus))
             this.setEndDateTime(java.sql.Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
+    }
+
+    public FruitUserDao getPrincipal() {
+        return principal;
+    }
+
+    public void setPrincipal(FruitUserDao principal) {
+        this.principal = principal;
     }
 
     public List<ProjectTeamRelation> getTeamRelation() {

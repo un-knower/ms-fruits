@@ -12,6 +12,8 @@ import wowjoy.fruits.ms.module.project.FruitProjectExample;
 import wowjoy.fruits.ms.module.project.mapper.FruitProjectMapper;
 import wowjoy.fruits.ms.module.relation.entity.ProjectTeamRelation;
 import wowjoy.fruits.ms.module.relation.entity.UserProjectRelation;
+import wowjoy.fruits.ms.module.user.FruitUser;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.util.List;
 
@@ -47,8 +49,20 @@ public class ProjectDaoImpl extends AbstractDaoProject {
             criteria.andProjectStatusEqualTo(dao.getProjectStatus());
         if (StringUtils.isNotBlank(dao.getUuid()))
             criteria.andUuidEqualTo(dao.getUuid());
-        return projectMapper.selectUserRelationByExample(example);
+        List<FruitProjectDao> result = projectMapper.selectUserRelationByExample(example);
+        projectParse(result);
+        return result;
     }
+
+    private void projectParse(List<FruitProjectDao> result) {
+        result.forEach((project) -> {
+            project.getUsers().forEach((user) -> {
+                if (FruitDict.UserProjectDict.PRINCIPAL.name().equals(user.getProjectRole()))
+                    project.setPrincipal(user);
+            });
+        });
+    }
+
 
     @Override
     protected List<FruitProjectDao> finds(FruitProjectDao dao) {
