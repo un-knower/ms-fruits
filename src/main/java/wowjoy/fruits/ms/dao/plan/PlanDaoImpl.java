@@ -15,6 +15,7 @@ import wowjoy.fruits.ms.module.plan.mapper.FruitPlanMapper;
 import wowjoy.fruits.ms.module.relation.entity.PlanUserRelation;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
+import java.text.MessageFormat;
 import java.util.List;
 import java.util.Objects;
 
@@ -72,7 +73,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         /*查询所有月计划*/
         criteria.andParentIdIsNull();
         if (StringUtils.isNotBlank(dao.getTitle()))
-            criteria.andTitleEqualTo(dao.getTitle());
+            criteria.andTitleLike(MessageFormat.format("%{0}%", dao.getTitle()));
         if (StringUtils.isNotBlank(dao.getPlanStatus()))
             criteria.andPlanStatusEqualTo(dao.getPlanStatus());
         if (Objects.nonNull(dao.getStartDateDao()) && Objects.nonNull(dao.getEndDateDao()))

@@ -1,5 +1,6 @@
 package wowjoy.fruits.ms.dao.project;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import wowjoy.fruits.ms.dao.InterfaceDao;
@@ -62,7 +63,12 @@ public abstract class AbstractDaoProject implements InterfaceDao {
         dao.setUuid(vo.getUuidVo());
         dao.setTitle(vo.getTitle());
         dao.setProjectStatus(vo.getProjectStatus());
-        return this.findRelation(dao);
+        List<FruitProjectDao> result = this.findRelation(dao);
+        result.forEach((p) -> {
+            p.computeDays();
+            p.seekPrincipal();
+        });
+        return result;
     }
 
     public final List<FruitProjectDao> finds(FruitProjectVo vo) {
@@ -99,6 +105,7 @@ public abstract class AbstractDaoProject implements InterfaceDao {
         data.setProjectStatus(vo.getProjectStatus());
         this.updateStatus(data);
     }
+
 
     /*******************************************************
      * 仅用于实现类。内部类尽量采用static，非静态类不利于垃圾回收。 *

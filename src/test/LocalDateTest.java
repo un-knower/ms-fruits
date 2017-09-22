@@ -7,6 +7,10 @@ import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
+import java.time.*;
+import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * Created by wangziwen on 2017/8/24.
@@ -15,7 +19,7 @@ import java.io.InputStreamReader;
 public class LocalDateTest {
     @Test
     public void project() throws Exception {
-
+        System.out.println(Math.abs(0));
     }
 
     private InputStreamReader urlClient() throws IOException {
