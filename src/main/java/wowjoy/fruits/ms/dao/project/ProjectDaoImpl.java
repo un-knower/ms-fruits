@@ -6,14 +6,12 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wowjoy.fruits.ms.dao.relation.AbstractDaoRelation;
-import wowjoy.fruits.ms.module.project.FruitProject;
+import wowjoy.fruits.ms.exception.NullException;
 import wowjoy.fruits.ms.module.project.FruitProjectDao;
 import wowjoy.fruits.ms.module.project.FruitProjectExample;
 import wowjoy.fruits.ms.module.project.mapper.FruitProjectMapper;
 import wowjoy.fruits.ms.module.relation.entity.ProjectTeamRelation;
 import wowjoy.fruits.ms.module.relation.entity.UserProjectRelation;
-import wowjoy.fruits.ms.module.user.FruitUser;
-import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.text.MessageFormat;
 import java.util.List;
@@ -23,7 +21,7 @@ import java.util.List;
  */
 @Service
 @Transactional
-public class ProjectDaoImpl extends AbstractDaoProject {
+public class ProjectDaoImpl extends AbstractProject {
 
     @Autowired
     private FruitProjectMapper projectMapper;
@@ -34,14 +32,15 @@ public class ProjectDaoImpl extends AbstractDaoProject {
     @Autowired
     private AbstractDaoRelation userDao;
 
+    //    @ESSynchro(tClass = ProjectEsRunnable.class)
     @Override
-    protected void insert(FruitProjectDao dao) {
+    public void insert(FruitProjectDao dao) {
         projectMapper.insertSelective(dao);
         Relation.getInstance(teamDao, userDao, dao).insertTeamRelation().insertUserRelation();
     }
 
     @Override
-    protected List<FruitProjectDao> findRelation(FruitProjectDao dao) {
+    public List<FruitProjectDao> findRelation(FruitProjectDao dao) {
         FruitProjectExample example = new FruitProjectExample();
         final FruitProjectExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(dao.getTitle()))
@@ -55,7 +54,7 @@ public class ProjectDaoImpl extends AbstractDaoProject {
 
 
     @Override
-    protected List<FruitProjectDao> finds(FruitProjectDao dao) {
+    public List<FruitProjectDao> finds(FruitProjectDao dao) {
         FruitProjectExample example = new FruitProjectExample();
         final FruitProjectExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(dao.getTitle()))
@@ -68,20 +67,20 @@ public class ProjectDaoImpl extends AbstractDaoProject {
     }
 
     @Override
-    protected FruitProject findByUUID(String uuid) {
+    public FruitProjectDao findByUUID(String uuid) {
         if (StringUtils.isBlank(uuid))
             throw new CheckProjectException("【项目】uuId不能为空");
         FruitProjectExample example = new FruitProjectExample();
         example.createCriteria().andUuidEqualTo(uuid);
         List<FruitProjectDao> data = projectMapper.selectUserRelationByExample(example);
         if (data.isEmpty())
-            return FruitProject.newEmpty("项目不存在");
+            throw new NullException("项目不存在");
         return data.get(0);
     }
 
 
     @Override
-    protected void update(FruitProjectDao dao) {
+    public void update(FruitProjectDao dao) {
         /*修改项目信息*/
         FruitProjectExample example = new FruitProjectExample();
         example.createCriteria().andUuidEqualTo(dao.getUuid());
@@ -93,13 +92,14 @@ public class ProjectDaoImpl extends AbstractDaoProject {
     }
 
     @Override
-    protected void updateStatus(FruitProjectDao dao) {
+    public void updateStatus(FruitProjectDao dao) {
         if (StringUtils.isBlank(dao.getUuid()))
             throw new CheckProjectException("【updateStatus】uuid无效。");
         final FruitProjectExample example = new FruitProjectExample();
         example.createCriteria().andUuidEqualTo(dao.getUuid());
         projectMapper.updateByExampleSelective(dao, example);
     }
+
 
     /**
      * 非静态类，对外部类提供关联功能
@@ -157,5 +157,4 @@ public class ProjectDaoImpl extends AbstractDaoProject {
             return this;
         }
     }
-
 }

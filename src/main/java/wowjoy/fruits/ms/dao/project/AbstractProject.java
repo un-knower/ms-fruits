@@ -1,8 +1,5 @@
 package wowjoy.fruits.ms.dao.project;
 
-import java.time.LocalDate;
-import java.util.List;
-
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.project.FruitProject;
@@ -10,10 +7,12 @@ import wowjoy.fruits.ms.module.project.FruitProjectDao;
 import wowjoy.fruits.ms.module.project.FruitProjectVo;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
+import java.util.List;
+
 /**
  * Created by wangziwen on 2017/9/6.
  */
-public abstract class AbstractDaoProject implements InterfaceDao {
+public abstract class AbstractProject implements InterfaceDao {
     /*********************************************************************************
      * 抽象接口，私有，因为对外的公共接口用来书写业务层，发布api必须在自己的控制范围内，不发布无用的接口。*
      *********************************************************************************/
@@ -105,7 +104,6 @@ public abstract class AbstractDaoProject implements InterfaceDao {
         data.setProjectStatus(vo.getProjectStatus());
         this.updateStatus(data);
     }
-
 
     /*******************************************************
      * 仅用于实现类。内部类尽量采用static，非静态类不利于垃圾回收。 *

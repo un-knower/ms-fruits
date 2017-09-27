@@ -1,7 +1,6 @@
 package wowjoy.fruits.ms.module.util.entity;
 
 
-import org.apache.commons.lang3.EnumUtils;
 import wowjoy.fruits.ms.module.AbstractEntity;
 
 /**
@@ -53,6 +52,7 @@ public class FruitDict extends AbstractEntity {
         MEILESTONE("里程碑"),
         USERTEAM("用户-团队"),
         USERPROJECT("用户-项目"),
+        MS_FRUITS("Elasticsearch-INDEX-TYPE"),
 
         /**
          * 系统字典
@@ -395,6 +395,36 @@ public class FruitDict extends AbstractEntity {
             this.setValue(value);
         }
 
+    }
+
+    public enum ESType {
+        PROJECT("项目"),
+        PLAN("计划");
+
+
+        private String parentCode;
+        private String value;
+
+        private void setParentCode(String parentCode) {
+            this.parentCode = parentCode;
+        }
+
+        private void setValue(String value) {
+            this.value = value;
+        }
+
+        public String getParentCode() {
+            return parentCode;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        ESType(String value) {
+            this.setParentCode(Dict.MS_FRUITS.name());
+            this.setValue(value);
+        }
     }
 
 }

@@ -3,9 +3,6 @@ package wowjoy.fruits.ms.dao.user;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 import wowjoy.fruits.ms.module.user.FruitUser;
 

@@ -21,6 +21,11 @@ public class TeamController {
     @Autowired
     private AbstractDaoTeam teamDao;
 
+    @RequestMapping(value = "/relation", method = RequestMethod.GET)
+    public RestResult findRelation(@JsonArgument(type = FruitTeamVo.class) FruitTeamVo vo) {
+        return RestResult.getInstance().setData(teamDao.findRelation(vo));
+    }
+
     @RequestMapping(method = RequestMethod.GET)
     public RestResult finds(@JsonArgument(type = FruitTeamVo.class) FruitTeamVo vo) {
         return RestResult.getInstance().setData(teamDao.finds(vo));

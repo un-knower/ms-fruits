@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="wowjoy.fruits.ms.module.team.mapper.FruitTeamMapperExt">
+    <resultMap id="BaseResultMap" type="wowjoy.fruits.ms.module.team.FruitTeamDao">
+        <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
+        <result column="title" jdbcType="VARCHAR" property="title"/>
+        <result column="description" jdbcType="VARCHAR" property="description"/>
+        <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
+        <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
+        <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
+        <collection property="users" ofType="wowjoy.fruits.ms.module.user.FruitUser" resultMap="UserResultMap"
+                    columnPrefix="user_"/>
+    </resultMap>
     <resultMap id="UserResultMap" type="wowjoy.fruits.ms.module.user.FruitUser">
         <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
         <result column="user_id" jdbcType="VARCHAR" property="userId"/>
@@ -13,15 +23,6 @@
         <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
-    </resultMap>
-    <resultMap id="BaseResultMap" type="wowjoy.fruits.ms.module.team.FruitTeam">
-        <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
-        <result column="title" jdbcType="VARCHAR" property="title"/>
-        <result column="description" jdbcType="VARCHAR" property="description"/>
-        <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
-        <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
-        <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
-        <collection property="userRelation" ofType="wowjoy.fruits.ms.module.user.FruitUser" resultMap="UserResultMap" columnPrefix="user_"/>
     </resultMap>
     <sql id="Example_Where_Clause">
         <where>
@@ -75,7 +76,7 @@
     ${replace}.is_deleted as ${prefix}is_deleted
   </sql>
 
-    <select id="findRelationUser" resultMap="BaseResultMap">
+    <select id="selectUserRelationByExample" resultMap="BaseResultMap">
         SELECT
         <include refid="User_Column_List">
             <property name="replace" value="u"/>

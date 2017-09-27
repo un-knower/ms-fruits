@@ -10,6 +10,8 @@ public class PatternTest {
     public void test() throws Exception {
         final boolean matches = Pattern.matches("/static/\\w{0,}", "/static/sssss");
         System.out.println(matches);
+
+        System.out.println(Runtime.getRuntime().availableProcessors());
     }
 
 }

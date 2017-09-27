@@ -1,16 +1,13 @@
 package wowjoy.fruits.ms.dao.relation.impl;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang3.EnumUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wowjoy.fruits.ms.dao.relation.AbstractDaoRelation;
-import wowjoy.fruits.ms.module.project.FruitProject;
 import wowjoy.fruits.ms.module.relation.entity.UserProjectRelation;
 import wowjoy.fruits.ms.module.relation.example.UserProjectRelationExample;
 import wowjoy.fruits.ms.module.relation.mapper.UserProjectRelationMapper;
-import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 /**
  * Created by wangziwen on 2017/9/12.

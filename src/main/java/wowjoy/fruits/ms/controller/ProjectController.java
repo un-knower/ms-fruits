@@ -6,9 +6,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import wowjoy.fruits.ms.dao.project.AbstractProject;
 import wowjoy.fruits.ms.module.project.FruitProject;
 import wowjoy.fruits.ms.module.project.FruitProjectVo;
-import wowjoy.fruits.ms.dao.project.AbstractDaoProject;
 import wowjoy.fruits.ms.util.JsonArgument;
 import wowjoy.fruits.ms.util.RestResult;
 
@@ -19,9 +19,10 @@ import wowjoy.fruits.ms.util.RestResult;
 @RequestMapping("/v1/api/project")
 public class ProjectController {
 
+
     @Qualifier("projectDaoImpl")
     @Autowired
-    private AbstractDaoProject projectDaoImpl;
+    private AbstractProject projectDaoImpl;
 
     @RequestMapping(value = "/relation", method = RequestMethod.GET)
     public RestResult findRelation(@JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {

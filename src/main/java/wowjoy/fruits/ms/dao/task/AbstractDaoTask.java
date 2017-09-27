@@ -3,8 +3,6 @@ package wowjoy.fruits.ms.dao.task;
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.module.task.FruitTask;
 
-import java.util.List;
-
 /**
  * Created by wangziwen on 2017/8/30.
  */

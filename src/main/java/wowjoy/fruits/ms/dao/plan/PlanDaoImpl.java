@@ -9,7 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 import wowjoy.fruits.ms.dao.relation.impl.PlanUserDaoImpl;
 import wowjoy.fruits.ms.module.plan.FruitPlan;
 import wowjoy.fruits.ms.module.plan.FruitPlanDao;
-import wowjoy.fruits.ms.module.plan.FruitPlanEmpty;
 import wowjoy.fruits.ms.module.plan.example.FruitPlanExample;
 import wowjoy.fruits.ms.module.plan.mapper.FruitPlanMapper;
 import wowjoy.fruits.ms.module.relation.entity.PlanUserRelation;

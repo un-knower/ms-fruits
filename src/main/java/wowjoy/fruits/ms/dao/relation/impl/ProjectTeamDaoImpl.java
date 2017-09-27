@@ -8,7 +8,6 @@ import wowjoy.fruits.ms.dao.relation.AbstractDaoRelation;
 import wowjoy.fruits.ms.module.relation.entity.ProjectTeamRelation;
 import wowjoy.fruits.ms.module.relation.example.ProjectTeamRelationExample;
 import wowjoy.fruits.ms.module.relation.mapper.ProjectTeamRelationMapper;
-import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 /**
  * Created by wangziwen on 2017/9/12.

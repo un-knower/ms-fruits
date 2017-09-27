@@ -6,4 +6,4 @@ server:
 pagehelper:
   helper-dialect: mysql
   reasonable: true
-debug: true
+#debug: true

@@ -1,13 +1,14 @@
 package wowjoy.fruits.ms.module.team.mapper;
 
-import java.util.List;
-import wowjoy.fruits.ms.module.team.FruitTeam;
+import wowjoy.fruits.ms.module.team.FruitTeamDao;
 import wowjoy.fruits.ms.module.team.FruitTeamExample;
+
+import java.util.List;
 
 /**
  * Created by wangziwen on 2017/9/11.
  */
 public interface FruitTeamMapperExt {
 
-    List<FruitTeam> selectUserRelationByExample(FruitTeamExample example);
+    List<FruitTeamDao> selectUserRelationByExample(FruitTeamExample example);
 }

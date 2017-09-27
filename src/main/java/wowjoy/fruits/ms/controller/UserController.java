@@ -6,14 +6,11 @@ import org.springframework.web.bind.annotation.RestController;
 import wowjoy.fruits.ms.dao.user.AbstractDaoUser;
 import wowjoy.fruits.ms.dao.user.UserDaoImpl;
 import wowjoy.fruits.ms.module.user.FruitUser;
-import wowjoy.fruits.ms.module.user.FruitUserEmpty;
 import wowjoy.fruits.ms.module.user.FruitUserVo;
 import wowjoy.fruits.ms.util.JsonArgument;
 import wowjoy.fruits.ms.util.RestResult;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import java.lang.reflect.Type;
 
 /**
  */
