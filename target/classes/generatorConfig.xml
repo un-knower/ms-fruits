@@ -31,7 +31,7 @@
             <property name="enableSubPackages" value="true"/>
         </javaClientGenerator>
 
-        <table schema="planUserRelation" tableName="plan_user_relation" domainObjectName="PlanUserRelation">
+        <table schema="planProjectRelation" tableName="plan_project_relation" domainObjectName="PlanProjectRelation">
             <ignoreColumn column="inc_id"/>
         </table>
 

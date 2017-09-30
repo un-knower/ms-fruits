@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import wowjoy.fruits.ms.dao.plan.AbstractDaoPlan;
+import wowjoy.fruits.ms.module.plan.FruitPlan;
+import wowjoy.fruits.ms.module.plan.FruitPlanSummaryVo;
 import wowjoy.fruits.ms.module.plan.FruitPlanVo;
 import wowjoy.fruits.ms.util.JsonArgument;
 import wowjoy.fruits.ms.util.RestResult;
@@ -35,7 +37,7 @@ public class PlanController {
      */
     @RequestMapping(value = "{uuid}", method = RequestMethod.GET)
     public RestResult findByUUID(@PathVariable("uuid") String uuid) {
-        FruitPlanVo vo = FruitPlanVo.getFruitPlanVo();
+        FruitPlanVo vo = FruitPlanVo.getVo();
         vo.setUuidVo(uuid);
         return RestResult.getInstance().setData(dataPlanDao.findByUUID(vo));
     }
@@ -80,17 +82,58 @@ public class PlanController {
      * 添加
      */
     @RequestMapping(method = RequestMethod.POST)
-    public void insert(@JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlan) {
+    public RestResult insert(@JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlan) {
         dataPlanDao.insert(fruitPlan);
+        return RestResult.getInstance().setData(fruitPlan.getUuid());
     }
 
     /**
      * 修改
      */
     @RequestMapping(value = "{uuid}", method = RequestMethod.PUT)
-    public void findByUUID(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlan) {
+    public RestResult findByUUID(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlan) {
         fruitPlan.setUuidVo(uuid);
         dataPlanDao.update(fruitPlan);
+        return RestResult.getInstance().setData(uuid);
+    }
+
+    /**
+     * 终止计划
+     *
+     * @param uuid
+     * @param vo
+     * @return
+     */
+    @RequestMapping(value = "/end/{uuid}", method = RequestMethod.DELETE)
+    public RestResult end(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
+        vo.setUuidVo(uuid);
+        dataPlanDao.end(vo);
+        return RestResult.getInstance().setData(uuid);
+    }
+
+    /**
+     * 删除计划
+     *
+     * @param uuid
+     */
+    @RequestMapping(value = "{uuid}", method = RequestMethod.DELETE)
+    public RestResult delete(@PathVariable("uuid") String uuid) {
+        FruitPlanVo vo = FruitPlan.getVo();
+        vo.setUuidVo(uuid);
+        dataPlanDao.delete(vo);
+        return RestResult.getInstance().setData(uuid);
+    }
+
+    /**
+     * 添加进度小结
+     *
+     * @param vo
+     * @return
+     */
+    @RequestMapping(value = "/summary", method = RequestMethod.POST)
+    public RestResult insertSummary(@JsonArgument(type = FruitPlanSummaryVo.class) FruitPlanSummaryVo vo) {
+        dataPlanDao.insertSummary(vo);
+        return RestResult.getInstance().setData(vo.getUuid());
     }
 
 

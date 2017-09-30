@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * Created by wangziwen on 2017/9/6.
  */
-public abstract class AbstractProject implements InterfaceDao {
+public abstract class AbstractDaoProject implements InterfaceDao {
     /*********************************************************************************
      * 抽象接口，私有，因为对外的公共接口用来书写业务层，发布api必须在自己的控制范围内，不发布无用的接口。*
      *********************************************************************************/
@@ -39,10 +39,18 @@ public abstract class AbstractProject implements InterfaceDao {
 
     protected abstract void updateStatus(FruitProjectDao dao);
 
+    protected abstract void delete(String uuid);
+
     /*******************************
      * PUBLIC 函数，公共接口         *
      * 尽量保证规范，不直接调用dao接口 *
      *******************************/
+
+    public final void delete(FruitProjectVo vo) {
+        if (!this.findByUUID(vo.getUuidVo()).isNotEmpty())
+            throw new CheckProjectException("项目不存在");
+        delete(vo.getUuidVo());
+    }
 
     public final void insert(FruitProjectVo vo) {
         final FruitProjectDao dao = FruitProject.getProjectDao();
@@ -51,8 +59,8 @@ public abstract class AbstractProject implements InterfaceDao {
         dao.setProjectStatus(vo.getProjectStatus());
         dao.setPredictEndDate(vo.getPredictEndDate());
         dao.setDescription(vo.getDescription());
-        dao.setTeamRelation(vo.getTeamVo());
-        dao.setUserRelation(vo.getUserVo());
+        dao.setTeamRelation(vo.getTeamRelation());
+        dao.setUserRelation(vo.getUserRelation());
         dao.setProjectStatus(FruitDict.ProjectDict.UNDERWAY.name());
         this.insert(dao);
     }
@@ -91,8 +99,8 @@ public abstract class AbstractProject implements InterfaceDao {
         dao.setDescription(vo.getDescription());
         dao.setPredictEndDate(vo.getPredictEndDate());
         dao.setProjectStatus(vo.getProjectStatus());
-        dao.setTeamRelation(vo.getTeamVo());
-        dao.setUserRelation(vo.getUserVo());
+        dao.setTeamRelation(vo.getTeamRelation());
+        dao.setUserRelation(vo.getUserRelation());
         this.update(dao);
     }
 

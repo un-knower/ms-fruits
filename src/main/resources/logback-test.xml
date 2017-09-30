@@ -2,4 +2,5 @@
 <configuration>
     <include resource="org/springframework/boot/logging/logback/base.xml"/>
     <logger name="wowjoy.fruits.ms.module" level="DEBUG"></logger>
+    <logger name="wowjoy.fruits.ms.elastic" level="DEBUG"></logger>
 </configuration>

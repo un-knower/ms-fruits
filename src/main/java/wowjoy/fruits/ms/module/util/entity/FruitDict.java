@@ -46,8 +46,10 @@ public class FruitDict extends AbstractEntity {
          */
         PROJECT("项目"),
         PLAN("计划"),
-        PLANUSER("计划-用户"),
         TASK("任务"),
+        USER("用户"),
+        TEAM("团队"),
+        PLANUSER("计划-用户"),
         TASKUSER("任务-用户"),
         MEILESTONE("里程碑"),
         USERTEAM("用户-团队"),
@@ -63,7 +65,9 @@ public class FruitDict extends AbstractEntity {
 
         MAN("男"),
 
-        GIRLS("女");
+        GIRLS("女"),
+
+        DELETE("删除标识"), ADD("添加标识");
 
         private String value;
 

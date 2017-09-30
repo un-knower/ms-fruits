@@ -3,16 +3,16 @@ package wowjoy.fruits.ms.util;
 /**
  * Created by wangziwen on 2017/8/28.
  */
-public class RestResult {
+public class RestResult<T> {
     RestResult() {
-        this(1000,null,null,true);
+        this(1000, null, null, true);
     }
 
-    public RestResult(Object data, boolean success) {
-        this(1000,null,data,success);
+    public RestResult(T data, boolean success) {
+        this(1000, null, data, success);
     }
 
-    public RestResult(Integer code, String msg, Object data, boolean success) {
+    public RestResult(Integer code, String msg, T data, boolean success) {
         this.code = code;
         this.msg = msg;
         this.data = data;
@@ -21,18 +21,19 @@ public class RestResult {
 
     private Integer code = 1000;
     private String msg;
-    private Object data;
+    private T data;
     private boolean success = true;
 
     public void setCode(Integer code) {
         this.code = code;
     }
 
-    public void setMsg(String msg) {
+    public RestResult setMsg(String msg) {
         this.msg = msg;
+        return this;
     }
 
-    public RestResult setData(Object data) {
+    public RestResult setData(T data) {
         this.data = data;
         return this;
     }
@@ -54,11 +55,19 @@ public class RestResult {
         return success;
     }
 
-    public Object getData() {
+    public T getData() {
         return data;
     }
 
     public static RestResult getInstance() {
         return new RestResult();
+    }
+
+    public static <T> RestResultPage newPage(int pageNum, int pageSize, long total, T data) {
+        return new RestResultPage(pageNum, pageSize, total, data);
+    }
+
+    public static RestResult newError(String msg) {
+        return new RestResultError(msg);
     }
 }

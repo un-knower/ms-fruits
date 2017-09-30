@@ -30,10 +30,10 @@ public class PlanUserDaoImpl<T extends PlanUserRelation> extends AbstractDaoRela
         final PlanUserRelationExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(relation.getPlanId()))
             criteria.andPlanIdEqualTo(relation.getPlanId());
-        else if (StringUtils.isNotBlank(relation.getUserId()))
+        if (StringUtils.isNotBlank(relation.getUserId()))
             criteria.andUserIdEqualTo(relation.getUserId());
-        else
-            throw new CheckRelationException("【ProjectTeamDaoImpl.remove】缺少删除条件");
+        if (criteria.getAllCriteria().isEmpty())
+            throw new CheckRelationException("【PlanUserDaoImpl.remove】缺少删除条件");
         mapper.deleteByExample(example);
     }
 }

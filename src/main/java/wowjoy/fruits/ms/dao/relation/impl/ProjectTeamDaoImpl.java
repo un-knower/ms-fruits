@@ -30,9 +30,9 @@ public class ProjectTeamDaoImpl<T extends ProjectTeamRelation> extends AbstractD
         final ProjectTeamRelationExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(relation.getProjectId()))
             criteria.andProjectIdEqualTo(relation.getProjectId());
-        else if (StringUtils.isNotBlank(relation.getTeamId()))
+        if (StringUtils.isNotBlank(relation.getTeamId()))
             criteria.andTeamIdEqualTo(relation.getTeamId());
-        else
+        if (criteria.getAllCriteria().isEmpty())
             throw new CheckRelationException("【ProjectTeamDaoImpl.remove】缺少删除条件");
         mapper.deleteByExample(example);
     }

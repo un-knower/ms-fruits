@@ -73,11 +73,11 @@ public class FruitPlan extends AbstractEntity {
         return new FruitPlan();
     }
 
-    public static FruitPlanDao getFruitPlanDao() {
+    public static FruitPlanDao getDao() {
         return new FruitPlanDao();
     }
 
-    public static FruitPlanVo getFruitPlanVo() {
+    public static FruitPlanVo getVo() {
         return new FruitPlanVo();
     }
 }

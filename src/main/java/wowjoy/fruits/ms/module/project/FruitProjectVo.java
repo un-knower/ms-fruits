@@ -1,13 +1,19 @@
 package wowjoy.fruits.ms.module.project;
 
+import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import org.apache.commons.lang3.EnumUtils;
+import org.assertj.core.util.Lists;
+import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.relation.entity.ProjectTeamRelation;
 import wowjoy.fruits.ms.module.relation.entity.UserProjectRelation;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by wangziwen on 2017/9/12.
@@ -18,8 +24,34 @@ public class FruitProjectVo extends FruitProject {
     }
 
     private String uuidVo;
-    private List<ProjectTeamRelation> teamVo;
-    private List<UserProjectRelation> userVo;
+    private Map<String, List<ProjectTeamRelation>> teamRelation;
+    private Map<String, List<UserProjectRelation>> userRelation;
+
+    public Map<String, List<ProjectTeamRelation>> getTeamRelation() {
+        return parset(teamRelation);
+    }
+
+    public void setTeamRelation(Map<String, List<ProjectTeamRelation>> teamRelation) {
+        this.teamRelation = teamRelation;
+    }
+
+    public Map<String, List<UserProjectRelation>> getUserRelation() {
+        return parset(userRelation);
+    }
+
+    public void setUserRelation(Map<String, List<UserProjectRelation>> userRelation) {
+        this.userRelation = userRelation;
+    }
+
+    private <T extends AbstractEntity> Map<String, List<T>> parset(Map<String, List<T>> relation) {
+        LinkedHashMap<String, List<T>> result = Maps.newLinkedHashMap();
+        ArrayList<FruitDict.Dict> dicts = Lists.newArrayList(FruitDict.Dict.DELETE, FruitDict.Dict.ADD);
+        dicts.forEach((i) -> {
+            if (relation.containsKey(i.name().toLowerCase()))
+                result.put(i.name().toLowerCase(), relation.get(i.name().toLowerCase()));
+        });
+        return result;
+    }
 
     public void setUuidVo(String uuidVo) {
         this.uuidVo = uuidVo;
@@ -27,30 +59,6 @@ public class FruitProjectVo extends FruitProject {
 
     public String getUuidVo() {
         return uuidVo;
-    }
-
-    public List<ProjectTeamRelation> getTeamVo() {
-        return teamVo;
-    }
-
-    public void setTeamVo(List<ProjectTeamRelation> teamVo) {
-        this.teamVo = teamVo;
-    }
-
-    public List<UserProjectRelation> getUserVo() {
-        return userVo;
-    }
-
-    public void setUserVo(List<UserProjectRelation> userVo) {
-        this.userVo = userVo;
-    }
-
-    public boolean isNullTeamVo() {
-        return this.getTeamVo() != null && this.getTeamVo().size() > 0 ? false : true;
-    }
-
-    public boolean isNullUserVo() {
-        return this.getUserVo() != null && this.getUserVo().size() > 0 ? false : true;
     }
 
     public void checkStatus() {

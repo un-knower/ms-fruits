@@ -1,17 +1,15 @@
 package wowjoy.fruits.ms.dao.plan;
 
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
-import wowjoy.fruits.ms.module.plan.FruitPlan;
-import wowjoy.fruits.ms.module.plan.FruitPlanDao;
-import wowjoy.fruits.ms.module.plan.FruitPlanVo;
+import wowjoy.fruits.ms.module.plan.*;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by wangziwen on 2017/8/25.
@@ -35,10 +33,21 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
 
     protected abstract void update(FruitPlanDao dao);
 
+    protected abstract void delete(String uuid);
+
+    protected abstract void insertSummary(FruitPlanSummaryDao dao);
+
+    protected abstract void deleteSummarys(FruitPlanSummaryDao dao);
+
     /*******************************
      * PUBLIC 函数，公共接口         *
      * 尽量保证规范，不直接调用dao接口 *
      *******************************/
+
+    public final void delete(FruitPlanVo vo) {
+        if (!this.findByUUID(vo.getUuidVo()).isNotEmpty()) throw new CheckPlanException("计划不存在，删除失败");
+        delete(vo.getUuidVo());
+    }
 
     /**
      * 月计划
@@ -46,8 +55,8 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
      * @param vo
      * @return
      */
-    public List<FruitPlanDao> findRelationMonth(FruitPlanVo vo) {
-        final FruitPlanDao dao = FruitPlan.getFruitPlanDao();
+    public final List<FruitPlanDao> findRelationMonth(FruitPlanVo vo) {
+        final FruitPlanDao dao = FruitPlan.getDao();
         dao.setTitle(vo.getTitle());
         dao.setPlanStatus(vo.getPlanStatus());
         dao.setStartDateDao(vo.getStartDateVo());
@@ -61,8 +70,8 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
      * @param vo
      * @return
      */
-    public List<FruitPlanDao> findRelationWeek(FruitPlanVo vo) {
-        FruitPlanDao dao = FruitPlan.getFruitPlanDao();
+    public final List<FruitPlanDao> findRelationWeek(FruitPlanVo vo) {
+        FruitPlanDao dao = FruitPlan.getDao();
         dao.setTitle(vo.getTitle());
         dao.setParentId(vo.getParentId());
         dao.setPlanStatus(vo.getPlanStatus());
@@ -77,8 +86,8 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
      * @param vo
      * @return
      */
-    public List<FruitPlanDao> findMonth(FruitPlanVo vo) {
-        final FruitPlanDao dao = FruitPlan.getFruitPlanDao();
+    public final List<FruitPlanDao> findMonth(FruitPlanVo vo) {
+        final FruitPlanDao dao = FruitPlan.getDao();
         dao.setTitle(vo.getTitle());
         dao.setPlanStatus(vo.getPlanStatus());
         dao.setStartDateDao(vo.getStartDateVo());
@@ -92,8 +101,8 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
      * @param vo
      * @return
      */
-    public List<FruitPlanDao> findWeek(FruitPlanVo vo) {
-        FruitPlanDao dao = FruitPlan.getFruitPlanDao();
+    public final List<FruitPlanDao> findWeek(FruitPlanVo vo) {
+        FruitPlanDao dao = FruitPlan.getDao();
         dao.setTitle(vo.getTitle());
         dao.setParentId(vo.getParentId());
         dao.setPlanStatus(vo.getPlanStatus());
@@ -102,12 +111,12 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         return this.findWeek(dao, vo.getPageNum(), vo.getPageSize());
     }
 
-    public FruitPlan findByUUID(FruitPlanVo vo) {
+    public final FruitPlan findByUUID(FruitPlanVo vo) {
         return this.findByUUID(vo.getUuidVo());
     }
 
-    public void insert(FruitPlanVo vo) {
-        FruitPlanDao dao = FruitPlan.getFruitPlanDao();
+    public final void insert(FruitPlanVo vo) {
+        FruitPlanDao dao = FruitPlan.getDao();
         dao.setUuid(vo.getUuid());
         dao.setPlanStatus(FruitDict.PlanDict.PENDING.name());
         dao.setEndDate(vo.getEndDate());
@@ -115,19 +124,40 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         dao.setParentId(vo.getParentId());
         dao.setDescription(vo.getDescription());
         dao.setUserRelation(vo.getUserRelation());
+        dao.setProjectRelation(vo.getProjectRelation());
         this.insert(dao);
     }
 
-    public void update(FruitPlanVo vo) {
+    public final void insertSummary(FruitPlanSummaryVo vo) {
+        if (!this.findByUUID(vo.getPlanId()).isNotEmpty()) throw new CheckPlanException("计划不存在，修改失败");
+        FruitPlanSummaryDao dao = FruitPlanSummary.getDao();
+        dao.setUuid(vo.getUuid());
+        dao.setPlanId(vo.getPlanId());
+        dao.setPercent(vo.getPercent());
+        dao.setDescription(vo.getDescription());
+        this.insertSummary(dao);
+    }
+
+    public final void update(FruitPlanVo vo) {
         if (!this.findByUUID(vo.getUuidVo()).isNotEmpty()) throw new CheckPlanException("计划不存在，修改失败");
-        FruitPlanDao dao = FruitPlan.getFruitPlanDao();
+        FruitPlanDao dao = FruitPlan.getDao();
         dao.setUuid(vo.getUuidVo());
         dao.setTitle(vo.getTitle());
         dao.setPlanStatus(vo.getPlanStatus());
         dao.setUserRelation(vo.getUserRelation());
+        dao.setProjectRelation(vo.getProjectRelation());
         dao.setDescription(vo.getDescription());
         dao.setEndDate(vo.getEndDate());
         dao.setPercent(vo.getPercent());
+        this.update(dao);
+    }
+
+    public final void end(FruitPlanVo vo) {
+        if (!this.findByUUID(vo.getUuidVo()).isNotEmpty()) throw new CheckPlanException("计划不存在，终止失败");
+        FruitPlanDao dao = FruitPlan.getDao();
+        dao.setUuid(vo.getUuidVo());
+        dao.setPlanStatus(FruitDict.PlanDict.END.name());
+        dao.setDescription(vo.getDescription());
         this.update(dao);
     }
 
@@ -137,7 +167,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
      * @param year
      * @return
      */
-    public Map<Integer, List<Week>> yearEachWeek(int year) {
+    public final Map<Integer, List<Week>> yearEachWeek(int year) {
         return DateUtils.getInstance(year).weeks();
     }
 

@@ -81,7 +81,7 @@ public class FruitUser extends AbstractEntity {
         return new FruitUserDao();
     }
 
-    public static FruitUser getFruitUserVo() {
+    public static FruitUserVo getFruitUserVo() {
         return new FruitUserVo();
     }
 

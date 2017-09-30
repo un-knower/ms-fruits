@@ -7,11 +7,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wowjoy.fruits.ms.dao.relation.AbstractDaoRelation;
 import wowjoy.fruits.ms.exception.NullException;
+import wowjoy.fruits.ms.module.project.FruitProject;
 import wowjoy.fruits.ms.module.project.FruitProjectDao;
 import wowjoy.fruits.ms.module.project.FruitProjectExample;
 import wowjoy.fruits.ms.module.project.mapper.FruitProjectMapper;
 import wowjoy.fruits.ms.module.relation.entity.ProjectTeamRelation;
 import wowjoy.fruits.ms.module.relation.entity.UserProjectRelation;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.text.MessageFormat;
 import java.util.List;
@@ -21,7 +23,7 @@ import java.util.List;
  */
 @Service
 @Transactional
-public class ProjectDaoImpl extends AbstractProject {
+public class ProjectDaoImpl extends AbstractDaoProject {
 
     @Autowired
     private FruitProjectMapper projectMapper;
@@ -32,7 +34,6 @@ public class ProjectDaoImpl extends AbstractProject {
     @Autowired
     private AbstractDaoRelation userDao;
 
-    //    @ESSynchro(tClass = ProjectEsRunnable.class)
     @Override
     public void insert(FruitProjectDao dao) {
         projectMapper.insertSelective(dao);
@@ -49,6 +50,7 @@ public class ProjectDaoImpl extends AbstractProject {
             criteria.andProjectStatusEqualTo(dao.getProjectStatus());
         if (StringUtils.isNotBlank(dao.getUuid()))
             criteria.andUuidEqualTo(dao.getUuid());
+        example.setOrderByClause("create_date_time desc");
         return projectMapper.selectUserRelationByExample(example);
     }
 
@@ -94,12 +96,24 @@ public class ProjectDaoImpl extends AbstractProject {
     @Override
     public void updateStatus(FruitProjectDao dao) {
         if (StringUtils.isBlank(dao.getUuid()))
-            throw new CheckProjectException("【updateStatus】uuid无效。");
+            throw new CheckProjectException("【项目】uuid无效。");
         final FruitProjectExample example = new FruitProjectExample();
         example.createCriteria().andUuidEqualTo(dao.getUuid());
         projectMapper.updateByExampleSelective(dao, example);
     }
 
+    @Override
+    protected void delete(String uuid) {
+        if (StringUtils.isBlank(uuid))
+            throw new CheckProjectException("【项目】uuid无效。");
+        FruitProjectExample example = new FruitProjectExample();
+        example.createCriteria().andUuidEqualTo(uuid);
+        projectMapper.deleteByExample(example);
+        FruitProjectDao projectDao = FruitProject.getProjectDao();
+        projectDao.setUuid(uuid);
+        Relation.getInstance(teamDao, userDao, projectDao)
+                .removesUserRelation().removesTeamRelation();
+    }
 
     /**
      * 非静态类，对外部类提供关联功能
@@ -122,16 +136,37 @@ public class ProjectDaoImpl extends AbstractProject {
         /**
          * 删除所有关联用户
          */
-        private Relation removeUserRelation() {
+        private Relation removesUserRelation() {
             UserDao.remove(UserProjectRelation.newInstance(Dao.getUuid(), null));
             return this;
         }
 
         /**
+         * 删除指定关联用户
+         */
+        private Relation removeUserRelation() {
+            Dao.getUserRelation(FruitDict.Dict.DELETE).forEach((i) -> {
+                UserDao.remove(UserProjectRelation.newInstance(Dao.getUuid(), i.getUserId()));
+            });
+            return this;
+        }
+
+
+        /**
          * 删除所有关联团队
          */
-        private Relation removeTeamRelation() {
+        private Relation removesTeamRelation() {
             TeamDao.remove(ProjectTeamRelation.newInstance(Dao.getUuid(), null));
+            return this;
+        }
+
+        /**
+         * 删除指定关联团队
+         */
+        private Relation removeTeamRelation() {
+            Dao.getTeamRelation(FruitDict.Dict.DELETE).forEach((i) -> {
+                UserDao.remove(ProjectTeamRelation.newInstance(Dao.getUuid(), i.getTeamId()));
+            });
             return this;
         }
 
@@ -139,7 +174,7 @@ public class ProjectDaoImpl extends AbstractProject {
          * 添加用户关联
          */
         private Relation insertUserRelation() {
-            Dao.getUserRelation().forEach((i) -> {
+            Dao.getUserRelation(FruitDict.Dict.ADD).forEach((i) -> {
                 i.setProjectId(Dao.getUuid());
                 UserDao.insert(i);
             });
@@ -150,7 +185,7 @@ public class ProjectDaoImpl extends AbstractProject {
          * 添加团队关联
          */
         private Relation insertTeamRelation() {
-            Dao.getTeamRelation().forEach((i) -> {
+            Dao.getTeamRelation(FruitDict.Dict.ADD).forEach((i) -> {
                 i.setProjectId(Dao.getUuid());
                 TeamDao.insert(i);
             });

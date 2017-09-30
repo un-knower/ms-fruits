@@ -42,10 +42,17 @@ public class PlanUserRelation extends AbstractEntity {
         }
     }
 
-    public static PlanUserRelation getInstance(String planId, String userId) {
+    public static PlanUserRelation getInstance(String planId) {
+        PlanUserRelation result = new PlanUserRelation();
+        result.setPlanId(planId);
+        return getInstance(planId, null, null);
+    }
+
+    public static PlanUserRelation getInstance(String planId, String userId, FruitDict.PlanUserDict role) {
         PlanUserRelation result = new PlanUserRelation();
         result.setPlanId(planId);
         result.setUserId(userId);
+        result.setPuRole(role != null ? role.name() : null);
         return result;
     }
 }

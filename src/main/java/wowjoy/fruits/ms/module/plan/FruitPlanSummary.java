@@ -24,4 +24,18 @@ public class FruitPlanSummary extends AbstractEntity {
     public void setPercent(int percent) {
         this.percent = percent;
     }
+
+    public static FruitPlanSummaryDao getDao() {
+        return new FruitPlanSummaryDao();
+    }
+
+    public static FruitPlanSummaryDao newDao(String planId) {
+        FruitPlanSummaryDao result = new FruitPlanSummaryDao();
+        result.setPlanId(planId);
+        return result;
+    }
+
+    public static FruitPlanSummaryVo getVo() {
+        return new FruitPlanSummaryVo();
+    }
 }

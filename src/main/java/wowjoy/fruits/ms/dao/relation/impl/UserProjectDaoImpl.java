@@ -30,9 +30,9 @@ public class UserProjectDaoImpl<T extends UserProjectRelation> extends AbstractD
         final UserProjectRelationExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(term.getProjectId()))
             criteria.andProjectIdEqualTo(term.getProjectId());
-        else if (StringUtils.isNotBlank(term.getUserId()))
+        if (StringUtils.isNotBlank(term.getUserId()))
             criteria.andUserIdEqualTo(term.getUserId());
-        else
+        if (criteria.getAllCriteria().isEmpty())
             throw new CheckRelationException("【UserProjectDaoImpl.remove】缺少关联条件");
         mapper.deleteByExample(example);
     }

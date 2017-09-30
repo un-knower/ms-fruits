@@ -1,5 +1,6 @@
 package wowjoy.fruits.ms.module.project;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import wowjoy.fruits.ms.module.relation.entity.ProjectTeamRelation;
 import wowjoy.fruits.ms.module.relation.entity.UserProjectRelation;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Dao层实体类
@@ -24,8 +26,8 @@ public class FruitProjectDao extends FruitProject {
         setUuid(null);
     }
 
-    private List<ProjectTeamRelation> teamRelation;
-    private List<UserProjectRelation> userRelation;
+    private Map<String, List<ProjectTeamRelation>> teamRelation;
+    private Map<String, List<UserProjectRelation>> userRelation;
 
     private List<FruitUserDao> users;
     private FruitUserDao principal;
@@ -33,6 +35,21 @@ public class FruitProjectDao extends FruitProject {
     private FruitDict.Dict isPostponed = FruitDict.Dict.N;
     private Integer days;
 
+    public List<ProjectTeamRelation> getTeamRelation(FruitDict.Dict type) {
+        return teamRelation != null && teamRelation.containsKey(type.name().toLowerCase()) ? teamRelation.get(type.name().toLowerCase()) : Lists.newLinkedList();
+    }
+
+    public void setTeamRelation(Map<String, List<ProjectTeamRelation>> teamRelation) {
+        this.teamRelation = teamRelation;
+    }
+
+    public List<UserProjectRelation> getUserRelation(FruitDict.Dict type) {
+        return userRelation != null && userRelation.containsKey(type.name().toLowerCase()) ? userRelation.get(type.name().toLowerCase()) : Lists.newLinkedList();
+    }
+
+    public void setUserRelation(Map<String, List<UserProjectRelation>> userRelation) {
+        this.userRelation = userRelation;
+    }
 
     public FruitDict.Dict getIsPostponed() {
         return isPostponed;
@@ -77,22 +94,6 @@ public class FruitProjectDao extends FruitProject {
 
     public void setPrincipal(FruitUserDao principal) {
         this.principal = principal;
-    }
-
-    public List<ProjectTeamRelation> getTeamRelation() {
-        return teamRelation;
-    }
-
-    public void setTeamRelation(List<ProjectTeamRelation> teamRelation) {
-        this.teamRelation = teamRelation;
-    }
-
-    public List<UserProjectRelation> getUserRelation() {
-        return userRelation;
-    }
-
-    public void setUserRelation(List<UserProjectRelation> userRelation) {
-        this.userRelation = userRelation;
     }
 
     /**

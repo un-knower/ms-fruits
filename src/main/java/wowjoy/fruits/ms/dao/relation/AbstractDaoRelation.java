@@ -6,7 +6,7 @@ import wowjoy.fruits.ms.exception.CheckException;
 /**
  * Created by wangziwen on 2017/9/12.
  */
-public abstract class AbstractDaoRelation<T> implements InterfaceDao{
+public abstract class AbstractDaoRelation<T> implements InterfaceDao {
 
     /**
      * 单条记录删除
@@ -17,7 +17,7 @@ public abstract class AbstractDaoRelation<T> implements InterfaceDao{
 
     /**
      * 采用物理删除 或者 物理删除
-     *
+     * <p>
      * 基本采用物理删除，有特殊需求采用逻辑删除
      *
      * @param relation
@@ -27,9 +27,9 @@ public abstract class AbstractDaoRelation<T> implements InterfaceDao{
     /**
      * 仅用于实现类。内部类尽量采用static，非静态类不利于垃圾回收。
      */
-    protected static class CheckRelationException extends CheckException{
+    protected static class CheckRelationException extends CheckException {
         public CheckRelationException(String message) {
-            super("【Relation Exception】"+message);
+            super("【Relation Exception】" + message);
         }
     }
 

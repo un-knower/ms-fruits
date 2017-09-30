@@ -1,11 +1,10 @@
 package wowjoy.fruits.ms.module.plan;
 
-import wowjoy.fruits.ms.module.relation.entity.PlanUserRelation;
-import wowjoy.fruits.ms.module.user.FruitUser;
+import com.google.common.collect.Maps;
+import org.assertj.core.util.Lists;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
-import java.util.List;
-
-import java.util.Date;
+import java.util.*;
 
 /**
  * Created by wangziwen on 2017/9/15.
@@ -16,14 +15,33 @@ public class FruitPlanVo extends FruitPlan {
     private Integer pageSize = 10;
     private Date startDateVo;
     private Date endDateVo;
-    private List<PlanUserRelation> userRelation;
+    private Map<String, List<String>> userRelation;
+    private Map<String, List<String>> projectRelation;
 
-    public List<PlanUserRelation> getUserRelation() {
-        return userRelation;
+    public Map<String, List<String>> getUserRelation() {
+        return parset(userRelation);
     }
 
-    public void setUserRelation(List<PlanUserRelation> userRelation) {
+    public void setUserRelation(Map<String, List<String>> userRelation) {
         this.userRelation = userRelation;
+    }
+
+    public Map<String, List<String>> getProjectRelation() {
+        return parset(projectRelation);
+    }
+
+    public void setProjectRelation(Map<String, List<String>> projectRelation) {
+        this.projectRelation = projectRelation;
+    }
+
+    private Map<String, List<String>> parset(Map<String, List<String>> relation) {
+        LinkedHashMap<String, List<String>> result = Maps.newLinkedHashMap();
+        ArrayList<FruitDict.Dict> dicts = Lists.newArrayList(FruitDict.Dict.DELETE, FruitDict.Dict.ADD);
+        dicts.forEach((i) -> {
+            if (relation.containsKey(i.name().toLowerCase()))
+                result.put(i.name().toLowerCase(), relation.get(i.name().toLowerCase()));
+        });
+        return result;
     }
 
     public Date getStartDateVo() {
