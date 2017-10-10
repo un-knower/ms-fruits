@@ -3,7 +3,6 @@ package wowjoy.fruits.ms.module.project;
 import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
-import org.apache.commons.lang3.EnumUtils;
 import org.assertj.core.util.Lists;
 import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.relation.entity.ProjectTeamRelation;
@@ -24,22 +23,22 @@ public class FruitProjectVo extends FruitProject {
     }
 
     private String uuidVo;
-    private Map<String, List<ProjectTeamRelation>> teamRelation;
-    private Map<String, List<UserProjectRelation>> userRelation;
+    private Map<FruitDict.Dict, List<ProjectTeamRelation>> teamRelation;
+    private Map<FruitDict.Dict, List<UserProjectRelation>> userRelation;
 
-    public Map<String, List<ProjectTeamRelation>> getTeamRelation() {
-        return parset(teamRelation);
+    public Map<FruitDict.Dict, List<ProjectTeamRelation>> getTeamRelation() {
+        return teamRelation;
     }
 
-    public void setTeamRelation(Map<String, List<ProjectTeamRelation>> teamRelation) {
+    public void setTeamRelation(Map<FruitDict.Dict, List<ProjectTeamRelation>> teamRelation) {
         this.teamRelation = teamRelation;
     }
 
-    public Map<String, List<UserProjectRelation>> getUserRelation() {
-        return parset(userRelation);
+    public Map<FruitDict.Dict, List<UserProjectRelation>> getUserRelation() {
+        return userRelation;
     }
 
-    public void setUserRelation(Map<String, List<UserProjectRelation>> userRelation) {
+    public void setUserRelation(Map<FruitDict.Dict, List<UserProjectRelation>> userRelation) {
         this.userRelation = userRelation;
     }
 
@@ -59,11 +58,6 @@ public class FruitProjectVo extends FruitProject {
 
     public String getUuidVo() {
         return uuidVo;
-    }
-
-    public void checkStatus() {
-        if (!EnumUtils.isValidEnum(FruitDict.ProjectDict.class, this.getProjectStatus()))
-            throw new CheckEntityException("【用户-项目】角色不存在.");
     }
 
     @Override

@@ -2,6 +2,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClients;
 import org.junit.Test;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -13,6 +14,7 @@ import java.io.InputStreamReader;
 public class LocalDateTest {
     @Test
     public void project() throws Exception {
+        FruitDict.TaskDict.valueOf("111");
     }
 
     private InputStreamReader urlClient() throws IOException {

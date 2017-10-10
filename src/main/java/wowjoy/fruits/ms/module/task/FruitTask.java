@@ -1,7 +1,7 @@
 package wowjoy.fruits.ms.module.task;
 
 
-import org.springframework.format.annotation.DateTimeFormat;
+import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
@@ -13,16 +13,29 @@ import java.util.Date;
  * Created by wangziwen on 2017/8/24.
  */
 public class FruitTask extends AbstractEntity {
-    public FruitTask() {
-        this.taskLevel = FruitDict.TaskDict.LOW.name();
-        this.taskStatus = FruitDict.TaskDict.START.name();
-    }
 
-    private String listId;
     private String taskLevel;
     private String title;
     private String taskStatus;
+    private String statusDescription;
+    private Date estimatedEndDate;
     private Date endDate;
+
+    public Date getEstimatedEndDate() {
+        return estimatedEndDate;
+    }
+
+    public void setEstimatedEndDate(Date estimatedEndDate) {
+        this.estimatedEndDate = estimatedEndDate;
+    }
+
+    public String getStatusDescription() {
+        return statusDescription;
+    }
+
+    public void setStatusDescription(String statusDescription) {
+        this.statusDescription = statusDescription;
+    }
 
     public void setTitle(String title) {
         this.title = title;
@@ -40,12 +53,12 @@ public class FruitTask extends AbstractEntity {
         this.setEndDate(Date.from(endDate.atStartOfDay(ZoneId.systemDefault()).toInstant()));
     }
 
-    public void setListId(String listId) {
-        this.listId = listId;
-    }
-
     public void setTaskLevel(String taskLevel) {
-        this.taskLevel = taskLevel;
+        try {
+            this.taskLevel = FruitDict.TaskDict.valueOf(taskLevel).name();
+        } catch (IllegalArgumentException ex) {
+            throw new CheckException("无效的任务等级：" + ex.getMessage());
+        }
     }
 
     public String getTitle() {
@@ -56,16 +69,20 @@ public class FruitTask extends AbstractEntity {
         return taskStatus;
     }
 
-    public String getListId() {
-        return listId;
-    }
-
     public String getTaskLevel() {
         return taskLevel;
     }
 
     public Date getEndDate() {
         return endDate;
+    }
+
+    public static FruitTaskDao getDao() {
+        return new FruitTaskDao();
+    }
+
+    public static FruitTaskVo getVo() {
+        return new FruitTaskVo();
     }
 
 }

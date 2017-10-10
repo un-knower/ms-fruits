@@ -11,7 +11,8 @@
         <result column="title" jdbcType="VARCHAR" property="title"/>
         <result column="plan_status" jdbcType="VARCHAR" property="planStatus"/>
         <result column="percent" jdbcType="INTEGER" property="percent"/>
-        <result column="end_date" jdbcType="DATE" property="endDate"/>
+        <result column="estimated_end_date" jdbcType="DATE" property="estimatedEndDate" />
+        <result column="end_date" jdbcType="DATE" property="estimatedEndDate"/>
         <result column="parent_id" jdbcType="VARCHAR" property="parentId"/>
         <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
@@ -74,6 +75,7 @@
     ${replace}.plan_status,
     ${replace}.percent,
     ${replace}.end_date,
+    ${replace}.estimated_end_date,
     ${replace}.parent_id,
     ${replace}.modify_date_time,
     ${replace}.create_date_time,

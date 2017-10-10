@@ -1,4 +1,4 @@
-package wowjoy.fruits.ms.module.list.entity;
+package wowjoy.fruits.ms.module.list;
 
 
 import wowjoy.fruits.ms.module.AbstractEntity;

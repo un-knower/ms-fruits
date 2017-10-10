@@ -15,22 +15,22 @@ public class FruitPlanVo extends FruitPlan {
     private Integer pageSize = 10;
     private Date startDateVo;
     private Date endDateVo;
-    private Map<String, List<String>> userRelation;
-    private Map<String, List<String>> projectRelation;
+    private Map<FruitDict.Dict, List<String>> userRelation;
+    private Map<FruitDict.Dict, List<String>> projectRelation;
 
-    public Map<String, List<String>> getUserRelation() {
-        return parset(userRelation);
+    public Map<FruitDict.Dict, List<String>> getUserRelation() {
+        return userRelation;
     }
 
-    public void setUserRelation(Map<String, List<String>> userRelation) {
+    public void setUserRelation(Map<FruitDict.Dict, List<String>> userRelation) {
         this.userRelation = userRelation;
     }
 
-    public Map<String, List<String>> getProjectRelation() {
-        return parset(projectRelation);
+    public Map<FruitDict.Dict, List<String>> getProjectRelation() {
+        return projectRelation;
     }
 
-    public void setProjectRelation(Map<String, List<String>> projectRelation) {
+    public void setProjectRelation(Map<FruitDict.Dict, List<String>> projectRelation) {
         this.projectRelation = projectRelation;
     }
 

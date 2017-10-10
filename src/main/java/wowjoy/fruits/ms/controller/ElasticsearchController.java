@@ -20,7 +20,7 @@ import java.util.LinkedList;
 /**
  * Created by wangziwen on 2017/9/27.
  */
-@RequestMapping("/elastic")
+@RequestMapping("/v1/api/elastic")
 @RestController
 public class ElasticsearchController {
 

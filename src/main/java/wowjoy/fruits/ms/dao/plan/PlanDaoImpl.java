@@ -67,7 +67,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
     protected List<FruitPlanDao> findRelationWeek(FruitPlanDao dao, Integer pageNum, Integer pageSize) {
         final FruitPlanExample example = new FruitPlanExample();
         final FruitPlanExample.Criteria criteria = example.createCriteria();
-        /*查询所有月计划*/
+        /*查询所有周计划*/
         criteria.andParentIdIsNotNull();
         if (StringUtils.isNotBlank(dao.getTitle()))
             criteria.andTitleEqualTo(dao.getTitle());
@@ -105,8 +105,8 @@ public class PlanDaoImpl extends AbstractDaoPlan {
     protected List<FruitPlanDao> findWeek(FruitPlanDao dao, Integer pageNum, Integer pageSize) {
         final FruitPlanExample example = new FruitPlanExample();
         final FruitPlanExample.Criteria criteria = example.createCriteria();
-        /*查询所有月计划*/
-        criteria.andParentIdIsNull();
+        /*查询所有周计划*/
+        criteria.andParentIdIsNotNull();
         if (StringUtils.isNotBlank(dao.getTitle()))
             criteria.andTitleEqualTo(dao.getTitle());
         if (StringUtils.isNotBlank(dao.getPlanStatus()))

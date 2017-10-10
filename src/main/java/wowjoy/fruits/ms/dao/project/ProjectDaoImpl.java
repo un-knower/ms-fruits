@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wowjoy.fruits.ms.dao.relation.AbstractDaoRelation;
-import wowjoy.fruits.ms.exception.NullException;
 import wowjoy.fruits.ms.module.project.FruitProject;
 import wowjoy.fruits.ms.module.project.FruitProjectDao;
 import wowjoy.fruits.ms.module.project.FruitProjectExample;
@@ -75,8 +74,6 @@ public class ProjectDaoImpl extends AbstractDaoProject {
         FruitProjectExample example = new FruitProjectExample();
         example.createCriteria().andUuidEqualTo(uuid);
         List<FruitProjectDao> data = projectMapper.selectUserRelationByExample(example);
-        if (data.isEmpty())
-            throw new NullException("项目不存在");
         return data.get(0);
     }
 
@@ -91,15 +88,6 @@ public class ProjectDaoImpl extends AbstractDaoProject {
         Relation.getInstance(teamDao, userDao, dao).removeUserRelation().removeTeamRelation();
         /*添加关联*/
         Relation.getInstance(teamDao, userDao, dao).insertTeamRelation().insertUserRelation();
-    }
-
-    @Override
-    public void updateStatus(FruitProjectDao dao) {
-        if (StringUtils.isBlank(dao.getUuid()))
-            throw new CheckProjectException("【项目】uuid无效。");
-        final FruitProjectExample example = new FruitProjectExample();
-        example.createCriteria().andUuidEqualTo(dao.getUuid());
-        projectMapper.updateByExampleSelective(dao, example);
     }
 
     @Override
@@ -165,7 +153,7 @@ public class ProjectDaoImpl extends AbstractDaoProject {
          */
         private Relation removeTeamRelation() {
             Dao.getTeamRelation(FruitDict.Dict.DELETE).forEach((i) -> {
-                UserDao.remove(ProjectTeamRelation.newInstance(Dao.getUuid(), i.getTeamId()));
+                TeamDao.remove(ProjectTeamRelation.newInstance(Dao.getUuid(), i.getTeamId()));
             });
             return this;
         }

@@ -2,13 +2,10 @@ package wowjoy.fruits.ms.module.project;
 
 
 import wowjoy.fruits.ms.module.AbstractEntity;
-import wowjoy.fruits.ms.module.relation.entity.UserProjectRelation;
-import wowjoy.fruits.ms.module.team.FruitTeam;
-import wowjoy.fruits.ms.module.user.FruitUser;
-import wowjoy.fruits.ms.module.user.FruitUserDao;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
-import java.util.List;
 
 /**
  * Created by wangziwen on 2017/8/24.
@@ -16,15 +13,32 @@ import java.util.List;
 public class FruitProject extends AbstractEntity {
     private String title;
     private Date predictEndDate;
-    private Date endDateTime;
+    private Date endDate;
     private String projectStatus;
+    private String statusDescription;
+
+    public String getStatusDescription() {
+        return statusDescription;
+    }
+
+    public void setStatusDescription(String statusDescription) {
+        this.statusDescription = statusDescription;
+    }
 
     public void setPredictEndDate(Date predictEndDate) {
         this.predictEndDate = predictEndDate;
     }
 
-    public void setEndDateTime(Date endDateTime) {
-        this.endDateTime = endDateTime;
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
+    }
+
+    public void setEndDate(LocalDateTime endDateTime) {
+        this.endDate = Date.from(endDateTime.atZone(ZoneId.systemDefault()).toInstant());
+    }
+
+    public Date getEndDate() {
+        return endDate;
     }
 
     public void setTitle(String title) {
@@ -41,10 +55,6 @@ public class FruitProject extends AbstractEntity {
 
     public Date getPredictEndDate() {
         return predictEndDate;
-    }
-
-    public Date getEndDateTime() {
-        return endDateTime;
     }
 
     public String getTitle() {

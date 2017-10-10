@@ -20,22 +20,22 @@ public class FruitPlanDao extends FruitPlan {
     private Date startDateDao;
     private Date endDateDao;
     private List<FruitUserDao> users;
-    private Map<String, List<String>> userRelation;
-    private Map<String, List<String>> projectRelation;
+    private Map<FruitDict.Dict, List<String>> userRelation;
+    private Map<FruitDict.Dict, List<String>> projectRelation;
 
     public List<String> getUserRelation(FruitDict.Dict type) {
-        return userRelation != null && userRelation.containsKey(type.name().toLowerCase()) ? userRelation.get(type.name().toLowerCase()) : Lists.newLinkedList();
-    }
-
-    public void setUserRelation(Map<String, List<String>> userRelation) {
-        this.userRelation = userRelation;
+        return userRelation != null && userRelation.containsKey(type) ? userRelation.get(type) : Lists.newLinkedList();
     }
 
     public List<String> getProjectRelation(FruitDict.Dict type) {
-        return userRelation != null && projectRelation.containsKey(type.name().toLowerCase()) ? projectRelation.get(type.name().toLowerCase()) : Lists.newLinkedList();
+        return userRelation != null && projectRelation.containsKey(type) ? projectRelation.get(type) : Lists.newLinkedList();
     }
 
-    public void setProjectRelation(Map<String, List<String>> projectRelation) {
+    public void setUserRelation(Map<FruitDict.Dict, List<String>> userRelation) {
+        this.userRelation = userRelation;
+    }
+
+    public void setProjectRelation(Map<FruitDict.Dict, List<String>> projectRelation) {
         this.projectRelation = projectRelation;
     }
 

@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wowjoy.fruits.ms.dao.relation.AbstractDaoRelation;
 import wowjoy.fruits.ms.module.relation.entity.PlanProjectRelation;
-import wowjoy.fruits.ms.module.relation.entity.PlanProjectRelationExample;
+import wowjoy.fruits.ms.module.relation.example.PlanProjectRelationExample;
 import wowjoy.fruits.ms.module.relation.mapper.PlanProjectRelationMapper;
 
 /**

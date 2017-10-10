@@ -119,7 +119,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         FruitPlanDao dao = FruitPlan.getDao();
         dao.setUuid(vo.getUuid());
         dao.setPlanStatus(FruitDict.PlanDict.PENDING.name());
-        dao.setEndDate(vo.getEndDate());
+        dao.setEstimatedEndDate(vo.getEstimatedEndDate());
         dao.setTitle(vo.getTitle());
         dao.setParentId(vo.getParentId());
         dao.setDescription(vo.getDescription());
@@ -143,22 +143,32 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         FruitPlanDao dao = FruitPlan.getDao();
         dao.setUuid(vo.getUuidVo());
         dao.setTitle(vo.getTitle());
-        dao.setPlanStatus(vo.getPlanStatus());
         dao.setUserRelation(vo.getUserRelation());
         dao.setProjectRelation(vo.getProjectRelation());
         dao.setDescription(vo.getDescription());
-        dao.setEndDate(vo.getEndDate());
+        dao.setEstimatedEndDate(vo.getEstimatedEndDate());
         dao.setPercent(vo.getPercent());
         this.update(dao);
     }
 
+    /**
+     * 终止计划
+     *
+     * @param vo
+     */
     public final void end(FruitPlanVo vo) {
-        if (!this.findByUUID(vo.getUuidVo()).isNotEmpty()) throw new CheckPlanException("计划不存在，终止失败");
-        FruitPlanDao dao = FruitPlan.getDao();
-        dao.setUuid(vo.getUuidVo());
-        dao.setPlanStatus(FruitDict.PlanDict.END.name());
-        dao.setDescription(vo.getDescription());
-        this.update(dao);
+        vo.setPlanStatus(FruitDict.PlanDict.END.name());
+        this.modifyStatus(vo);
+    }
+
+    /**
+     * 完成计划
+     *
+     * @param vo
+     */
+    public final void complete(FruitPlanVo vo) {
+        vo.setPlanStatus(FruitDict.PlanDict.COMPLETE.name());
+        this.modifyStatus(vo);
     }
 
     /**
@@ -180,6 +190,22 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         }
     }
 
+    /**
+     * PRIVATE/PROTECTED
+     */
+
+    private final void modifyStatus(FruitPlanVo vo) {
+        FruitPlan project = this.findByUUID(vo.getUuidVo());
+        if (!project.isNotEmpty()) throw new CheckPlanException("计划不存在，无法完成");
+        if (FruitDict.PlanDict.END.name().equals(project.getPlanStatus()) || FruitDict.PlanDict.COMPLETE.name().equals(project.getPlanStatus()))
+            throw new CheckPlanException("计划状态已终止或已完成");
+        FruitPlanDao dao = FruitPlan.getDao();
+        dao.setUuid(vo.getUuidVo());
+        dao.setPlanStatus(vo.getPlanStatus());
+        dao.setEndDate(LocalDate.now());
+        dao.setStatusDescription(vo.getStatusDescription());
+        this.update(dao);
+    }
 
     /**********
      * 内部类  *

@@ -3,7 +3,7 @@ package wowjoy.fruits.ms.module.relation.mapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import wowjoy.fruits.ms.module.relation.entity.PlanProjectRelation;
-import wowjoy.fruits.ms.module.relation.entity.PlanProjectRelationExample;
+import wowjoy.fruits.ms.module.relation.example.PlanProjectRelationExample;
 
 import java.util.List;
 

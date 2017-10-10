@@ -11,7 +11,7 @@
         <result column="title" jdbcType="VARCHAR" property="title"/>
         <result column="project_status" jdbcType="VARCHAR" property="projectStatus"/>
         <result column="predict_end_date" jdbcType="DATE" property="predictEndDate"/>
-        <result column="end_date_time" jdbcType="TIMESTAMP" property="endDateTime"/>
+        <result column="end_date" jdbcType="TIMESTAMP" property="endDate"/>
         <result column="description" jdbcType="VARCHAR" property="description"/>
         <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
@@ -76,7 +76,7 @@
     ${replace}.title,
     ${replace}.project_status,
     ${replace}.predict_end_date,
-    ${replace}.end_date_time,
+    ${replace}.end_date,
     ${replace}.description,
     ${replace}.modify_date_time,
     ${replace}.create_date_time,

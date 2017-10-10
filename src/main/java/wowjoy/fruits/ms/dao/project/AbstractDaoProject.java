@@ -7,6 +7,7 @@ import wowjoy.fruits.ms.module.project.FruitProjectDao;
 import wowjoy.fruits.ms.module.project.FruitProjectVo;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -33,11 +34,9 @@ public abstract class AbstractDaoProject implements InterfaceDao {
 
     protected abstract List<FruitProjectDao> finds(FruitProjectDao dao);
 
-    protected abstract FruitProject findByUUID(String uuid);
+    protected abstract FruitProjectDao findByUUID(String uuid);
 
     protected abstract void update(FruitProjectDao dao);
-
-    protected abstract void updateStatus(FruitProjectDao dao);
 
     protected abstract void delete(String uuid);
 
@@ -47,7 +46,7 @@ public abstract class AbstractDaoProject implements InterfaceDao {
      *******************************/
 
     public final void delete(FruitProjectVo vo) {
-        if (!this.findByUUID(vo.getUuidVo()).isNotEmpty())
+        if (!this.findByUUID(vo).isNotEmpty())
             throw new CheckProjectException("项目不存在");
         delete(vo.getUuidVo());
     }
@@ -62,6 +61,9 @@ public abstract class AbstractDaoProject implements InterfaceDao {
         dao.setTeamRelation(vo.getTeamRelation());
         dao.setUserRelation(vo.getUserRelation());
         dao.setProjectStatus(FruitDict.ProjectDict.UNDERWAY.name());
+
+        if (dao.getTeamRelation(FruitDict.Dict.ADD).isEmpty() || dao.getUserRelation(FruitDict.Dict.ADD).isEmpty())
+            throw new CheckException("必须绑定至少一个 团队 和 参与人");
         this.insert(dao);
     }
 
@@ -71,9 +73,9 @@ public abstract class AbstractDaoProject implements InterfaceDao {
         dao.setTitle(vo.getTitle());
         dao.setProjectStatus(vo.getProjectStatus());
         List<FruitProjectDao> result = this.findRelation(dao);
-        result.forEach((p) -> {
-            p.computeDays();
-            p.seekPrincipal();
+        result.forEach((project) -> {
+            project.computeDays();
+            project.seekPrincipal();
         });
         return result;
     }
@@ -86,31 +88,47 @@ public abstract class AbstractDaoProject implements InterfaceDao {
         return this.finds(dao);
     }
 
-    public final FruitProject findByUUID(FruitProjectVo vo) {
-        return this.findByUUID(vo.getUuidVo());
+    public final FruitProjectDao findByUUID(FruitProjectVo vo) {
+        FruitProjectDao result = this.findByUUID(vo.getUuidVo());
+        result.computeDays().seekPrincipal();
+        return result;
     }
 
+    /**
+     * 修改项目信息
+     * 贴士：
+     * 1、暂时不支持修改项目状态，需修改项目状态需要直接调用complete接口
+     *
+     * @param vo
+     */
     public final void update(FruitProjectVo vo) {
-        if (!this.findByUUID(vo.getUuidVo()).isNotEmpty())
+        FruitProjectDao project = this.findByUUID(vo);
+        if (!project.isNotEmpty())
             throw new CheckProjectException("项目不存在");
         final FruitProjectDao dao = FruitProject.getProjectDao();
         dao.setUuid(vo.getUuidVo());
         dao.setTitle(vo.getTitle());
         dao.setDescription(vo.getDescription());
         dao.setPredictEndDate(vo.getPredictEndDate());
-        dao.setProjectStatus(vo.getProjectStatus());
         dao.setTeamRelation(vo.getTeamRelation());
         dao.setUserRelation(vo.getUserRelation());
+
         this.update(dao);
     }
 
-    public final void updateStatus(FruitProjectVo vo) {
-        if (!this.findByUUID(vo.getUuidVo()).isNotEmpty())
+    public final void complete(FruitProjectVo vo) {
+        FruitProjectDao project = this.findByUUID(vo);
+        if (!project.isNotEmpty())
             throw new CheckProjectException("项目不存在");
+        if (FruitDict.ProjectDict.COMPLETE.equals(project.getProjectStatus()))
+            throw new CheckProjectException("项目已完成，错误的操作");
         final FruitProjectDao data = FruitProject.getProjectDao();
         data.setUuid(vo.getUuidVo());
-        data.setProjectStatus(vo.getProjectStatus());
-        this.updateStatus(data);
+        /*使用系统默认时间*/
+        data.setEndDate(LocalDateTime.now());
+        data.setProjectStatus(FruitDict.ProjectDict.COMPLETE.name());
+        data.setStatusDescription(vo.getStatusDescription());
+        this.update(data);
     }
 
     /*******************************************************

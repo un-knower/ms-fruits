@@ -36,4 +36,5 @@ public class ProjectTeamDaoImpl<T extends ProjectTeamRelation> extends AbstractD
             throw new CheckRelationException("【ProjectTeamDaoImpl.remove】缺少删除条件");
         mapper.deleteByExample(example);
     }
+
 }

@@ -26,8 +26,8 @@ public class FruitProjectDao extends FruitProject {
         setUuid(null);
     }
 
-    private Map<String, List<ProjectTeamRelation>> teamRelation;
-    private Map<String, List<UserProjectRelation>> userRelation;
+    private Map<FruitDict.Dict, List<ProjectTeamRelation>> teamRelation;
+    private Map<FruitDict.Dict, List<UserProjectRelation>> userRelation;
 
     private List<FruitUserDao> users;
     private FruitUserDao principal;
@@ -36,18 +36,18 @@ public class FruitProjectDao extends FruitProject {
     private Integer days;
 
     public List<ProjectTeamRelation> getTeamRelation(FruitDict.Dict type) {
-        return teamRelation != null && teamRelation.containsKey(type.name().toLowerCase()) ? teamRelation.get(type.name().toLowerCase()) : Lists.newLinkedList();
-    }
-
-    public void setTeamRelation(Map<String, List<ProjectTeamRelation>> teamRelation) {
-        this.teamRelation = teamRelation;
+        return teamRelation != null && teamRelation.containsKey(type) ? teamRelation.get(type) : Lists.newLinkedList();
     }
 
     public List<UserProjectRelation> getUserRelation(FruitDict.Dict type) {
-        return userRelation != null && userRelation.containsKey(type.name().toLowerCase()) ? userRelation.get(type.name().toLowerCase()) : Lists.newLinkedList();
+        return userRelation != null && userRelation.containsKey(type) ? userRelation.get(type) : Lists.newLinkedList();
     }
 
-    public void setUserRelation(Map<String, List<UserProjectRelation>> userRelation) {
+    public void setTeamRelation(Map<FruitDict.Dict, List<ProjectTeamRelation>> teamRelation) {
+        this.teamRelation = teamRelation;
+    }
+
+    public void setUserRelation(Map<FruitDict.Dict, List<UserProjectRelation>> userRelation) {
         this.userRelation = userRelation;
     }
 
@@ -85,7 +85,7 @@ public class FruitProjectDao extends FruitProject {
     public void setProjectStatus(String projectStatus) {
         super.setProjectStatus(projectStatus);
         if (FruitDict.ProjectDict.COMPLETE.equals(projectStatus))
-            this.setEndDateTime(java.sql.Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
+            this.setEndDate(java.sql.Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
     }
 
     public FruitUserDao getPrincipal() {
@@ -96,15 +96,15 @@ public class FruitProjectDao extends FruitProject {
         this.principal = principal;
     }
 
-    /**
-     * 项目工具函数
-     */
+    /***************
+     * 项目工具函数  *
+     ***************/
 
     /**
      * 是否延期
      * 延期天数
      */
-    public void computeDays() {
+    public FruitProjectDao computeDays() {
         LocalDateTime predictEndTime = LocalDateTime.parse(new SimpleDateFormat(DateTimeFormat).format(this.getPredictEndDate()));
         LocalDateTime currentTime = LocalDateTime.parse(new SimpleDateFormat(DateTimeFormat).format(new Date()));
         Duration between = Duration.between(currentTime, predictEndTime);
@@ -115,6 +115,7 @@ public class FruitProjectDao extends FruitProject {
             this.setIsPostponed(FruitDict.Dict.Y);
             this.setDays((int) Math.abs(between.toDays()));
         }
+        return this;
     }
 
     /**

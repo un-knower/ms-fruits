@@ -2,14 +2,12 @@ package wowjoy.fruits.ms.util;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.*;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
-import wowjoy.fruits.ms.module.AbstractEntity;
 
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
@@ -41,13 +39,6 @@ public class ArgumentInterceptor implements HandlerMethodArgumentResolver {
         if (Object.class.getName().equals(type.getName()))
             return (T) type;
         return gsonBuilder.fromJson(parameter, TypeToken.of(type).getType());
-    }
-
-    private boolean checkAbstractEntity(Class superclass) {
-        if (superclass == null) return false;
-        if (AbstractEntity.class.getName().equals(superclass.getName()))
-            return true;
-        return checkAbstractEntity(superclass.getSuperclass());
     }
 
     private JsonElement findNotGet(ServletInputStream inputStream) throws IOException {

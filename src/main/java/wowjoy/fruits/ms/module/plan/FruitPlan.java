@@ -13,9 +13,12 @@ import java.util.Date;
 public class FruitPlan extends AbstractEntity {
     private String title;
     private int percent;
+    private Date estimatedEndDate;
     private Date endDate;
     private String planStatus;
+    private String statusDescription;
     private String parentId;
+
 
     public Date getEndDate() {
         return endDate;
@@ -23,6 +26,22 @@ public class FruitPlan extends AbstractEntity {
 
     public void setEndDate(Date endDate) {
         this.endDate = endDate;
+    }
+
+    public String getStatusDescription() {
+        return statusDescription;
+    }
+
+    public void setStatusDescription(String statusDescription) {
+        this.statusDescription = statusDescription;
+    }
+
+    public Date getEstimatedEndDate() {
+        return estimatedEndDate;
+    }
+
+    public void setEstimatedEndDate(Date estimatedEndDate) {
+        this.estimatedEndDate = estimatedEndDate;
     }
 
     public String getParentId() {
@@ -59,7 +78,7 @@ public class FruitPlan extends AbstractEntity {
     }
 
     public void setEndDate(LocalDate endDate) {
-        this.setEndDate(Date.from(endDate.atStartOfDay(ZoneId.systemDefault()).toInstant()));
+        this.setEstimatedEndDate(Date.from(endDate.atStartOfDay(ZoneId.systemDefault()).toInstant()));
     }
 
     /********
