@@ -73,6 +73,8 @@ public class PlanDaoImpl extends AbstractDaoPlan {
             criteria.andTitleEqualTo(dao.getTitle());
         if (StringUtils.isNotBlank(dao.getPlanStatus()))
             criteria.andPlanStatusEqualTo(dao.getPlanStatus());
+        if (StringUtils.isNotBlank(dao.getParentId()))
+            criteria.andParentIdEqualTo(dao.getParentId());
         if (Objects.nonNull(dao.getStartDateDao()) && Objects.nonNull(dao.getEndDateDao()))
             criteria.andEndDateBetween(dao.getStartDateDao(), dao.getEndDateDao());
         if (StringUtils.isNotBlank(dao.getPlanStatus()))
@@ -111,6 +113,8 @@ public class PlanDaoImpl extends AbstractDaoPlan {
             criteria.andTitleEqualTo(dao.getTitle());
         if (StringUtils.isNotBlank(dao.getPlanStatus()))
             criteria.andPlanStatusEqualTo(dao.getPlanStatus());
+        if (StringUtils.isNotBlank(dao.getParentId()))
+            criteria.andParentIdEqualTo(dao.getParentId());
         if (Objects.nonNull(dao.getStartDateDao()) && Objects.nonNull(dao.getEndDateDao()))
             criteria.andEndDateBetween(dao.getStartDateDao(), dao.getEndDateDao());
         if (StringUtils.isNotBlank(dao.getPlanStatus()))
