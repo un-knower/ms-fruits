@@ -31,4 +31,5 @@ public class ExtendsTest {
         final Test2 test2 = new Test2();
         System.out.println(test2.getName());
     }
+
 }

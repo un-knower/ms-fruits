@@ -14,4 +14,5 @@ public class PatternTest {
         System.out.println(Runtime.getRuntime().availableProcessors());
     }
 
+
 }

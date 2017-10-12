@@ -111,7 +111,7 @@ public class PlanController {
     @RequestMapping(value = "{uuid}", method = RequestMethod.PUT)
     public RestResult update(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlan) {
         fruitPlan.setUuidVo(uuid);
-        dataPlanDao.update(fruitPlan);
+        dataPlanDao.modify(fruitPlan);
         return RestResult.getInstance().setData(uuid);
     }
 
@@ -161,7 +161,7 @@ public class PlanController {
 
     /**
      * 添加进度小结
-     *
+     * <p>
      * 2017年10月10日14:01:41：添加进度小结
      *
      * @param vo

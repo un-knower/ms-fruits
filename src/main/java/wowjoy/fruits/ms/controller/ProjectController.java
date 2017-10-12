@@ -13,7 +13,7 @@ import wowjoy.fruits.ms.util.JsonArgument;
 import wowjoy.fruits.ms.util.RestResult;
 
 /**
- *
+ * 增加项目拼音搜索
  */
 @RestController
 @RequestMapping("/v1/api/project")
@@ -91,7 +91,7 @@ public class ProjectController {
     @RequestMapping(value = "{uuid}", method = RequestMethod.PUT)
     public RestResult update(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
         vo.setUuidVo(uuid);
-        projectDaoImpl.update(vo);
+        projectDaoImpl.modify(vo);
         return RestResult.getInstance().setData(vo.getUuid());
     }
 

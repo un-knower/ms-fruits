@@ -22,4 +22,15 @@ public class TaskProjectRelation extends AbstractEntity {
     public void setProjectId(String projectId) {
         this.projectId = projectId;
     }
+
+    public static TaskProjectRelation getInstance() {
+        return new TaskProjectRelation();
+    }
+
+    public static TaskProjectRelation newInstance(String taskId, String projectId) {
+        TaskProjectRelation result = new TaskProjectRelation();
+        result.setTaskId(taskId);
+        result.setProjectId(projectId);
+        return result;
+    }
 }

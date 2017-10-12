@@ -1,11 +1,16 @@
 package wowjoy.fruits.ms.dao.task;
 
+import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
+import wowjoy.fruits.ms.module.relation.entity.TaskPlanRelation;
+import wowjoy.fruits.ms.module.relation.entity.TaskProjectRelation;
 import wowjoy.fruits.ms.module.task.FruitTask;
 import wowjoy.fruits.ms.module.task.FruitTaskDao;
 import wowjoy.fruits.ms.module.task.FruitTaskVo;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
+
+import java.util.List;
 
 /**
  * Created by wangziwen on 2017/8/30.
@@ -25,27 +30,120 @@ public abstract class AbstractDaoTask implements InterfaceDao {
      */
     protected abstract void insert(FruitTaskDao dao);
 
+    protected abstract List<FruitTaskDao> finds(FruitTaskDao dao);
+
+    protected abstract void update(FruitTaskDao dao);
+
+    protected abstract void delete(FruitTaskDao dao);
+
+    /**
+     * 查询关联计划信息
+     *
+     * @return
+     */
+    protected abstract List<TaskPlanRelation> findJoinPlan(TaskPlanRelation relation);
+
+    /*******************************
+     /**
+     * 查询关联项目信息
+     *
+     * @return
+     */
+    protected abstract List<TaskProjectRelation> findJoinProject(TaskProjectRelation relation);
+
     /*******************************
      * PUBLIC 函数，公共接口         *
      * 尽量保证规范，不直接调用dao接口 *
      *******************************/
 
-    public final void insert(FruitTaskVo vo) {
+    public final void addJoinProject(FruitTaskVo vo) {
+        final FruitTaskDao dao = this.addTemplate(vo);
+        dao.setTaskProjectRelation(vo.getTaskProjectRelation());
+        if (dao.getTaskProjectRelation(FruitDict.Dict.ADD).isEmpty() || dao.getTaskProjectRelation(FruitDict.Dict.ADD).size() > 1)
+            throw new CheckException("添加任务，必须关联计划，且只能关联一个计划");
+        this.insert(dao);
+    }
+
+    public final void addJoinPlan(FruitTaskVo vo) {
+        final FruitTaskDao dao = this.addTemplate(vo);
+        dao.setTaskPlanRelation(vo.getTaskPlanRelation());
+        if (dao.getTaskPlanRelation(FruitDict.Dict.ADD).isEmpty() || dao.getTaskPlanRelation(FruitDict.Dict.ADD).size() > 1)
+            throw new CheckException("添加任务，必须关联计划，且只能关联一个计划");
+        this.insert(dao);
+    }
+
+    private final FruitTaskDao addTemplate(FruitTaskVo vo) {
         FruitTaskDao dao = FruitTask.getDao();
         dao.setUuid(vo.getUuid());
+        dao.setTaskStatus(FruitDict.TaskDict.START.name());
+        dao.setDescription(vo.getDescription());
+        dao.setEstimatedEndDate(vo.getEstimatedEndDate());
         dao.setTitle(vo.getTitle());
         dao.setTaskLevel(vo.getTaskLevel());
-        dao.setTaskStatus(FruitDict.TaskDict.START.name());
-        dao.setEstimatedEndDate(vo.getEstimatedEndDate());
+        dao.setTaskUserRelation(vo.getTaskUserRelation());
+        return dao;
+    }
+
+    public final void modifyJoinPlan(FruitTaskVo vo) {
+        FruitTaskDao dao = modifyTemplate(vo);
+        dao.setTaskPlanRelation(vo.getTaskPlanRelation());
+        if (!dao.getTaskPlanRelation(FruitDict.Dict.DELETE).isEmpty()) {
+            if (this.findJoinPlan(TaskPlanRelation.newInstance(dao.getUuid(), dao.getTaskPlanRelation(FruitDict.Dict.DELETE).get(0).getPlanId())).isEmpty()) {
+                throw new CheckException("不存在的关联计划，修改中断");
+            }
+            if (dao.getTaskPlanRelation(FruitDict.Dict.ADD).isEmpty())
+                throw new CheckException("若删除旧的关联计划，必须添加新关联计划");
+        } else if (dao.getTaskPlanRelation(FruitDict.Dict.ADD).isEmpty()) {
+            throw new CheckException("友情提示，不能添加多个关联计划");
+        } else
+            dao.setTaskPlanRelation(null);
+
+        this.update(dao);
+    }
+
+    public final void modifyJoinProject(FruitTaskVo vo) {
+        FruitTaskDao dao = modifyTemplate(vo);
+        dao.setTaskProjectRelation(vo.getTaskProjectRelation());
+        if (!dao.getTaskProjectRelation(FruitDict.Dict.DELETE).isEmpty()) {
+            if (this.findJoinProject(TaskProjectRelation.newInstance(dao.getUuid(), dao.getTaskProjectRelation(FruitDict.Dict.DELETE).get(0).getProjectId())).isEmpty()) {
+                throw new CheckException("不存在的关联项目，修改中断");
+            }
+            if (dao.getTaskProjectRelation(FruitDict.Dict.ADD).isEmpty())
+                throw new CheckException("若删除旧的关联项目，必须添加新关联项目");
+        } else if (!dao.getTaskProjectRelation(FruitDict.Dict.ADD).isEmpty()) {
+            throw new CheckException("友情提示，不能添加多个关联项目");
+        } else
+            dao.setTaskPlanRelation(null);
+        this.update(dao);
+    }
+
+    private final FruitTaskDao modifyTemplate(FruitTaskVo vo) {
+        if (!this.findByID(vo).isNotEmpty())
+            throw new CheckException("任务不存在，不予修改。");
+        FruitTaskDao dao = FruitTask.getDao();
+        dao.setUuid(vo.getUuidVo());
+        dao.setTitle(vo.getTitle());
+        dao.setTaskLevel(vo.getTaskLevel());
         dao.setDescription(vo.getDescription());
-        /*如果无关联计划，默认绑定关联项目*/
-        if (vo.getTaskPlanRelation() != null && vo.getTaskPlanRelation().containsKey(FruitDict.Dict.ADD))
-            dao.setTaskPlanRelation(vo.getTaskPlanRelation());
-        else if (vo.getTaskProjectRelation() != null && vo.getTaskProjectRelation().containsKey(FruitDict.Dict.ADD))
-            dao.setTaskProjectRelation(vo.getTaskProjectRelation());
-        else
-            throw new CheckException("无法确认任务去向，请指明至少一条关联渠道");
-        this.insert(dao);
+        dao.setTaskUserRelation(vo.getTaskUserRelation());
+        return dao;
+    }
+
+    public final void delete(FruitTaskVo vo) {
+        FruitTaskDao dao = FruitTask.getDao();
+        dao.setUuid(vo.getUuidVo());
+        this.delete(dao);
+    }
+
+    public final FruitTask findByID(FruitTaskVo vo) {
+        if (StringUtils.isBlank(vo.getUuidVo()))
+            throw new CheckException("任务不存在");
+        FruitTaskDao dao = FruitTask.getDao();
+        dao.setUuid(vo.getUuidVo());
+        List<FruitTaskDao> data = this.finds(dao);
+        if (data.isEmpty() || data.size() > 1)
+            return FruitTask.getEmpty();
+        return data.get(0);
     }
 
 }

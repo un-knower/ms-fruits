@@ -138,7 +138,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         this.insertSummary(dao);
     }
 
-    public final void update(FruitPlanVo vo) {
+    public final void modify(FruitPlanVo vo) {
         if (!this.findByUUID(vo.getUuidVo()).isNotEmpty()) throw new CheckPlanException("计划不存在，修改失败");
         FruitPlanDao dao = FruitPlan.getDao();
         dao.setUuid(vo.getUuidVo());
@@ -177,8 +177,8 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
      * @param year
      * @return
      */
-    public final Map<Integer, List<Week>> yearEachWeek(int year) {
-        return DateUtils.getInstance(year).weeks();
+    public final Map<Integer, List<DateUtils.Week.WeekChinese>> yearEachWeek(int year) {
+        return DateUtils.getInstance(year).weeks().toChinese();
     }
 
     /****************
@@ -321,7 +321,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
          *
          * @return
          */
-        public Map<Integer, List<Week>> weeks() {
+        public DateUtils weeks() {
             final int firstDay = yearWeekNumber();
             int year = Year;
             int month = 1;
@@ -368,25 +368,87 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
                     endNextDay = endDay;
                 }
                 Months.get(month).add(new Week(
-                        LocalDate.of(startNextYear, startNextMonth, startNextDay),
+                        Months.get(month).size() + 1, LocalDate.of(startNextYear, startNextMonth, startNextDay),
                         LocalDate.of(endNextYear, endNextMonth, endNextDay)
                 ));
                 day += 7;
             }
-            return Months;
+            return this;
         }
-    }
 
-    /**
-     * 尽量使用不可变对象，防止参数逃逸
-     */
-    public static class Week {
-        private final LocalDate startDate;
-        private final LocalDate endDate;
-
-        public Week(LocalDate startDate, LocalDate endDate) {
-            this.startDate = startDate;
-            this.endDate = endDate;
+        public Map<Integer, List<Week.WeekChinese>> toChinese() {
+            Map<Integer, List<Week.WeekChinese>> result = Maps.newLinkedHashMap();
+            Months.forEach((k, weeks) -> {
+                result.put(k, Lists.newLinkedList());
+                weeks.forEach((i) -> {
+                    result.get(k).add(i.toChinese());
+                });
+            });
+            return result;
         }
+
+        /**
+         * 尽量使用不可变对象，防止参数逃逸
+         */
+        public static class Week {
+            private final Integer weekMonth;
+            private final LocalDate startDate;
+            private final LocalDate endDate;
+
+            public Week(Integer weekMonth, LocalDate startDate, LocalDate endDate) {
+                this.weekMonth = weekMonth;
+                this.startDate = startDate;
+                this.endDate = endDate;
+            }
+
+            public WeekChinese toChinese() {
+                return new WeekChinese(weekMonth, startDate, endDate);
+            }
+
+            public static class WeekChinese extends Week {
+                private final String weekChinese;
+
+                public WeekChinese(Integer weekMonth, LocalDate startDate, LocalDate endDate) {
+                    super(weekMonth, startDate, endDate);
+                    switch (weekMonth) {
+                        case 1:
+                            weekChinese = "第一周";
+                            break;
+                        case 2:
+                            weekChinese = "第二周";
+                            break;
+                        case 3:
+                            weekChinese = "第三周";
+                            break;
+                        case 4:
+                            weekChinese = "第四周";
+                            break;
+                        case 5:
+                            weekChinese = "第五周";
+                            break;
+                        case 6:
+                            weekChinese = "第六周";
+                            break;
+                        case 7:
+                            weekChinese = "第七周";
+                            break;
+                        case 8:
+                            weekChinese = "第八周";
+                            break;
+                        case 9:
+                            weekChinese = "第九周";
+                            break;
+                        case 10:
+                            weekChinese = "第十周";
+                            break;
+                        default:
+                            weekChinese = "";
+                            break;
+                    }
+                }
+            }
+
+        }
+
     }
 }

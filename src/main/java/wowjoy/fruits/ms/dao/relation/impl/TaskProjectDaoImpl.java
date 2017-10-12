@@ -9,6 +9,8 @@ import wowjoy.fruits.ms.module.relation.entity.TaskProjectRelation;
 import wowjoy.fruits.ms.module.relation.example.TaskProjectRelationExample;
 import wowjoy.fruits.ms.module.relation.mapper.TaskProjectRelationMapper;
 
+import java.util.List;
+
 /**
  * Created by wangziwen on 2017/9/12.
  */
@@ -34,6 +36,16 @@ public class TaskProjectDaoImpl<T extends TaskProjectRelation> extends AbstractD
         if (criteria.getAllCriteria().isEmpty())
             throw new CheckRelationException("【TaskProjectDaoImpl.remove】缺少删除条件");
         mapper.deleteByExample(example);
+    }
+
+    public List<TaskProjectRelation> finds(TaskProjectRelation relation){
+        TaskProjectRelationExample example = new TaskProjectRelationExample();
+        TaskProjectRelationExample.Criteria criteria = example.createCriteria();
+        if (StringUtils.isNotBlank(relation.getProjectId()))
+            criteria.andProjectIdEqualTo(relation.getProjectId());
+        if (StringUtils.isNotBlank(relation.getTaskId()))
+            criteria.andTaskIdEqualTo(relation.getTaskId());
+        return mapper.selectByExample(example);
     }
 
 }

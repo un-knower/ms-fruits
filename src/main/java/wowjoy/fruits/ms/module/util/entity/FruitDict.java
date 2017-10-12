@@ -239,8 +239,10 @@ public class FruitDict extends AbstractEntity {
      * taskUserRelation 任务用户关联字典管理
      */
     public enum TaskUserDict {
-        PRINCIPAL("负责人"),
-        PARTICIPANT("参与者");
+        /*废弃*/
+//        PRINCIPAL("负责人"),
+//        PARTICIPANT("参与者");
+        EXECUTOR("执行人");
 
 
         private String parentCode;

@@ -42,7 +42,11 @@ public class FruitTask extends AbstractEntity {
     }
 
     public void setTaskStatus(String taskStatus) {
-        this.taskStatus = taskStatus;
+        try {
+            this.taskStatus = FruitDict.TaskDict.valueOf(taskStatus).name();
+        } catch (IllegalArgumentException ex) {
+            throw new CheckException("无效的任务状态：" + ex.getMessage());
+        }
     }
 
     public void setEndDate(Date endDate) {
@@ -83,6 +87,10 @@ public class FruitTask extends AbstractEntity {
 
     public static FruitTaskVo getVo() {
         return new FruitTaskVo();
+    }
+
+    public static FruitTaskEmpty getEmpty() {
+        return new FruitTaskEmpty();
     }
 
 }

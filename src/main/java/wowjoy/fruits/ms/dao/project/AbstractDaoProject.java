@@ -101,7 +101,7 @@ public abstract class AbstractDaoProject implements InterfaceDao {
      *
      * @param vo
      */
-    public final void update(FruitProjectVo vo) {
+    public final void modify(FruitProjectVo vo) {
         FruitProjectDao project = this.findByUUID(vo);
         if (!project.isNotEmpty())
             throw new CheckProjectException("项目不存在");

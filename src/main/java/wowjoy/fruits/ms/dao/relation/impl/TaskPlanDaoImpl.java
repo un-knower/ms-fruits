@@ -9,6 +9,8 @@ import wowjoy.fruits.ms.module.relation.entity.TaskPlanRelation;
 import wowjoy.fruits.ms.module.relation.example.TaskPlanRelationExample;
 import wowjoy.fruits.ms.module.relation.mapper.TaskPlanRelationMapper;
 
+import java.util.List;
+
 /**
  * Created by wangziwen on 2017/9/12.
  */
@@ -35,5 +37,16 @@ public class TaskPlanDaoImpl<T extends TaskPlanRelation> extends AbstractDaoRela
             throw new CheckRelationException("【TaskPlanDaoImpl.remove】缺少删除条件");
         mapper.deleteByExample(example);
     }
+
+    public List<TaskPlanRelation> finds(TaskPlanRelation relation) {
+        TaskPlanRelationExample example = new TaskPlanRelationExample();
+        TaskPlanRelationExample.Criteria criteria = example.createCriteria();
+        if (StringUtils.isNotBlank(relation.getTaskId()))
+            criteria.andTaskIdEqualTo(relation.getTaskId());
+        if (StringUtils.isNotBlank(relation.getPlanId()))
+            criteria.andPlanIdEqualTo(relation.getPlanId());
+        return mapper.selectByExample(example);
+    }
+
 
 }

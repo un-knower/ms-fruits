@@ -22,4 +22,15 @@ public class TaskPlanRelation extends AbstractEntity {
     public void setPlanId(String planId) {
         this.planId = planId;
     }
+
+    public static TaskPlanRelation getInstance() {
+        return new TaskPlanRelation();
+    }
+
+    public static TaskPlanRelation newInstance(String taskId, String planId) {
+        TaskPlanRelation result = new TaskPlanRelation();
+        result.setTaskId(taskId);
+        result.setPlanId(planId);
+        return result;
+    }
 }
