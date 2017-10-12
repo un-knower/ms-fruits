@@ -88,15 +88,48 @@ public class TaskController {
         return RestResult.getInstance().setData(vo.getUuidVo());
     }
 
-    // TODO: 2017/10/12 修改任务状态
-    public void changeStatusTo() {
+    /**
+     * 修改任务-改变任务状态为已结束
+     * 2017年10月12日16:00:12
+     * 1、完成修改任务状态至已结束
+     *
+     * @param uuid
+     * @param vo
+     * @return
+     */
+    @RequestMapping(value = "/end/{uuid}", method = RequestMethod.PUT)
+    public RestResult changeStatusToEnd(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
+        vo.setUuidVo(uuid);
+        daoTask.changeStatusToEnd(vo);
+        return RestResult.getInstance().setData(vo.getUuidVo());
+    }
 
+    /**
+     * 修改任务-改变任务状态为开始
+     *
+     * @param uuid
+     * @param vo
+     * @return
+     */
+    @RequestMapping(value = "/start/{uuid}", method = RequestMethod.PUT)
+    public RestResult changeStatusToStart(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
+        vo.setUuidVo(uuid);
+        daoTask.changeStatusToStart(vo);
+        return RestResult.getInstance().setData(vo.getUuidVo());
     }
 
     /**
      * 删除任务
+     * 2017年10月12日15:58:49
+     * 1、完成删除任务
+     * 2、完成删除关联用户
+     * 3、完成删除关联计划
+     * 4、完成删除关联项目
+     *
+     * @param uuid
+     * @return
      */
-    @RequestMapping(method = RequestMethod.DELETE)
+    @RequestMapping(value = "{uuid}", method = RequestMethod.DELETE)
     public RestResult delete(@PathVariable("uuid") String uuid) {
         FruitTaskVo vo = FruitTask.getVo();
         vo.setUuidVo(uuid);

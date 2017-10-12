@@ -32,7 +32,6 @@ public class FruitProjectDao extends FruitProject {
     private List<FruitUserDao> users;
     private FruitUserDao principal;
 
-    private FruitDict.Dict isPostponed = FruitDict.Dict.N;
     private Integer days;
 
     public List<ProjectTeamRelation> getTeamRelation(FruitDict.Dict type) {
@@ -49,14 +48,6 @@ public class FruitProjectDao extends FruitProject {
 
     public void setUserRelation(Map<FruitDict.Dict, List<UserProjectRelation>> userRelation) {
         this.userRelation = userRelation;
-    }
-
-    public FruitDict.Dict getIsPostponed() {
-        return isPostponed;
-    }
-
-    public void setIsPostponed(FruitDict.Dict isPostponed) {
-        this.isPostponed = isPostponed;
     }
 
     public Integer getDays() {
@@ -108,13 +99,7 @@ public class FruitProjectDao extends FruitProject {
         LocalDateTime predictEndTime = LocalDateTime.parse(new SimpleDateFormat(DateTimeFormat).format(this.getPredictEndDate()));
         LocalDateTime currentTime = LocalDateTime.parse(new SimpleDateFormat(DateTimeFormat).format(new Date()));
         Duration between = Duration.between(currentTime, predictEndTime);
-        if (between.toDays() > 0) {
-            this.setIsPostponed(FruitDict.Dict.N);
-            this.setDays(Math.abs((int) between.toDays()));
-        } else {
-            this.setIsPostponed(FruitDict.Dict.Y);
-            this.setDays((int) Math.abs(between.toDays()));
-        }
+        this.setDays((int) between.toDays());
         return this;
     }
 

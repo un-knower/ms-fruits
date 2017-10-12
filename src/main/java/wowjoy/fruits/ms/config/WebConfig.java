@@ -1,5 +1,6 @@
 package wowjoy.fruits.ms.config;
 
+import com.google.gson.GsonBuilder;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.GsonHttpMessageConverter;
@@ -23,6 +24,8 @@ public class WebConfig extends WebMvcConfigurerAdapter {
 
     @Override
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
-        converters.add(new GsonHttpMessageConverter());
+        GsonHttpMessageConverter gsonHttpMessageConverter = new GsonHttpMessageConverter();
+        gsonHttpMessageConverter.setGson(new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create());
+        converters.add(gsonHttpMessageConverter);
     }
 }

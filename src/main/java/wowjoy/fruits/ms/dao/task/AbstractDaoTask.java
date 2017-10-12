@@ -10,6 +10,7 @@ import wowjoy.fruits.ms.module.task.FruitTaskDao;
 import wowjoy.fruits.ms.module.task.FruitTaskVo;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -73,7 +74,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
     }
 
     private final FruitTaskDao addTemplate(FruitTaskVo vo) {
-        FruitTaskDao dao = FruitTask.getDao();
+        final FruitTaskDao dao = FruitTask.getDao();
         dao.setUuid(vo.getUuid());
         dao.setTaskStatus(FruitDict.TaskDict.START.name());
         dao.setDescription(vo.getDescription());
@@ -85,7 +86,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
     }
 
     public final void modifyJoinPlan(FruitTaskVo vo) {
-        FruitTaskDao dao = modifyTemplate(vo);
+        final FruitTaskDao dao = modifyTemplate(vo);
         dao.setTaskPlanRelation(vo.getTaskPlanRelation());
         if (!dao.getTaskPlanRelation(FruitDict.Dict.DELETE).isEmpty()) {
             if (this.findJoinPlan(TaskPlanRelation.newInstance(dao.getUuid(), dao.getTaskPlanRelation(FruitDict.Dict.DELETE).get(0).getPlanId())).isEmpty()) {
@@ -102,7 +103,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
     }
 
     public final void modifyJoinProject(FruitTaskVo vo) {
-        FruitTaskDao dao = modifyTemplate(vo);
+        final FruitTaskDao dao = modifyTemplate(vo);
         dao.setTaskProjectRelation(vo.getTaskProjectRelation());
         if (!dao.getTaskProjectRelation(FruitDict.Dict.DELETE).isEmpty()) {
             if (this.findJoinProject(TaskProjectRelation.newInstance(dao.getUuid(), dao.getTaskProjectRelation(FruitDict.Dict.DELETE).get(0).getProjectId())).isEmpty()) {
@@ -118,9 +119,9 @@ public abstract class AbstractDaoTask implements InterfaceDao {
     }
 
     private final FruitTaskDao modifyTemplate(FruitTaskVo vo) {
-        if (!this.findByID(vo).isNotEmpty())
+        if (!this.findByUUID(vo).isNotEmpty())
             throw new CheckException("任务不存在，不予修改。");
-        FruitTaskDao dao = FruitTask.getDao();
+        final FruitTaskDao dao = FruitTask.getDao();
         dao.setUuid(vo.getUuidVo());
         dao.setTitle(vo.getTitle());
         dao.setTaskLevel(vo.getTaskLevel());
@@ -129,16 +130,50 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         return dao;
     }
 
+    public final void changeStatusToEnd(FruitTaskVo vo) {
+        final FruitTaskDao dao = changeTemplate(vo);
+        if (FruitDict.TaskDict.END.name().equals(dao.getTaskStatus()))
+            throw new CheckException("任务已结束");
+        dao.setTaskStatus(FruitDict.TaskDict.END.name());
+        update(dao);
+    }
+
+    public final void changeStatusToStart(FruitTaskVo vo) {
+        final FruitTaskDao dao = changeTemplate(vo);
+        if (FruitDict.TaskDict.START.name().equals(dao.getTaskStatus()))
+            throw new CheckException("");
+        dao.setTaskStatus(FruitDict.TaskDict.START.name());
+        update(dao);
+    }
+
+    private final FruitTaskDao changeTemplate(FruitTaskVo vo) {
+        final FruitTask task = this.findByUUID(vo);
+        if (!task.isNotEmpty())
+            throw new CheckException("任务不存在，不予修改。");
+        final FruitTaskDao dao = FruitTask.getDao();
+        dao.setUuid(vo.getUuidVo());
+        dao.setStatusDescription(vo.getStatusDescription());
+        dao.setEndDate(LocalDate.now());
+        dao.setTaskStatus(task.getTaskStatus());
+        return dao;
+    }
+
     public final void delete(FruitTaskVo vo) {
-        FruitTaskDao dao = FruitTask.getDao();
+        final FruitTaskDao dao = FruitTask.getDao();
         dao.setUuid(vo.getUuidVo());
         this.delete(dao);
     }
 
-    public final FruitTask findByID(FruitTaskVo vo) {
+    /**
+     * 操作任务前的先决条件
+     *
+     * @param vo
+     * @return
+     */
+    private final FruitTask findByUUID(FruitTaskVo vo) {
         if (StringUtils.isBlank(vo.getUuidVo()))
             throw new CheckException("任务不存在");
-        FruitTaskDao dao = FruitTask.getDao();
+        final FruitTaskDao dao = FruitTask.getDao();
         dao.setUuid(vo.getUuidVo());
         List<FruitTaskDao> data = this.finds(dao);
         if (data.isEmpty() || data.size() > 1)
