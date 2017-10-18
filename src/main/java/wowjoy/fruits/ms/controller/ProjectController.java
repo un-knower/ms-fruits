@@ -68,13 +68,15 @@ public class ProjectController {
      * 2017年10月10日09:29:30-汪梓文：
      * 测试通过。
      * 待改进：遇到一个问题当传入的参数不包含在枚举中时，会出现"null"key的问题，包括大小写。
+     * 2017年10月13日16:59:30-汪梓文：第二次改版【测试通过】
+     * 1、增加业务逻辑
      *
      * @param vo
      * @return
      */
     @RequestMapping(method = RequestMethod.POST)
     public RestResult insert(@JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
-        projectDaoImpl.insert(vo);
+        projectDaoImpl.add(vo);
         return RestResult.getInstance().setData(vo.getUuid());
     }
 
@@ -83,6 +85,9 @@ public class ProjectController {
      * 2017年10月10日09:46:50-汪梓文：
      * 测试通过。
      * 待改进：需要防止关联重复的信息。
+     * 2017年10月13日17:24:21-汪梓文：第二次改版【测试通过】
+     * 1、增加添加负责人 or 负责团队自动覆盖旧值
+     * 2、拒绝添加多个负责人 or 负责团队
      *
      * @param uuid
      * @param vo

@@ -41,7 +41,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
     private PlanUserDaoImpl userDao;
     @Qualifier("planProjectDaoImpl")
     @Autowired
-    private PlanProjectDaoImpl planProjectDaoImpl;
+    private PlanProjectDaoImpl projectDao;
 
 
     @Override
@@ -127,7 +127,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
     @Override
     protected FruitPlan findByUUID(String uuid) {
         if (StringUtils.isBlank(uuid))
-            throw new CheckPlanException("【计划】uuId不能为空");
+            throw new CheckException("【计划】uuId不能为空");
         FruitPlanExample example = new FruitPlanExample();
         example.createCriteria().andUuidEqualTo(uuid);
         List<FruitPlanDao> data = mapper.selectUserByExampleWithBLOBs(example);
@@ -146,7 +146,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
     @Override
     public void insert(FruitPlanDao dao) {
         mapper.insertSelective(dao);
-        Relation.getInstance(userDao, planProjectDaoImpl, dao).insertUser().insertProject();
+        Relation.getInstance(userDao, projectDao, dao).insertUser().insertProject();
     }
 
     @Override
@@ -155,7 +155,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         FruitPlanExample.Criteria criteria = example.createCriteria();
         criteria.andUuidEqualTo(dao.getUuid());
         mapper.updateByExampleSelective(dao, example);
-        Relation.getInstance(userDao, planProjectDaoImpl, dao)
+        Relation.getInstance(userDao, projectDao, dao)
                 .removeUser().removeProject()
                 .insertUser().insertProject();
     }
@@ -167,7 +167,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         mapper.deleteByExample(example);
         FruitPlanDao plan = FruitPlan.getDao();
         plan.setUuid(uuid);
-        Relation.getInstance(userDao, planProjectDaoImpl, plan).removesProject().removesUser();
+        Relation.getInstance(userDao, projectDao, plan).removesProject().removesUser();
         /*删除进度小结*/
         deleteSummarys(FruitPlanSummary.newDao(uuid));
     }
@@ -188,6 +188,11 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         if (criteria.getAllCriteria().isEmpty())
             throw new CheckException("【删除进度小结】没有可用的删除条件");
         summaryMapper.deleteByExample(example);
+    }
+
+    @Override
+    protected List<PlanProjectRelation> findJoin(PlanProjectRelation relation) {
+        return projectDao.finds(relation);
     }
 
     private static class Relation {
@@ -226,19 +231,19 @@ public class PlanDaoImpl extends AbstractDaoPlan {
 
         public void insertProject() {
             planDao.getProjectRelation(FruitDict.Dict.ADD).forEach((i) -> {
-                projectdao.insert(PlanProjectRelation.getInstance(planDao.getUuid(), i));
+                projectdao.insert(PlanProjectRelation.newInstance(planDao.getUuid(), i));
             });
         }
 
         public Relation removeProject() {
             planDao.getProjectRelation(FruitDict.Dict.DELETE).forEach((i) ->
-                    projectdao.remove(PlanProjectRelation.getInstance(planDao.getUuid(), i))
+                    projectdao.remove(PlanProjectRelation.newInstance(planDao.getUuid(), i))
             );
             return this;
         }
 
         public Relation removesProject() {
-            projectdao.remove(PlanProjectRelation.getInstance(planDao.getUuid()));
+            projectdao.remove(PlanProjectRelation.newInstance(planDao.getUuid()));
             return this;
         }
 

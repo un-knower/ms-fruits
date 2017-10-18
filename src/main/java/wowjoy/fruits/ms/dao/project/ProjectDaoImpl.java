@@ -6,6 +6,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wowjoy.fruits.ms.dao.relation.AbstractDaoRelation;
+import wowjoy.fruits.ms.dao.relation.impl.ProjectTeamDaoImpl;
+import wowjoy.fruits.ms.dao.relation.impl.UserProjectDaoImpl;
+import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.project.FruitProject;
 import wowjoy.fruits.ms.module.project.FruitProjectDao;
 import wowjoy.fruits.ms.module.project.FruitProjectExample;
@@ -20,6 +23,7 @@ import java.util.List;
 /**
  * Created by wangziwen on 2017/9/6.
  */
+
 @Service
 @Transactional
 public class ProjectDaoImpl extends AbstractDaoProject {
@@ -28,10 +32,10 @@ public class ProjectDaoImpl extends AbstractDaoProject {
     private FruitProjectMapper projectMapper;
     @Qualifier("projectTeamDaoImpl")
     @Autowired
-    private AbstractDaoRelation teamDao;
+    private ProjectTeamDaoImpl teamDao;
     @Qualifier("userProjectDaoImpl")
     @Autowired
-    private AbstractDaoRelation userDao;
+    private UserProjectDaoImpl userDao;
 
     @Override
     public void insert(FruitProjectDao dao) {
@@ -70,7 +74,7 @@ public class ProjectDaoImpl extends AbstractDaoProject {
     @Override
     public FruitProjectDao findByUUID(String uuid) {
         if (StringUtils.isBlank(uuid))
-            throw new CheckProjectException("【项目】uuId不能为空");
+            throw new CheckException("【项目】uuId不能为空");
         FruitProjectExample example = new FruitProjectExample();
         example.createCriteria().andUuidEqualTo(uuid);
         List<FruitProjectDao> data = projectMapper.selectUserRelationByExample(example);
@@ -93,7 +97,7 @@ public class ProjectDaoImpl extends AbstractDaoProject {
     @Override
     protected void delete(String uuid) {
         if (StringUtils.isBlank(uuid))
-            throw new CheckProjectException("【项目】uuid无效。");
+            throw new CheckException("【项目】uuid无效。");
         FruitProjectExample example = new FruitProjectExample();
         example.createCriteria().andUuidEqualTo(uuid);
         projectMapper.deleteByExample(example);
@@ -101,6 +105,16 @@ public class ProjectDaoImpl extends AbstractDaoProject {
         projectDao.setUuid(uuid);
         Relation.getInstance(teamDao, userDao, projectDao)
                 .removesUserRelation().removesTeamRelation();
+    }
+
+    @Override
+    protected List<UserProjectRelation> findJoin(UserProjectRelation relation) {
+        return userDao.finds(relation);
+    }
+
+    @Override
+    protected List<ProjectTeamRelation> findJoin(ProjectTeamRelation relation) {
+        return teamDao.finds(relation);
     }
 
     /**
@@ -134,7 +148,9 @@ public class ProjectDaoImpl extends AbstractDaoProject {
          */
         private Relation removeUserRelation() {
             Dao.getUserRelation(FruitDict.Dict.DELETE).forEach((i) -> {
-                UserDao.remove(UserProjectRelation.newInstance(Dao.getUuid(), i.getUserId()));
+                if (StringUtils.isBlank(i.getUserId()))
+                    throw new CheckException("未指明删除的关联用户");
+                UserDao.remove(UserProjectRelation.newInstance(Dao.getUuid(), i.getUserId(), StringUtils.isNotBlank(i.getUpRole()) ? i.getUpRole() : null));
             });
             return this;
         }
@@ -153,7 +169,9 @@ public class ProjectDaoImpl extends AbstractDaoProject {
          */
         private Relation removeTeamRelation() {
             Dao.getTeamRelation(FruitDict.Dict.DELETE).forEach((i) -> {
-                TeamDao.remove(ProjectTeamRelation.newInstance(Dao.getUuid(), i.getTeamId()));
+                if (StringUtils.isBlank(i.getTeamId()))
+                    throw new CheckException("未指明删除的关联团队");
+                TeamDao.remove(ProjectTeamRelation.newInstance(Dao.getUuid(), i.getTeamId(), StringUtils.isNotBlank(i.getTpRole()) ? i.getTpRole() : null));
             });
             return this;
         }

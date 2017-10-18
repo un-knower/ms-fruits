@@ -6,6 +6,7 @@ import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Date;
 
 /**
  * Created by wangziwen on 2017/8/24.
@@ -15,6 +16,15 @@ public class LocalDateTest {
     @Test
     public void project() throws Exception {
         FruitDict.TaskDict.valueOf("111");
+    }
+
+    @Test
+    public void name() throws Exception {
+        Date date = new Date();
+        Thread.sleep(1000);
+        Date date1 = new Date();
+
+        System.out.println(date1.toInstant().compareTo(date.toInstant()));
     }
 
     private InputStreamReader urlClient() throws IOException {
@@ -39,8 +49,8 @@ public class LocalDateTest {
 //    @Autowired
 //    private FruitPlanSummaryMapper summaryMapper;
 //
-//    @RequestMapping("insert")
-//    public void insert(){
+//    @RequestMapping("add")
+//    public void add(){
 //        final JsonObject parse = new JsonParser().parse(urlClient()).getAsJsonObject().get("result").getAsJsonObject();
 //        final List<FruitPlan> planInfo = Lists.newLinkedList();
 //        final LinkedList<PlanProjectRelation> planProjectInfo = Lists.newLinkedList();
@@ -93,7 +103,7 @@ public class LocalDateTest {
 //        });
 //
 //        fruitPlanSummaryInfo.forEach((i)->{
-//            summaryMapper.insert(i);
+//            summaryMapper.add(i);
 //        });
 //
 //        planUserRelation.forEach((i)->{

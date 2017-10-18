@@ -5,9 +5,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wowjoy.fruits.ms.dao.relation.AbstractDaoRelation;
+import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.relation.entity.ProjectTeamRelation;
 import wowjoy.fruits.ms.module.relation.example.ProjectTeamRelationExample;
 import wowjoy.fruits.ms.module.relation.mapper.ProjectTeamRelationMapper;
+
+import java.text.MessageFormat;
+import java.util.List;
 
 /**
  * Created by wangziwen on 2017/9/12.
@@ -20,7 +24,8 @@ public class ProjectTeamDaoImpl<T extends ProjectTeamRelation> extends AbstractD
 
     @Override
     public void insert(ProjectTeamRelation relation) {
-        relation.checkTpRole();
+        if (StringUtils.isBlank(relation.getProjectId()) || StringUtils.isBlank(relation.getTeamId()))
+            throw new CheckException(MessageFormat.format(checkMsg, "项目-团队"));
         mapper.insertSelective(relation);
     }
 
@@ -32,9 +37,23 @@ public class ProjectTeamDaoImpl<T extends ProjectTeamRelation> extends AbstractD
             criteria.andProjectIdEqualTo(relation.getProjectId());
         if (StringUtils.isNotBlank(relation.getTeamId()))
             criteria.andTeamIdEqualTo(relation.getTeamId());
+        if (StringUtils.isNotBlank(relation.getTpRole()))
+            criteria.andTpRoleEqualTo(relation.getTpRole());
         if (criteria.getAllCriteria().isEmpty())
             throw new CheckRelationException("【ProjectTeamDaoImpl.remove】缺少删除条件");
         mapper.deleteByExample(example);
+    }
+
+    public List<ProjectTeamRelation> finds(ProjectTeamRelation relation) {
+        ProjectTeamRelationExample example = new ProjectTeamRelationExample();
+        ProjectTeamRelationExample.Criteria criteria = example.createCriteria();
+        if (StringUtils.isNotBlank(relation.getProjectId()))
+            criteria.andProjectIdEqualTo(relation.getProjectId());
+        if (StringUtils.isNotBlank(relation.getTeamId()))
+            criteria.andTeamIdEqualTo(relation.getTeamId());
+        if (StringUtils.isNotBlank(relation.getTpRole()))
+            criteria.andTpRoleEqualTo(relation.getTpRole());
+        return mapper.selectByExample(example);
     }
 
 }

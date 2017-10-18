@@ -1,5 +1,6 @@
 package wowjoy.fruits.ms.module.relation.entity;
 
+import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
@@ -32,7 +33,15 @@ public class TaskUserRelation extends AbstractEntity {
     }
 
     public void setUserRole(String userRole) {
-        this.userRole = userRole;
+        try {
+            this.userRole = FruitDict.TaskUserDict.valueOf(userRole).name();
+        } catch (Exception e) {
+            throw new CheckException("用户角色不存在");
+        }
+    }
+
+    public void setUserRole(FruitDict.TaskUserDict userDict) {
+        this.setUserRole(userDict.name());
     }
 
     public static TaskUserRelation newInstance(String taskId, String userId) {
@@ -46,7 +55,7 @@ public class TaskUserRelation extends AbstractEntity {
         TaskUserRelation result = new TaskUserRelation();
         result.setTaskId(taskId);
         result.setUserId(userId);
-        result.setUserRole(userRole.name());
+        result.setUserRole(userRole);
         return result;
     }
 

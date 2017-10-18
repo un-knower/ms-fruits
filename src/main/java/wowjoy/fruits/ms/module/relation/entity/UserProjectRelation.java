@@ -1,6 +1,6 @@
 package wowjoy.fruits.ms.module.relation.entity;
 
-import org.apache.commons.lang3.EnumUtils;
+import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
@@ -32,7 +32,11 @@ public class UserProjectRelation extends AbstractEntity {
     }
 
     public void setUpRole(String upRole) {
-        this.upRole = upRole;
+        try {
+            this.upRole = FruitDict.UserProjectDict.valueOf(upRole).name();
+        } catch (Exception ex) {
+            throw new CheckException("用户关联团队的角色不存在");
+        }
     }
 
     public static UserProjectRelation newInstance(String projectId, String userId) {
@@ -42,8 +46,12 @@ public class UserProjectRelation extends AbstractEntity {
         return result;
     }
 
-    public void checkUpRole() {
-        if (!EnumUtils.isValidEnum(FruitDict.UserProjectDict.class, this.upRole))
-            throw new CheckEntityException("【用户-项目】角色不存在.");
+    public static UserProjectRelation newInstance(String projectId, String userId, String upRole) {
+        final UserProjectRelation result = new UserProjectRelation();
+        result.setProjectId(projectId);
+        result.setUserId(userId);
+        result.setUpRole(upRole);
+        return result;
     }
+
 }

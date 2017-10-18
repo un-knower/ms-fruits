@@ -1,6 +1,7 @@
 package wowjoy.fruits.ms.module.plan;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
@@ -37,6 +38,13 @@ public class FruitPlanDao extends FruitPlan {
 
     public void setProjectRelation(Map<FruitDict.Dict, List<String>> projectRelation) {
         this.projectRelation = projectRelation;
+    }
+
+    public void setProjectRelation(FruitDict.Dict dict, List<String> value) {
+        if (projectRelation == null)
+            projectRelation = Maps.newHashMap();
+
+        projectRelation.put(dict, value);
     }
 
     public List<FruitUserDao> getUsers() {

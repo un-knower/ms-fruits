@@ -14,6 +14,7 @@ import java.util.List;
 /**
  * Created by wangziwen on 2017/9/5.
  */
+// TODO: 2017/10/13 团队关联项目时，需要指明在团队在项目中的角色
 @Service
 @Transactional
 public class TeamDaoImpl extends AbstractDaoTeam {

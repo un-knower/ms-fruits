@@ -117,7 +117,6 @@ public class DataDictDaoImpl extends AbstractDaoDict {
      * PUBLIC
      */
 
-    @Override
     public List<FruitDict> find() {
         return this.commonEnum().planEnum().taskEnum().projectEnum().milestoneEnum().taskUserEnum().planUserEnum().getData();
     }

@@ -1,5 +1,6 @@
 package wowjoy.fruits.ms.module.task;
 
+import wowjoy.fruits.ms.module.relation.entity.TaskListRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskPlanRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskProjectRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskUserRelation;
@@ -14,9 +15,19 @@ import java.util.Map;
  */
 public class FruitTaskVo extends FruitTask {
     private String uuidVo;
+    private String listId;
     private Map<FruitDict.Dict, List<TaskPlanRelation>> taskPlanRelation;
     private Map<FruitDict.Dict, List<TaskProjectRelation>> taskProjectRelation;
     private Map<FruitDict.Dict, List<TaskUserRelation>> taskUserRelation;
+    private Map<FruitDict.Dict, TaskListRelation> taskListRelation;
+
+    public String getListId() {
+        return listId;
+    }
+
+    public void setListId(String listId) {
+        this.listId = listId;
+    }
 
     public String getUuidVo() {
         return uuidVo;
@@ -48,5 +59,13 @@ public class FruitTaskVo extends FruitTask {
 
     public void setTaskUserRelation(Map<FruitDict.Dict, List<TaskUserRelation>> taskUserRelation) {
         this.taskUserRelation = taskUserRelation;
+    }
+
+    public Map<FruitDict.Dict, TaskListRelation> getTaskListRelation() {
+        return taskListRelation;
+    }
+
+    public void setTaskListRelation(Map<FruitDict.Dict, TaskListRelation> taskListRelation) {
+        this.taskListRelation = taskListRelation;
     }
 }

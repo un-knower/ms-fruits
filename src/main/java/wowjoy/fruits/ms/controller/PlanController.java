@@ -98,7 +98,7 @@ public class PlanController {
      */
     @RequestMapping(method = RequestMethod.POST)
     public RestResult insert(@JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlan) {
-        dataPlanDao.insert(fruitPlan);
+        dataPlanDao.add(fruitPlan);
         return RestResult.getInstance().setData(fruitPlan.getUuid());
     }
 

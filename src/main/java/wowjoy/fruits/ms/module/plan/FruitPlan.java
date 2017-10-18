@@ -1,6 +1,7 @@
 package wowjoy.fruits.ms.module.plan;
 
 
+import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.module.AbstractEntity;
 
 import java.time.LocalDate;
@@ -49,7 +50,7 @@ public class FruitPlan extends AbstractEntity {
     }
 
     public void setParentId(String parentId) {
-        this.parentId = parentId;
+        this.parentId = StringUtils.isNotBlank(parentId) ? parentId : null;
     }
 
     public int getPercent() {

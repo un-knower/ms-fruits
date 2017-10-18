@@ -24,11 +24,11 @@ public class PlanProjectRelation extends AbstractEntity {
         this.planId = planId;
     }
 
-    public static PlanProjectRelation getInstance(String planId) {
-        return getInstance(planId, null);
+    public static PlanProjectRelation newInstance(String planId) {
+        return newInstance(planId, null);
     }
 
-    public static PlanProjectRelation getInstance(String planId, String projectId) {
+    public static PlanProjectRelation newInstance(String planId, String projectId) {
         PlanProjectRelation result = new PlanProjectRelation();
         result.setPlanId(planId);
         result.setProjectId(projectId);

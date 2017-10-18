@@ -5,9 +5,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import wowjoy.fruits.ms.dao.relation.impl.TaskListDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.TaskPlanDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.TaskProjectDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.TaskUserDaoImpl;
+import wowjoy.fruits.ms.module.relation.entity.TaskListRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskPlanRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskProjectRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskUserRelation;
@@ -16,6 +18,7 @@ import wowjoy.fruits.ms.module.task.FruitTaskExample;
 import wowjoy.fruits.ms.module.task.mapper.FruitTaskMapper;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
+import java.text.MessageFormat;
 import java.util.List;
 
 /**
@@ -40,13 +43,16 @@ public class TaskDaoImpl extends AbstractDaoTask {
     @Qualifier("taskUserDaoImpl")
     @Autowired
     private TaskUserDaoImpl userDao;
+    @Qualifier("taskListDaoImpl")
+    @Autowired
+    private TaskListDaoImpl listDao;
 
 
     @Override
     public void insert(FruitTaskDao dao) {
         /*插入任务*/
         taskMapper.insertSelective(dao);
-        Relation.getInstance(dao, planDao, projectDao, userDao).insertPlan().insertProject().insertUser();
+        Relation.getInstance(dao, planDao, projectDao, userDao, listDao).insertList().insertPlan().insertProject().insertUser();
     }
 
     @Override
@@ -55,6 +61,8 @@ public class TaskDaoImpl extends AbstractDaoTask {
         FruitTaskExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(dao.getUuid()))
             criteria.andUuidEqualTo(dao.getUuid());
+        if (StringUtils.isNotBlank(dao.getTitle()))
+            criteria.andTitleEqualTo(MessageFormat.format("%{0}%", dao.getTitle()));
         return taskMapper.selectByExample(example);
     }
 
@@ -64,11 +72,11 @@ public class TaskDaoImpl extends AbstractDaoTask {
         FruitTaskExample.Criteria criteria = example.createCriteria();
         criteria.andUuidEqualTo(dao.getUuid());
         taskMapper.updateByExampleSelective(dao, example);
-        Relation.getInstance(dao, planDao, projectDao, userDao)
-                /*删除计划、项目、用户的关联信息*/
-                .removePlan().removeProject().removeUser()
-                /*添加计划、项目、用户的关联信息*/
-                .insertPlan().insertProject().insertUser();
+        Relation.getInstance(dao, planDao, projectDao, userDao, listDao)
+                /*删除列表、计划、项目、用户的关联信息*/
+                .removeList().removePlan().removeProject().removeUser()
+                /*添加列表、计划、项目、用户的关联信息*/
+                .insertList().insertPlan().insertProject().insertUser();
 
     }
 
@@ -80,17 +88,41 @@ public class TaskDaoImpl extends AbstractDaoTask {
             criteria.andUuidEqualTo(dao.getUuid());
         taskMapper.deleteByExample(example);
         /*删除项目、计划、用户关联信息*/
-        Relation.getInstance(dao, planDao, projectDao, userDao).removePlans().removeProjects().removeUsers();
+        Relation.getInstance(dao, planDao, projectDao, userDao, listDao).removeLists().removePlans().removeProjects().removeUsers();
     }
 
     @Override
-    protected List<TaskPlanRelation> findJoinPlan(TaskPlanRelation relation) {
+    protected List<TaskPlanRelation> findJoin(TaskPlanRelation relation) {
         return planDao.finds(relation);
     }
 
     @Override
-    protected List<TaskProjectRelation> findJoinProject(TaskProjectRelation relation) {
+    protected List<TaskProjectRelation> findJoin(TaskProjectRelation relation) {
         return projectDao.finds(relation);
+    }
+
+    @Override
+    protected List<TaskListRelation> findJoin(TaskListRelation relation) {
+        return listDao.finds(relation);
+    }
+
+    @Override
+    protected List<FruitTaskDao> findJoinProjects(FruitTaskDao dao, String listId) {
+        return taskMapper.selectProjectByExample(findJoinExample(dao), listId);
+    }
+
+    @Override
+    protected List<FruitTaskDao> findJoinPlans(FruitTaskDao dao, String listId) {
+        return taskMapper.selectPlanByExample(findJoinExample(dao), listId);
+    }
+
+    /*查询模板*/
+    private FruitTaskExample findJoinExample(FruitTaskDao dao) {
+        FruitTaskExample example = new FruitTaskExample();
+        FruitTaskExample.Criteria criteria = example.createCriteria();
+        if (StringUtils.isNotBlank(dao.getTitle()))
+            criteria.andTitleEqualTo(dao.getTitle());
+        return example;
     }
 
     /**
@@ -101,16 +133,18 @@ public class TaskDaoImpl extends AbstractDaoTask {
         private final TaskPlanDaoImpl planDao;
         private final TaskProjectDaoImpl projectDao;
         private final TaskUserDaoImpl userDao;
+        private final TaskListDaoImpl listDao;
 
-        private Relation(FruitTaskDao dao, TaskPlanDaoImpl planDao, TaskProjectDaoImpl projectDao, TaskUserDaoImpl userDao) {
+        private Relation(FruitTaskDao dao, TaskPlanDaoImpl planDao, TaskProjectDaoImpl projectDao, TaskUserDaoImpl userDao, TaskListDaoImpl listDao) {
             this.dao = dao;
             this.planDao = planDao;
             this.projectDao = projectDao;
             this.userDao = userDao;
+            this.listDao = listDao;
         }
 
-        public static Relation getInstance(FruitTaskDao dao, TaskPlanDaoImpl planDao, TaskProjectDaoImpl projectDao, TaskUserDaoImpl userDao) {
-            return new Relation(dao, planDao, projectDao, userDao);
+        public static Relation getInstance(FruitTaskDao dao, TaskPlanDaoImpl planDao, TaskProjectDaoImpl projectDao, TaskUserDaoImpl userDao, TaskListDaoImpl listDao) {
+            return new Relation(dao, planDao, projectDao, userDao, listDao);
         }
 
         public Relation insertPlan() {
@@ -132,8 +166,17 @@ public class TaskDaoImpl extends AbstractDaoTask {
         public Relation insertUser() {
             dao.getTaskUserRelation(FruitDict.Dict.ADD).forEach((i) -> {
                 i.setTaskId(dao.getUuid());
+                i.setUserRole(FruitDict.TaskUserDict.EXECUTOR);
                 userDao.insert(i);
             });
+            return this;
+        }
+
+        public Relation insertList() {
+            TaskListRelation relation = dao.getTaskListRelation(FruitDict.Dict.ADD);
+            if (!relation.isNotEmpty()) return this;
+            relation.setTaskId(dao.getUuid());
+            listDao.insert(relation);
             return this;
         }
 
@@ -161,14 +204,26 @@ public class TaskDaoImpl extends AbstractDaoTask {
             return this;
         }
 
-        public void removeUsers() {
+        public Relation removeUsers() {
             userDao.remove(TaskUserRelation.newInstance(dao.getUuid(), null));
+            return this;
         }
 
         public Relation removeUser() {
             dao.getTaskUserRelation(FruitDict.Dict.DELETE).forEach((i) -> {
                 userDao.remove(TaskUserRelation.newInstance(dao.getUuid(), i.getUserId()));
             });
+            return this;
+        }
+
+        public Relation removeLists() {
+            listDao.remove(TaskListRelation.newInstance(dao.getUuid(), null));
+            return this;
+        }
+
+        public Relation removeList() {
+            if (dao.getTaskListRelation(FruitDict.Dict.DELETE).isNotEmpty())
+                listDao.remove(TaskListRelation.newInstance(dao.getUuid(), dao.getTaskListRelation(FruitDict.Dict.DELETE).getListId()));
             return this;
         }
 

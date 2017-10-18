@@ -5,10 +5,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wowjoy.fruits.ms.dao.relation.AbstractDaoRelation;
+import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.relation.entity.TaskUserRelation;
 import wowjoy.fruits.ms.module.relation.example.TaskUserRelationExample;
 import wowjoy.fruits.ms.module.relation.mapper.TaskUserRelationMapper;
 
+import java.text.MessageFormat;
 import java.util.List;
 
 /**
@@ -22,6 +24,8 @@ public class TaskUserDaoImpl<T extends TaskUserRelation> extends AbstractDaoRela
 
     @Override
     public void insert(TaskUserRelation relation) {
+        if (StringUtils.isBlank(relation.getUserId()) || StringUtils.isBlank(relation.getTaskId()) || StringUtils.isBlank(relation.getUserRole()))
+            throw new CheckException(MessageFormat.format(checkMsg, "任务-用户"));
         mapper.insertSelective(relation);
     }
 
@@ -33,6 +37,8 @@ public class TaskUserDaoImpl<T extends TaskUserRelation> extends AbstractDaoRela
             criteria.andTaskIdEqualTo(relation.getTaskId());
         if (StringUtils.isNotBlank(relation.getUserId()))
             criteria.andUserIdEqualTo(relation.getUserId());
+        if (StringUtils.isNotBlank(relation.getUserRole()))
+            criteria.andUserRoleEqualTo(relation.getUserRole());
         if (criteria.getAllCriteria().isEmpty())
             throw new CheckRelationException("【TaskUserDaoImpl.remove】缺少删除条件");
         mapper.deleteByExample(example);

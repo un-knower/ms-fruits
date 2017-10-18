@@ -5,10 +5,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wowjoy.fruits.ms.dao.relation.AbstractDaoRelation;
+import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.relation.entity.TaskPlanRelation;
 import wowjoy.fruits.ms.module.relation.example.TaskPlanRelationExample;
 import wowjoy.fruits.ms.module.relation.mapper.TaskPlanRelationMapper;
 
+import java.text.MessageFormat;
 import java.util.List;
 
 /**
@@ -22,6 +24,8 @@ public class TaskPlanDaoImpl<T extends TaskPlanRelation> extends AbstractDaoRela
 
     @Override
     public void insert(TaskPlanRelation relation) {
+        if (StringUtils.isBlank(relation.getPlanId()) || StringUtils.isBlank(relation.getTaskId()))
+            throw new CheckException(MessageFormat.format(checkMsg,"任务-计划"));
         mapper.insertSelective(relation);
     }
 

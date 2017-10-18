@@ -5,10 +5,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wowjoy.fruits.ms.dao.relation.AbstractDaoRelation;
+import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.relation.entity.TaskProjectRelation;
 import wowjoy.fruits.ms.module.relation.example.TaskProjectRelationExample;
 import wowjoy.fruits.ms.module.relation.mapper.TaskProjectRelationMapper;
 
+import java.text.MessageFormat;
 import java.util.List;
 
 /**
@@ -22,6 +24,8 @@ public class TaskProjectDaoImpl<T extends TaskProjectRelation> extends AbstractD
 
     @Override
     public void insert(TaskProjectRelation relation) {
+        if (StringUtils.isBlank(relation.getTaskId()) || StringUtils.isBlank(relation.getProjectId()))
+            throw new CheckException(MessageFormat.format(checkMsg, "任务-项目"));
         mapper.insertSelective(relation);
     }
 
@@ -38,7 +42,7 @@ public class TaskProjectDaoImpl<T extends TaskProjectRelation> extends AbstractD
         mapper.deleteByExample(example);
     }
 
-    public List<TaskProjectRelation> finds(TaskProjectRelation relation){
+    public List<TaskProjectRelation> finds(TaskProjectRelation relation) {
         TaskProjectRelationExample example = new TaskProjectRelationExample();
         TaskProjectRelationExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(relation.getProjectId()))

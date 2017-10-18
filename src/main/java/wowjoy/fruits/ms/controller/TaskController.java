@@ -106,6 +106,8 @@ public class TaskController {
 
     /**
      * 修改任务-改变任务状态为开始
+     * 2017年10月12日17:32:05
+     * 1、完成修改任务状态至已开始
      *
      * @param uuid
      * @param vo
@@ -115,6 +117,20 @@ public class TaskController {
     public RestResult changeStatusToStart(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
         vo.setUuidVo(uuid);
         daoTask.changeStatusToStart(vo);
+        return RestResult.getInstance().setData(vo.getUuidVo());
+    }
+
+    /**
+     * 修改任务-改变任务所在列表
+     *
+     * @param uuid
+     * @param vo
+     * @return
+     */
+    @RequestMapping(value = "/list/{uuid}", method = RequestMethod.PUT)
+    public RestResult changeList(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
+        vo.setUuidVo(uuid);
+        daoTask.changeList(vo);
         return RestResult.getInstance().setData(vo.getUuidVo());
     }
 
@@ -137,5 +153,38 @@ public class TaskController {
         return RestResult.getInstance().setData(vo.getUuidVo());
     }
 
+
+    /**
+     * 查询属于项目的任务列表
+     * 1、用户列表提供简单的日期排序
+     * 2、提供简单的延期计算功能
+     * 2017年10月16日16:19:46-汪梓文：测试通过
+     * `
+     *
+     * @param listId
+     * @param vo
+     * @return
+     */
+    @RequestMapping(value = "/project/{listId}", method = RequestMethod.GET)
+    public RestResult findJoinProject(@PathVariable("listId") String listId, @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
+        vo.setListId(listId);
+        return RestResult.getInstance().setData(daoTask.findJoinProjects(vo));
+    }
+
+    /**
+     * 查询属于计划的任务列表
+     * 1、用户列表提供简单的日期排序
+     * 2、提供简单的延期计算功能
+     * 2017年10月16日16:20:09-汪梓文：测试通过
+     *
+     * @param listId
+     * @param vo
+     * @return
+     */
+    @RequestMapping(value = "/plan/{listId}", method = RequestMethod.GET)
+    public RestResult findJoinPlan(@PathVariable("listId") String listId, @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
+        vo.setListId(listId);
+        return RestResult.getInstance().setData(daoTask.findJoinPlans(vo));
+    }
 
 }

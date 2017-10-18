@@ -1,6 +1,7 @@
 package wowjoy.fruits.ms.module.project;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import wowjoy.fruits.ms.module.relation.entity.ProjectTeamRelation;
 import wowjoy.fruits.ms.module.relation.entity.UserProjectRelation;
@@ -46,8 +47,20 @@ public class FruitProjectDao extends FruitProject {
         this.teamRelation = teamRelation;
     }
 
+    public void setTeamRelation(FruitDict.Dict dict, List<ProjectTeamRelation> value) {
+        if (teamRelation == null)
+            teamRelation = Maps.newLinkedHashMap();
+        teamRelation.put(dict, value);
+    }
+
     public void setUserRelation(Map<FruitDict.Dict, List<UserProjectRelation>> userRelation) {
         this.userRelation = userRelation;
+    }
+
+    public void setUserRelation(FruitDict.Dict dict, List<UserProjectRelation> value) {
+        if (userRelation == null)
+            userRelation = Maps.newLinkedHashMap();
+        userRelation.put(dict, value);
     }
 
     public Integer getDays() {

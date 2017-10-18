@@ -7,6 +7,7 @@ import wowjoy.fruits.ms.exception.CheckException;
  * Created by wangziwen on 2017/9/12.
  */
 public abstract class AbstractDaoRelation<T> implements InterfaceDao {
+    protected final String checkMsg = "关联【{0}】参数错误，请检查入参。";
 
     /**
      * 单条记录删除

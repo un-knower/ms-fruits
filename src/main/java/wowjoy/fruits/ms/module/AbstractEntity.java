@@ -4,14 +4,13 @@ import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.exception.NullException;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
-import java.text.MessageFormat;
 import java.util.Date;
 import java.util.UUID;
 
 /**
  * 实体类基类
  */
-public abstract class AbstractEntity {
+public abstract class AbstractEntity implements InterfaceEntity {
 
     protected AbstractEntity() {
         /*利大于弊，我选择保留，如果有更好的方法，可以尝试*/
@@ -55,10 +54,6 @@ public abstract class AbstractEntity {
 
     public String getIsDeleted() {
         return isDeleted;
-    }
-
-    public boolean isNotEmpty() {
-        return true;
     }
 
     /****************

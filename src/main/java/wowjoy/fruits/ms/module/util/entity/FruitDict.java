@@ -274,8 +274,8 @@ public class FruitDict extends AbstractEntity {
      * planUserRelation 计划用户关联字典管理
      */
     public enum PlanUserDict {
-        PRINCIPAL("负责人"),
-        PARTICIPANT("参与者");
+        PRINCIPAL("负责人");
+//        PARTICIPANT("参与者");
 
 
         private String parentCode;
@@ -397,7 +397,7 @@ public class FruitDict extends AbstractEntity {
         }
 
         ProjectTeamDict(String value) {
-            this.setParentCode(Dict.USERTEAM.name());
+            this.setParentCode(Dict.USERPROJECT.name());
             this.setValue(value);
         }
 
