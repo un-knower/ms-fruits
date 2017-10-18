@@ -28,7 +28,9 @@ public class WebConfig extends WebMvcConfigurerAdapter {
     @Override
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
         GsonHttpMessageConverter gsonHttpMessageConverter = new GsonHttpMessageConverter();
-        gsonHttpMessageConverter.setGson(new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").registerTypeAdapter(LocalDate.class, LocalDateAdapter.getInstance()).create());
+        gsonHttpMessageConverter.setGson(new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss")
+//                .registerTypeAdapter(LocalDate.class, LocalDateAdapter.getInstance())
+                .create());
         converters.add(gsonHttpMessageConverter);
     }
 
