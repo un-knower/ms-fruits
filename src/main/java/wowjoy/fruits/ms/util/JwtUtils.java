@@ -29,7 +29,7 @@ public class JwtUtils {
     }
 
     public static class Jwt {
-        private final Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").registerTypeAdapter(LocalDate.class, WebConfig.LocalDateAdapter.getInstance()).create();
+        private final Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").registerTypeAdapter(LocalDateTime.class, WebConfig.LocalDateAdapter.getInstance()).create();
         private final Header header;
         private final PayLoad payload;
         private final String signature;
