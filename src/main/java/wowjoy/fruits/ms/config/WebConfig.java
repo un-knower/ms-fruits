@@ -34,6 +34,9 @@ public class WebConfig extends WebMvcConfigurerAdapter {
         converters.add(gsonHttpMessageConverter);
     }
 
+    /**
+     * 时间转换字段工具
+     */
     private static class LocalDateAdapter implements JsonSerializer<LocalDate> {
 
         @Override

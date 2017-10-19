@@ -16,8 +16,9 @@ import java.util.TimeZone;
 public class LocalDateTime {
     @Test
     public void localDate() throws Exception {
-        final LocalDate of = LocalDate.of(2017, 1, 1);
+//        final LocalDate of = LocalDate.of(2017, 1, 1);
 //        System.out.println(of.toEpochDay());
+        System.out.println(java.time.LocalDateTime.now().compareTo(java.time.LocalDateTime.now().plusHours(1)));
     }
 
     /**

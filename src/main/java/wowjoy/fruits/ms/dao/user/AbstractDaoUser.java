@@ -6,7 +6,9 @@ import wowjoy.fruits.ms.exception.NullException;
 import wowjoy.fruits.ms.module.user.FruitUser;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.user.FruitUserVo;
+import wowjoy.fruits.ms.util.JwtUtils;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -28,12 +30,13 @@ public abstract class AbstractDaoUser implements InterfaceDao {
      * PUBLIC 函数，公共接口 *
      ***********************/
 
-    public FruitUser find(FruitUserVo vo) {
+    public String login(FruitUserVo vo) {
         final FruitUserDao dao = FruitUser.getFruitUserDao();
         if (StringUtils.isBlank(vo.getUserEmail()))
             throw new NullUserException("邮箱不能为空");
         dao.setUserEmail(vo.getUserEmail());
-        return this.find(dao);
+        FruitUser fruitUser = this.find(dao);
+        return JwtUtils.token(JwtUtils.newHeader(),JwtUtils.newPayLoad(fruitUser.getUserId(), LocalDate.now().plusDays(1), LocalDate.now()));
     }
 
     public List<FruitUser> finds(FruitUserVo vo) {
