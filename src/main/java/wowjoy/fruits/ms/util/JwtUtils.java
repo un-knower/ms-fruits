@@ -34,7 +34,7 @@ public class JwtUtils {
 
         @Override
         public JsonElement serialize(LocalDateTime src, Type typeOfSrc, JsonSerializationContext context) {
-            return new JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE));
+            return new JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
         }
 
         public static LocalDateTimeAdapter getInstance() {
