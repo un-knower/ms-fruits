@@ -1,5 +1,7 @@
 package wowjoy.fruits.ms.dao.user;
 
+import com.google.common.base.Charsets;
+import com.sun.jersey.core.util.Base64;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.NullException;
