@@ -1,8 +1,10 @@
 package wowjoy.fruits.ms.util;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.apache.commons.codec.binary.StringUtils;
 import org.apache.commons.codec.digest.HmacUtils;
+import wowjoy.fruits.ms.config.WebConfig;
 
 import java.time.LocalDate;
 import java.util.Base64;
@@ -26,6 +28,7 @@ public class JwtUtils {
     }
 
     public static class Jwt {
+        private final Gson gson = new GsonBuilder().registerTypeAdapter(LocalDate.class, WebConfig.LocalDateAdapter.getInstance()).create();
         private final Header header;
         private final PayLoad payload;
         private final String signature;
@@ -43,11 +46,11 @@ public class JwtUtils {
         }
 
         public String getHeader() {
-            return StringUtils.newStringUtf8(Base64.getUrlEncoder().encode(new Gson().toJsonTree(header).toString().getBytes()));
+            return StringUtils.newStringUtf8(Base64.getUrlEncoder().encode(gson.toJsonTree(header).toString().getBytes()));
         }
 
         public String getPayload() {
-            return StringUtils.newStringUtf8(Base64.getUrlEncoder().encode(new Gson().toJsonTree(payload).toString().getBytes()));
+            return StringUtils.newStringUtf8(Base64.getUrlEncoder().encode(gson.toJsonTree(payload).toString().getBytes()));
         }
 
         public String toString() {
