@@ -7,6 +7,7 @@ import org.apache.commons.codec.digest.HmacUtils;
 import wowjoy.fruits.ms.config.WebConfig;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.UUID;
 
@@ -23,7 +24,7 @@ public class JwtUtils {
         return Jwt.Header.newInstance();
     }
 
-    public static Jwt.PayLoad newPayLoad(String userId, LocalDate exp, LocalDate iat) {
+    public static Jwt.PayLoad newPayLoad(String userId, LocalDateTime exp, LocalDateTime iat) {
         return Jwt.PayLoad.newInstance(userId, exp, iat);
     }
 
@@ -114,12 +115,12 @@ public class JwtUtils {
              */
             private final String iss;
             private final String sub;
-            private final LocalDate exp;
-            private final LocalDate iat;
+            private final LocalDateTime exp;
+            private final LocalDateTime iat;
             private final String jti;
             private final String userId;
 
-            private PayLoad(String iss, String sub, LocalDate exp, LocalDate iat, String userId) {
+            private PayLoad(String iss, String sub, LocalDateTime exp, LocalDateTime iat, String userId) {
                 this.iss = iss;
                 this.sub = sub;
                 this.exp = exp;
@@ -128,7 +129,7 @@ public class JwtUtils {
                 this.userId = userId;
             }
 
-            public static PayLoad newInstance(String userId, LocalDate exp, LocalDate iat) {
+            public static PayLoad newInstance(String userId, LocalDateTime exp, LocalDateTime iat) {
                 return new PayLoad(null, null, exp, iat, userId);
             }
 

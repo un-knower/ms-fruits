@@ -9,6 +9,7 @@ import wowjoy.fruits.ms.module.user.FruitUserVo;
 import wowjoy.fruits.ms.util.JwtUtils;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -36,7 +37,7 @@ public abstract class AbstractDaoUser implements InterfaceDao {
             throw new NullUserException("邮箱不能为空");
         dao.setUserEmail(vo.getUserEmail());
         FruitUser fruitUser = this.find(dao);
-        return JwtUtils.token(JwtUtils.newHeader(),JwtUtils.newPayLoad(fruitUser.getUserId(), LocalDate.now().plusDays(1), LocalDate.now()));
+        return JwtUtils.token(JwtUtils.newHeader(),JwtUtils.newPayLoad(fruitUser.getUserId(), LocalDateTime.now().plusDays(1), LocalDateTime.now()));
     }
 
     public List<FruitUser> finds(FruitUserVo vo) {
