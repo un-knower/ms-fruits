@@ -1,13 +1,12 @@
 package wowjoy.fruits.ms.util;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.*;
 import org.apache.commons.codec.binary.StringUtils;
 import org.apache.commons.codec.digest.HmacUtils;
-import wowjoy.fruits.ms.config.WebConfig;
 
-import java.time.LocalDate;
+import java.lang.reflect.Type;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.UUID;
 
@@ -28,8 +27,23 @@ public class JwtUtils {
         return Jwt.PayLoad.newInstance(userId, exp, iat);
     }
 
+    /**
+     * 时间转换字段工具
+     */
+    public static class LocalDateTimeAdapter implements JsonSerializer<LocalDateTime> {
+
+        @Override
+        public JsonElement serialize(LocalDateTime src, Type typeOfSrc, JsonSerializationContext context) {
+            return new JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE));
+        }
+
+        public static LocalDateTimeAdapter getInstance() {
+            return new LocalDateTimeAdapter();
+        }
+    }
+
     public static class Jwt {
-        private final Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").registerTypeAdapter(LocalDateTime.class, WebConfig.LocalDateAdapter.getInstance()).create();
+        private final Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").registerTypeAdapter(LocalDateTime.class, LocalDateTimeAdapter.getInstance()).create();
         private final Header header;
         private final PayLoad payload;
         private final String signature;

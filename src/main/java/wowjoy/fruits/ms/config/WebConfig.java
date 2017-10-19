@@ -37,7 +37,7 @@ public class WebConfig extends WebMvcConfigurerAdapter {
     /**
      * 时间转换字段工具
      */
-    public static class LocalDateAdapter implements JsonSerializer<LocalDate> {
+    private static class LocalDateAdapter implements JsonSerializer<LocalDate> {
 
         @Override
         public JsonElement serialize(LocalDate src, Type typeOfSrc, JsonSerializationContext context) {
