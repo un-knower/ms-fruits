@@ -40,35 +40,33 @@
         <result column="pu_role" jdbcType="VARCHAR" property="planRole"/>
     </resultMap>
     <sql id="Example_Where_Clause">
-        <where>
-            <foreach collection="oredCriteria" item="criteria" separator="or">
-                <if test="criteria.valid">
-                    <trim prefix="(" prefixOverrides="and" suffix=")">
-                        <foreach collection="criteria.criteria" item="criterion">
-                            <choose>
-                                <when test="criterion.noValue">
-                                    and ${replace}.${criterion.condition}
-                                </when>
-                                <when test="criterion.singleValue">
-                                    and ${replace}.${criterion.condition} #{criterion.value}
-                                </when>
-                                <when test="criterion.betweenValue">
-                                    and ${replace}.${criterion.condition} #{criterion.value} and
-                                    #{criterion.secondValue}
-                                </when>
-                                <when test="criterion.listValue">
-                                    and ${replace}.${criterion.condition}
-                                    <foreach close=")" collection="criterion.value" item="listItem" open="("
-                                             separator=",">
-                                        #{listItem}
-                                    </foreach>
-                                </when>
-                            </choose>
-                        </foreach>
-                    </trim>
-                </if>
-            </foreach>
-        </where>
+        <foreach collection="example.oredCriteria" item="criteria" separator="or">
+            <if test="criteria.valid">
+                <trim prefix="(" prefixOverrides="and" suffix=")">
+                    <foreach collection="criteria.criteria" item="criterion">
+                        <choose>
+                            <when test="criterion.noValue">
+                                and ${replace}.${criterion.condition}
+                            </when>
+                            <when test="criterion.singleValue">
+                                and ${replace}.${criterion.condition} #{criterion.value}
+                            </when>
+                            <when test="criterion.betweenValue">
+                                and ${replace}.${criterion.condition} #{criterion.value} and
+                                #{criterion.secondValue}
+                            </when>
+                            <when test="criterion.listValue">
+                                and ${replace}.${criterion.condition}
+                                <foreach close=")" collection="criterion.value" item="listItem" open="("
+                                         separator=",">
+                                    #{listItem}
+                                </foreach>
+                            </when>
+                        </choose>
+                    </foreach>
+                </trim>
+            </if>
+        </foreach>
     </sql>
     <sql id="Base_Column_List">
     ${replace}.uuid,
@@ -97,32 +95,26 @@
     ${replace}.create_date_time as ${prefix}create_date_time,
     ${replace}.is_deleted as ${prefix}is_deleted
   </sql>
-    <select id="selectUserByExampleWithBLOBs" parameterType="wowjoy.fruits.ms.module.plan.example.FruitPlanExample"
+    <select id="selectUserByProject" parameterType="wowjoy.fruits.ms.module.plan.example.FruitPlanExample"
             resultMap="ResultMapWithBLOBs">
         select
-        <if test="distinct">
-            distinct
-        </if>
         <include refid="Base_Column_List">
             <property name="replace" value="p"/>
         </include>
-        ,
-        <include refid="User_Column_List">
-            <property name="replace" value="u"/>
-            <property name="prefix" value="user_"/>
-        </include>
-        ,
-        pur.pu_role as user_pu_role
         from fruits_plan p
-        LEFT JOIN plan_user_relation pur ON pur.plan_id = p.uuid
-        LEFT JOIN fruits_user u ON pur.user_id = u.user_id
-        <if test="_parameter != null">
-            <include refid="Example_Where_Clause">
-                <property name="replace" value="p"/>
-            </include>
+        LEFT join plan_project_relation ppr on ppr.plan_id = p.uuid
+        <if test="example != null">
+            <where>
+                <include refid="Example_Where_Clause">
+                    <property name="replace" value="p"/>
+                </include>
+                <if test="projectId != null">
+                    and ppr.project_id = #{projectId}
+                </if>
+            </where>
         </if>
-        <if test="orderByClause != null">
-            order by p.${orderByClause}
+        <if test="example.orderByClause != null">
+            order by p.${example.orderByClause}
         </if>
     </select>
 </mapper>

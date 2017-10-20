@@ -23,6 +23,24 @@ public class FruitPlanDao extends FruitPlan {
     private List<FruitUserDao> users;
     private Map<FruitDict.Dict, List<String>> userRelation;
     private Map<FruitDict.Dict, List<String>> projectRelation;
+    private List<FruitPlanDao> weeks;
+    private String projectId;
+
+    public List<FruitPlanDao> getWeeks() {
+        return weeks;
+    }
+
+    public void setWeeks(List<FruitPlanDao> weeks) {
+        this.weeks = weeks;
+    }
+
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(String projectId) {
+        this.projectId = projectId;
+    }
 
     public List<String> getUserRelation(FruitDict.Dict type) {
         return userRelation != null && userRelation.containsKey(type) ? userRelation.get(type) : Lists.newLinkedList();

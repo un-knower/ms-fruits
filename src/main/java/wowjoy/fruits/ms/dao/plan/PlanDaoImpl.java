@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wowjoy.fruits.ms.dao.relation.impl.PlanProjectDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.PlanUserDaoImpl;
+import wowjoy.fruits.ms.dao.user.UserDaoImpl;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.plan.FruitPlan;
 import wowjoy.fruits.ms.module.plan.FruitPlanDao;
@@ -19,9 +20,9 @@ import wowjoy.fruits.ms.module.plan.mapper.FruitPlanMapper;
 import wowjoy.fruits.ms.module.plan.mapper.FruitPlanSummaryMapper;
 import wowjoy.fruits.ms.module.relation.entity.PlanProjectRelation;
 import wowjoy.fruits.ms.module.relation.entity.PlanUserRelation;
+import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
-import java.text.MessageFormat;
 import java.util.List;
 import java.util.Objects;
 
@@ -38,37 +39,46 @@ public class PlanDaoImpl extends AbstractDaoPlan {
     private FruitPlanSummaryMapper summaryMapper;
     @Qualifier("planUserDaoImpl")
     @Autowired
-    private PlanUserDaoImpl userDao;
+    private PlanUserDaoImpl userRelation;
     @Qualifier("planProjectDaoImpl")
     @Autowired
     private PlanProjectDaoImpl projectDao;
+    @Autowired
+    private UserDaoImpl userDao;
 
 
     @Override
-    protected List<FruitPlanDao> findRelationMonth(FruitPlanDao dao, Integer pageNum, Integer pageSize) {
-        final FruitPlanExample example = new FruitPlanExample();
-        final FruitPlanExample.Criteria criteria = example.createCriteria();
-        /*查询所有月计划*/
-        criteria.andParentIdIsNull();
-        if (StringUtils.isNotBlank(dao.getTitle()))
-            criteria.andTitleEqualTo(dao.getTitle());
-        if (StringUtils.isNotBlank(dao.getPlanStatus()))
-            criteria.andPlanStatusEqualTo(dao.getPlanStatus());
-        if (Objects.nonNull(dao.getStartDateDao()) && Objects.nonNull(dao.getEndDateDao()))
-            criteria.andEstimatedEndDateBetween(dao.getStartDateDao(), dao.getEndDateDao());
-        if (StringUtils.isNotBlank(dao.getPlanStatus()))
-            criteria.andPlanStatusEqualTo(dao.getPlanStatus());
-        criteria.andIsDeletedEqualTo(FruitDict.Dict.N.name());
-        PageHelper.startPage(pageNum, pageSize);
-        return mapper.selectUserByExampleWithBLOBs(example);
+    protected List<FruitUserDao> findUser(FruitPlanDao dao) {
+        return userDao.findPlan(dao.getUuid());
     }
 
     @Override
-    protected List<FruitPlanDao> findRelationWeek(FruitPlanDao dao, Integer pageNum, Integer pageSize) {
+    protected List<FruitPlanDao> findProject(FruitPlanDao dao, Integer pageNum, Integer pageSize, boolean isPage) {
+        FruitPlanExample example = this.findTemplate(dao);
+        if (StringUtils.isNotBlank(dao.getParentId()))
+            example.getOredCriteria().get(0).andParentIdIsNotNull();
+        else
+            example.getOredCriteria().get(0).andParentIdIsNull();
+        findTemplate(dao).getOredCriteria().get(0).andParentIdIsNull();
+        if (isPage) PageHelper.startPage(pageNum, pageSize);
+        return mapper.selectUserByProject(example, dao.getProjectId());
+    }
+
+    @Override
+    protected List<FruitPlanDao> find(FruitPlanDao dao, Integer pageNum, Integer pageSize) {
+        final FruitPlanExample example = this.findTemplate(dao);
+        /*查询所有月计划*/
+        if (StringUtils.isNotBlank(dao.getParentId()))
+            example.getOredCriteria().get(0).andParentIdIsNotNull();
+        else
+            example.getOredCriteria().get(0).andParentIdIsNull();
+        PageHelper.startPage(pageNum, pageSize);
+        return mapper.selectByExampleWithBLOBs(example);
+    }
+
+    private FruitPlanExample findTemplate(FruitPlanDao dao) {
         final FruitPlanExample example = new FruitPlanExample();
         final FruitPlanExample.Criteria criteria = example.createCriteria();
-        /*查询所有周计划*/
-        criteria.andParentIdIsNotNull();
         if (StringUtils.isNotBlank(dao.getTitle()))
             criteria.andTitleEqualTo(dao.getTitle());
         if (StringUtils.isNotBlank(dao.getPlanStatus()))
@@ -80,48 +90,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         if (StringUtils.isNotBlank(dao.getPlanStatus()))
             criteria.andPlanStatusEqualTo(dao.getPlanStatus());
         criteria.andIsDeletedEqualTo(FruitDict.Dict.N.name());
-        PageHelper.startPage(pageNum, pageSize);
-        return mapper.selectUserByExampleWithBLOBs(example);
-    }
-
-    @Override
-    protected List<FruitPlanDao> findMonth(FruitPlanDao dao, Integer pageNum, Integer pageSize) {
-        final FruitPlanExample example = new FruitPlanExample();
-        final FruitPlanExample.Criteria criteria = example.createCriteria();
-        /*查询所有月计划*/
-        criteria.andParentIdIsNull();
-        if (StringUtils.isNotBlank(dao.getTitle()))
-            criteria.andTitleLike(MessageFormat.format("%{0}%", dao.getTitle()));
-        if (StringUtils.isNotBlank(dao.getPlanStatus()))
-            criteria.andPlanStatusEqualTo(dao.getPlanStatus());
-        if (Objects.nonNull(dao.getStartDateDao()) && Objects.nonNull(dao.getEndDateDao()))
-            criteria.andEstimatedEndDateBetween(dao.getStartDateDao(), dao.getEndDateDao());
-        if (StringUtils.isNotBlank(dao.getPlanStatus()))
-            criteria.andPlanStatusEqualTo(dao.getPlanStatus());
-        criteria.andIsDeletedEqualTo(FruitDict.Dict.N.name());
-        PageHelper.startPage(pageNum, pageSize);
-        return mapper.selectByExampleWithBLOBs(example);
-    }
-
-    @Override
-    protected List<FruitPlanDao> findWeek(FruitPlanDao dao, Integer pageNum, Integer pageSize) {
-        final FruitPlanExample example = new FruitPlanExample();
-        final FruitPlanExample.Criteria criteria = example.createCriteria();
-        /*查询所有周计划*/
-        criteria.andParentIdIsNotNull();
-        if (StringUtils.isNotBlank(dao.getTitle()))
-            criteria.andTitleEqualTo(dao.getTitle());
-        if (StringUtils.isNotBlank(dao.getPlanStatus()))
-            criteria.andPlanStatusEqualTo(dao.getPlanStatus());
-        if (StringUtils.isNotBlank(dao.getParentId()))
-            criteria.andParentIdEqualTo(dao.getParentId());
-        if (Objects.nonNull(dao.getStartDateDao()) && Objects.nonNull(dao.getEndDateDao()))
-            criteria.andEstimatedEndDateBetween(dao.getStartDateDao(), dao.getEndDateDao());
-        if (StringUtils.isNotBlank(dao.getPlanStatus()))
-            criteria.andPlanStatusEqualTo(dao.getPlanStatus());
-        criteria.andIsDeletedEqualTo(FruitDict.Dict.N.name());
-        PageHelper.startPage(pageNum, pageSize);
-        return mapper.selectByExampleWithBLOBs(example);
+        return example;
     }
 
     @Override
@@ -130,7 +99,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
             throw new CheckException("【计划】uuId不能为空");
         FruitPlanExample example = new FruitPlanExample();
         example.createCriteria().andUuidEqualTo(uuid);
-        List<FruitPlanDao> data = mapper.selectUserByExampleWithBLOBs(example);
+        List<FruitPlanDao> data = mapper.selectUserByProject(example, null);
         if (data.isEmpty())
             return FruitPlan.newEmpty("计划不存在");
         return data.get(0);
@@ -146,7 +115,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
     @Override
     public void insert(FruitPlanDao dao) {
         mapper.insertSelective(dao);
-        Relation.getInstance(userDao, projectDao, dao).insertUser().insertProject();
+        Relation.getInstance(userRelation, projectDao, dao).insertUser().insertProject();
     }
 
     @Override
@@ -155,7 +124,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         FruitPlanExample.Criteria criteria = example.createCriteria();
         criteria.andUuidEqualTo(dao.getUuid());
         mapper.updateByExampleSelective(dao, example);
-        Relation.getInstance(userDao, projectDao, dao)
+        Relation.getInstance(userRelation, projectDao, dao)
                 .removeUser().removeProject()
                 .insertUser().insertProject();
     }
@@ -167,7 +136,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         mapper.deleteByExample(example);
         FruitPlanDao plan = FruitPlan.getDao();
         plan.setUuid(uuid);
-        Relation.getInstance(userDao, projectDao, plan).removesProject().removesUser();
+        Relation.getInstance(userRelation, projectDao, plan).removesProject().removesUser();
         /*删除进度小结*/
         deleteSummarys(FruitPlanSummary.newDao(uuid));
     }

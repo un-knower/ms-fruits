@@ -11,6 +11,7 @@ import wowjoy.fruits.ms.dao.plan.AbstractDaoPlan;
 import wowjoy.fruits.ms.module.plan.FruitPlan;
 import wowjoy.fruits.ms.module.plan.FruitPlanSummaryVo;
 import wowjoy.fruits.ms.module.plan.FruitPlanVo;
+import wowjoy.fruits.ms.util.DateUtils;
 import wowjoy.fruits.ms.util.JsonArgument;
 import wowjoy.fruits.ms.util.RestResult;
 
@@ -37,7 +38,7 @@ public class PlanController {
      */
     @RequestMapping(value = "/year/{year}", method = RequestMethod.GET)
     public RestResult regular(@PathVariable("year") String year) {
-        return RestResult.getInstance().setData(dataPlanDao.yearEachWeek(Integer.valueOf(year)));
+        return RestResult.getInstance().setData(DateUtils.getWeekByYear(year));
     }
 
     /**
@@ -56,9 +57,19 @@ public class PlanController {
      * 分页
      * 2017年10月10日10:07:01：测试通过。查询速度230ms左右
      */
-    @RequestMapping(value = "/relation/month", method = RequestMethod.GET)
+    @RequestMapping(value = "/project", method = RequestMethod.GET)
+    public RestResult findMonthWeek(@JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlanVo) {
+        return RestResult.getInstance().setData(dataPlanDao.findMonthWeek(fruitPlanVo));
+    }
+
+    /**
+     * 月计划列表
+     * 分页
+     * 2017年10月10日10:07:01：测试通过。查询速度230ms左右
+     */
+    @RequestMapping(value = "/project/month", method = RequestMethod.GET)
     public RestResult findRelationMonth(@JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlanVo) {
-        return RestResult.getInstance().setData(dataPlanDao.findRelationMonth(fruitPlanVo));
+        return RestResult.getInstance().setData(dataPlanDao.findProject(fruitPlanVo));
     }
 
     /**
@@ -66,9 +77,9 @@ public class PlanController {
      * 分页
      * 2017年10月10日10:07:41：测试通过。查询速度380ms左右
      */
-    @RequestMapping(value = "/relation/week", method = RequestMethod.GET)
+    @RequestMapping(value = "/project/week", method = RequestMethod.GET)
     public RestResult findRelationWeek(@JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlanVo) {
-        return RestResult.getInstance().setData(dataPlanDao.findRelationWeek(fruitPlanVo));
+        return RestResult.getInstance().setData(dataPlanDao.findWeekProject(fruitPlanVo));
     }
 
     /**
@@ -78,7 +89,7 @@ public class PlanController {
      */
     @RequestMapping(value = "/month", method = RequestMethod.GET)
     public RestResult findMonth(@JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlanVo) {
-        return RestResult.getInstance().setData(dataPlanDao.findMonth(fruitPlanVo));
+        return RestResult.getInstance().setData(dataPlanDao.find(fruitPlanVo));
     }
 
     /**

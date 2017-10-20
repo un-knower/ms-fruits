@@ -15,8 +15,37 @@ public class FruitPlanVo extends FruitPlan {
     private Integer pageSize = 10;
     private Date startDateVo;
     private Date endDateVo;
+    /*提供年份*/
+    private String year;
+    /*提供月份*/
+    private String month;
+    private String projectId;
     private Map<FruitDict.Dict, List<String>> userRelation;
     private Map<FruitDict.Dict, List<String>> projectRelation;
+
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(String projectId) {
+        this.projectId = projectId;
+    }
+
+    public String getYear() {
+        return year;
+    }
+
+    public void setYear(String year) {
+        this.year = year;
+    }
+
+    public String getMonth() {
+        return month;
+    }
+
+    public void setMonth(String month) {
+        this.month = month;
+    }
 
     public Map<FruitDict.Dict, List<String>> getUserRelation() {
         return userRelation;

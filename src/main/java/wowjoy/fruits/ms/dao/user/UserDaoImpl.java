@@ -21,6 +21,11 @@ public class UserDaoImpl extends AbstractDaoUser {
     private FruitUserMapper mapper;
 
     @Override
+    public List<FruitUserDao> findPlan(String planId) {
+        return mapper.selectByPlan(new FruitUserExample(), planId);
+    }
+
+    @Override
     public void insert(FruitUser... user) {
         mapper.inserts(user);
     }

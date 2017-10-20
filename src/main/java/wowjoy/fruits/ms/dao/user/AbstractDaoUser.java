@@ -1,9 +1,5 @@
 package wowjoy.fruits.ms.dao.user;
 
-import com.google.common.base.Charsets;
-import com.google.gson.JsonParser;
-import com.sun.jersey.core.util.Base64;
-import jdk.nashorn.internal.parser.JSONParser;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.NullException;
@@ -23,6 +19,8 @@ public abstract class AbstractDaoUser implements InterfaceDao {
     /*********************************************************************************
      * 抽象接口，私有，因为对外的公共接口用来书写业务层，如果真的不需要业务，也可以开放为公共接口 *
      *********************************************************************************/
+
+    protected abstract List<FruitUserDao> findPlan(String planId);
 
     protected abstract void insert(FruitUser... user);
 

@@ -118,7 +118,7 @@
                     <property name="replace" value="task"/>
                 </include>
                 <if test="listId != null">
-                    tlr.list_id = #{listId}
+                    and tlr.list_id = #{listId}
                 </if>
             </where>
         </if>
@@ -149,7 +149,7 @@
                     <property name="replace" value="task"/>
                 </include>
                 <if test="listId != null">
-                    tlr.list_id = #{listId}
+                    and tlr.list_id = #{listId}
                 </if>
             </where>
         </if>
