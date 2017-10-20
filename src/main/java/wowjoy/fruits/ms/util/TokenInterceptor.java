@@ -19,16 +19,13 @@ public class TokenInterceptor extends HandlerInterceptorAdapter {
         try {
             String[] headers = request.getHeader(headerKey).split(" ");
             if (headers.length <= 1 || StringUtils.isBlank(headers[1]))
-                throw new CheckException("非法请求");
+                throw new CheckException("Authorization not null");
             String header = headers[1];
-            JwtUtils.Jwt jwt = JwtUtils.newJwt(header);
-            if (!jwt.checkSignature(header))
-                throw new CheckException("token被攻击，拒绝请求");
             FruitUser user = FruitUser.getInstance();
-            user.setUserId(jwt.getPayload().getUserId());
+            user.setUserId(JwtUtils.newJwt(header).getPayload().getUserId());
             ApplicationContextUtils.setCurrentUser(user);
         } catch (Exception ex) {
-            throw new CheckException("验证授权失败：" + ex.getMessage());
+            throw new CheckException("Authorization exception：" + ex.getMessage());
         }
         return true;
     }

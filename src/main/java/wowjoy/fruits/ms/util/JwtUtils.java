@@ -1,5 +1,6 @@
 package wowjoy.fruits.ms.util;
 
+import com.google.common.base.Charsets;
 import com.google.gson.*;
 import org.apache.commons.codec.binary.StringUtils;
 import org.apache.commons.codec.digest.HmacUtils;
@@ -30,12 +31,15 @@ public class JwtUtils {
     }
 
     public static Jwt newJwt(String jwt) {
-        String[] split = jwt.split("\\.");
-        if (split.length <= 3)
-            throw new CheckException("token认证失败");
-        Jwt.Header header = Jwt.Header.newInstance(split[0]);
-        Jwt.PayLoad payLoad = Jwt.PayLoad.newInstance(split[1]);
-        return Jwt.newHmacSHA256(header, payLoad);
+        String[] token = jwt.split("\\.");
+        if (token.length < 3)
+            throw new CheckException("Jwt token format error");
+        Jwt.Header header = Jwt.Header.newInstance(new String(Base64.getDecoder().decode(token[0]), Charsets.UTF_8));
+        Jwt.PayLoad payLoad = Jwt.PayLoad.newInstance(new String(Base64.getDecoder().decode(token[1]), Charsets.UTF_8));
+        Jwt result = Jwt.newHmacSHA256(header, payLoad);
+        if (!result.checkSignature(jwt))
+            throw new CheckException("Jwt token Be tampered with");
+        return result;
     }
 
     /**
@@ -168,11 +172,15 @@ public class JwtUtils {
             private final String userId;
 
             private PayLoad(String iss, String sub, LocalDateTime exp, LocalDateTime iat, String userId) {
+                this(iss, sub, exp, iat, userId, UUID.randomUUID().toString().replace("-", ""));
+            }
+
+            private PayLoad(String iss, String sub, LocalDateTime exp, LocalDateTime iat, String userId, String jit) {
                 this.iss = iss;
                 this.sub = sub;
                 this.exp = exp;
                 this.iat = iat;
-                this.jti = UUID.randomUUID().toString().replace("-", "");
+                this.jti = jit;
                 this.userId = userId;
             }
 
@@ -184,13 +192,18 @@ public class JwtUtils {
                 return new PayLoad(null, null, exp, iat, userId);
             }
 
+            public static PayLoad newInstance(String jti, String userId, LocalDateTime exp, LocalDateTime iat) {
+                return new PayLoad(null, null, exp, iat, userId, jti);
+            }
+
             public static PayLoad newInstance(String payload) {
                 JsonObject json = new JsonParser().parse(payload).getAsJsonObject();
                 if (!json.has("userId") || !json.has("exp") || !json.has("iat"))
                     throw new CheckException("Token信息错误");
-                return newInstance(json.get("userId").getAsString(), LocalDateTime.parse(json.get("exp").getAsString()), LocalDateTime.parse(json.get("iat").getAsString()));
+                return newInstance(json.get("jti").getAsString(), json.get("userId").getAsString(), LocalDateTime.parse(json.get("exp").getAsString()), LocalDateTime.parse(json.get("iat").getAsString()));
             }
         }
 
     }
+
 }

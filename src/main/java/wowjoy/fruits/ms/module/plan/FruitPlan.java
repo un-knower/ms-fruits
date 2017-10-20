@@ -14,12 +14,21 @@ import java.util.Date;
 public class FruitPlan extends AbstractEntity {
     private String title;
     private int percent;
+    private Date estimatedStartDate;
     private Date estimatedEndDate;
     private Date endDate;
     private String planStatus;
     private String statusDescription;
     private String parentId;
 
+
+    public Date getEstimatedStartDate() {
+        return estimatedStartDate;
+    }
+
+    public void setEstimatedStartDate(Date estimatedStartDate) {
+        this.estimatedStartDate = estimatedStartDate;
+    }
 
     public Date getEndDate() {
         return endDate;

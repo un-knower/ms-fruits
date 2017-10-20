@@ -55,7 +55,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         if (StringUtils.isNotBlank(dao.getPlanStatus()))
             criteria.andPlanStatusEqualTo(dao.getPlanStatus());
         if (Objects.nonNull(dao.getStartDateDao()) && Objects.nonNull(dao.getEndDateDao()))
-            criteria.andEndDateBetween(dao.getStartDateDao(), dao.getEndDateDao());
+            criteria.andEstimatedEndDateBetween(dao.getStartDateDao(), dao.getEndDateDao());
         if (StringUtils.isNotBlank(dao.getPlanStatus()))
             criteria.andPlanStatusEqualTo(dao.getPlanStatus());
         criteria.andIsDeletedEqualTo(FruitDict.Dict.N.name());
@@ -76,7 +76,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         if (StringUtils.isNotBlank(dao.getParentId()))
             criteria.andParentIdEqualTo(dao.getParentId());
         if (Objects.nonNull(dao.getStartDateDao()) && Objects.nonNull(dao.getEndDateDao()))
-            criteria.andEndDateBetween(dao.getStartDateDao(), dao.getEndDateDao());
+            criteria.andEstimatedEndDateBetween(dao.getStartDateDao(), dao.getEndDateDao());
         if (StringUtils.isNotBlank(dao.getPlanStatus()))
             criteria.andPlanStatusEqualTo(dao.getPlanStatus());
         criteria.andIsDeletedEqualTo(FruitDict.Dict.N.name());
@@ -95,7 +95,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         if (StringUtils.isNotBlank(dao.getPlanStatus()))
             criteria.andPlanStatusEqualTo(dao.getPlanStatus());
         if (Objects.nonNull(dao.getStartDateDao()) && Objects.nonNull(dao.getEndDateDao()))
-            criteria.andEndDateBetween(dao.getStartDateDao(), dao.getEndDateDao());
+            criteria.andEstimatedEndDateBetween(dao.getStartDateDao(), dao.getEndDateDao());
         if (StringUtils.isNotBlank(dao.getPlanStatus()))
             criteria.andPlanStatusEqualTo(dao.getPlanStatus());
         criteria.andIsDeletedEqualTo(FruitDict.Dict.N.name());
@@ -116,7 +116,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         if (StringUtils.isNotBlank(dao.getParentId()))
             criteria.andParentIdEqualTo(dao.getParentId());
         if (Objects.nonNull(dao.getStartDateDao()) && Objects.nonNull(dao.getEndDateDao()))
-            criteria.andEndDateBetween(dao.getStartDateDao(), dao.getEndDateDao());
+            criteria.andEstimatedEndDateBetween(dao.getStartDateDao(), dao.getEndDateDao());
         if (StringUtils.isNotBlank(dao.getPlanStatus()))
             criteria.andPlanStatusEqualTo(dao.getPlanStatus());
         criteria.andIsDeletedEqualTo(FruitDict.Dict.N.name());

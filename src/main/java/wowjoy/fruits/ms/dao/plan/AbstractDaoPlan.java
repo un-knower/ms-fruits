@@ -10,6 +10,7 @@ import wowjoy.fruits.ms.module.relation.entity.PlanProjectRelation;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -122,6 +123,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         FruitPlanDao dao = FruitPlan.getDao();
         dao.setUuid(vo.getUuid());
         dao.setPlanStatus(FruitDict.PlanDict.PENDING.name());
+        dao.setEstimatedStartDate(vo.getEstimatedStartDate() != null ? vo.getEstimatedStartDate() : new Date());
         dao.setEstimatedEndDate(vo.getEstimatedEndDate());
         dao.setTitle(vo.getTitle());
         dao.setParentId(vo.getParentId());
@@ -143,6 +145,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         dao.setUuid(vo.getUuidVo());
         dao.setTitle(vo.getTitle());
         dao.setDescription(vo.getDescription());
+        dao.setEstimatedStartDate(vo.getEstimatedStartDate());
         dao.setEstimatedEndDate(vo.getEstimatedEndDate());
         dao.setPercent(vo.getPercent());
         dao.setUserRelation(vo.getUserRelation());
