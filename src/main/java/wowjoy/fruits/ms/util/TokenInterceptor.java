@@ -17,10 +17,10 @@ public class TokenInterceptor extends HandlerInterceptorAdapter {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         try {
-            String header = request.getHeader(headerKey);
-            String[] headers = header.split(" ");
+            String[] headers = request.getHeader(headerKey).split(" ");
             if (headers.length <= 1 || StringUtils.isBlank(headers[1]))
                 throw new CheckException("非法请求");
+            String header = headers[0];
             JwtUtils.Jwt jwt = JwtUtils.newJwt(header);
             if (!jwt.checkSignature(header))
                 throw new CheckException("token被攻击，拒绝请求");
