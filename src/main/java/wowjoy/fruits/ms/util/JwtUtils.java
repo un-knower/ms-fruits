@@ -3,6 +3,7 @@ package wowjoy.fruits.ms.util;
 import com.google.gson.*;
 import org.apache.commons.codec.binary.StringUtils;
 import org.apache.commons.codec.digest.HmacUtils;
+import wowjoy.fruits.ms.exception.CheckException;
 
 import java.lang.reflect.Type;
 import java.time.LocalDateTime;
@@ -14,6 +15,7 @@ import java.util.UUID;
  * Created by wangziwen on 2017/10/19.
  */
 public class JwtUtils {
+    public static final String salt = "wangziwen";
 
     public static String token(Jwt.Header header, Jwt.PayLoad payLoad) {
         return Jwt.newHmacSHA256(header, payLoad).toString();
@@ -25,6 +27,15 @@ public class JwtUtils {
 
     public static Jwt.PayLoad newPayLoad(String userId, LocalDateTime exp, LocalDateTime iat) {
         return Jwt.PayLoad.newInstance(userId, exp, iat);
+    }
+
+    public static Jwt newJwt(String jwt) {
+        String[] split = jwt.split("\\.");
+        if (split.length < 1)
+            throw new CheckException("token认证失败");
+        Jwt.Header header = Jwt.Header.newInstance(split[0]);
+        Jwt.PayLoad payLoad = Jwt.PayLoad.newInstance(split[1]);
+        return Jwt.newHmacSHA256(header, payLoad);
     }
 
     /**
@@ -56,24 +67,39 @@ public class JwtUtils {
             this.signature = this.encryptHmacSHA256();
         }
 
-        String encryptHmacSHA256() {
-            return HmacUtils.hmacSha256Hex(salt, getHeader() + "." + getPayload());
+        public boolean checkSignature(String jwt) {
+            String[] split = jwt.split("\\.");
+            if (split.length < 1)
+                throw new CheckException("Token认证失败");
+            return signature.equals(split[2]);
         }
 
-        public String getHeader() {
+        String encryptHmacSHA256() {
+            return HmacUtils.hmacSha256Hex(salt, getHeaderBase64() + "." + getPayloadBase64());
+        }
+
+        private String getHeaderBase64() {
             return StringUtils.newStringUtf8(Base64.getUrlEncoder().encode(gson.toJsonTree(header).toString().getBytes()));
         }
 
-        public String getPayload() {
+        private String getPayloadBase64() {
             return StringUtils.newStringUtf8(Base64.getUrlEncoder().encode(gson.toJsonTree(payload).toString().getBytes()));
         }
 
+        public Header getHeader() {
+            return header;
+        }
+
+        public PayLoad getPayload() {
+            return payload;
+        }
+
         public String toString() {
-            return this.getHeader() + "." + this.getPayload() + "." + this.signature;
+            return this.getHeaderBase64() + "." + this.getPayloadBase64() + "." + this.signature;
         }
 
         public static Jwt newHmacSHA256(Header header, PayLoad payLoad) {
-            return new Jwt(header, payLoad, "wangziwen");
+            return new Jwt(header, payLoad, JwtUtils.salt);
         }
 
         public static class Header {
@@ -117,6 +143,13 @@ public class JwtUtils {
             public static Header newInstance() {
                 return new Header("JWT", "SHA256");
             }
+
+            public static Header newInstance(String header) {
+                JsonObject json = new JsonParser().parse(header).getAsJsonObject();
+                if (!json.has("typ") || !json.has("alg"))
+                    throw new CheckException("Token信息错误");
+                return new Header(json.get("typ").getAsString(), json.get("alg").getAsString());
+            }
         }
 
         public static class PayLoad {
@@ -143,10 +176,20 @@ public class JwtUtils {
                 this.userId = userId;
             }
 
+            public String getUserId() {
+                return userId;
+            }
+
             public static PayLoad newInstance(String userId, LocalDateTime exp, LocalDateTime iat) {
                 return new PayLoad(null, null, exp, iat, userId);
             }
 
+            public static PayLoad newInstance(String payload) {
+                JsonObject json = new JsonParser().parse(payload).getAsJsonObject();
+                if (!json.has("userId") || !json.has("exp") || !json.has("iat"))
+                    throw new CheckException("Token信息错误");
+                return newInstance(json.get("userId").getAsString(), LocalDateTime.parse(json.get("exp").getAsString()), LocalDateTime.parse(json.get("iat").getAsString()));
+            }
         }
 
     }

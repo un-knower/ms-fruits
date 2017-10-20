@@ -30,8 +30,6 @@ public class ArgumentInterceptor implements HandlerMethodArgumentResolver {
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer, NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
         final HttpServletRequest request = (HttpServletRequest) webRequest.getNativeRequest();
         final JsonElement data = RequestMethod.GET.name().toLowerCase().equals(request.getMethod().toLowerCase()) ? findGet(request.getParameterMap()) : findNotGet(request.getInputStream());
-        if (data.getAsJsonObject().has("userId"))
-            request.setAttribute("userId", data.getAsJsonObject().get("userId").getAsString());
         return toType(data, parameter.getParameterAnnotation(JsonArgument.class).type());
     }
 
