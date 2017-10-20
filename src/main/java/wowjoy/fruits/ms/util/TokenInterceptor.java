@@ -20,7 +20,7 @@ public class TokenInterceptor extends HandlerInterceptorAdapter {
             String[] headers = request.getHeader(headerKey).split(" ");
             if (headers.length <= 1 || StringUtils.isBlank(headers[1]))
                 throw new CheckException("非法请求");
-            String header = headers[0];
+            String header = headers[1];
             JwtUtils.Jwt jwt = JwtUtils.newJwt(header);
             if (!jwt.checkSignature(header))
                 throw new CheckException("token被攻击，拒绝请求");

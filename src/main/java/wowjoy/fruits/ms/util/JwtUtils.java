@@ -31,7 +31,7 @@ public class JwtUtils {
 
     public static Jwt newJwt(String jwt) {
         String[] split = jwt.split("\\.");
-        if (split.length < 1)
+        if (split.length <= 3)
             throw new CheckException("token认证失败");
         Jwt.Header header = Jwt.Header.newInstance(split[0]);
         Jwt.PayLoad payLoad = Jwt.PayLoad.newInstance(split[1]);
