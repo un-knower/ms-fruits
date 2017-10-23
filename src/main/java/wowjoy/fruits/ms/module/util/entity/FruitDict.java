@@ -67,7 +67,9 @@ public class FruitDict extends AbstractEntity {
 
         GIRLS("女"),
 
-        DELETE("删除标识"), ADD("添加标识");
+        DELETE("删除标识"), ADD("添加标识"),
+
+        DESC("倒序"),ASC("升序");
 
         private String value;
 
@@ -94,6 +96,8 @@ public class FruitDict extends AbstractEntity {
         COMPLETE("已完成"),
         //终止
         END("已终止");
+
+
 
         private String parentCode;
         private String value;

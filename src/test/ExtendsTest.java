@@ -1,10 +1,13 @@
 import org.junit.Test;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * Created by wangziwen on 2017/9/14.
  */
 public class ExtendsTest {
-    class Test1{
+    class Test1 {
         public Test1() {
             this.name = "23232";
         }
@@ -20,16 +23,18 @@ public class ExtendsTest {
         }
     }
 
-    class Test2 extends Test1{
+    class Test2 extends Test1 {
         public Test2() {
             this.setName(null);
         }
     }
 
     @Test
-    public void test(){
-        final Test2 test2 = new Test2();
-        System.out.println(test2.getName());
+    public void test() {
+        String string = null;
+        string.split(",");
+
+
     }
 
 }

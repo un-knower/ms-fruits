@@ -1,6 +1,7 @@
 package wowjoy.fruits.ms.dao.plan;
 
 import com.github.pagehelper.PageHelper;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -22,8 +23,12 @@ import wowjoy.fruits.ms.module.relation.entity.PlanProjectRelation;
 import wowjoy.fruits.ms.module.relation.entity.PlanUserRelation;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
+import java.text.MessageFormat;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by wangziwen on 2017/8/25.
@@ -53,7 +58,6 @@ public class PlanDaoImpl extends AbstractDaoPlan {
             example.getOredCriteria().get(0).andParentIdIsNotNull();
         else
             example.getOredCriteria().get(0).andParentIdIsNull();
-        findTemplate(dao).getOredCriteria().get(0).andParentIdIsNull();
         if (isPage) PageHelper.startPage(pageNum, pageSize);
         return mapper.selectUserByProject(example, dao.getProjectId());
     }
@@ -83,9 +87,42 @@ public class PlanDaoImpl extends AbstractDaoPlan {
             criteria.andEstimatedEndDateBetween(dao.getStartDateDao(), dao.getEndDateDao());
         if (StringUtils.isNotBlank(dao.getPlanStatus()))
             criteria.andPlanStatusEqualTo(dao.getPlanStatus());
+        String sort = sortConstrue(dao);
+        if (StringUtils.isNotBlank(sort))
+            example.setOrderByClause(sort);
         criteria.andIsDeletedEqualTo(FruitDict.Dict.N.name());
-        example.setOrderByClause("estimated_end_date desc");
         return example;
+    }
+
+    private String sortConstrue(FruitPlanDao dao) {
+        if (StringUtils.isNotBlank(dao.getDesc()) && StringUtils.isNotBlank(dao.getAsc())) return null;
+        LinkedList<String> sorts = Lists.newLinkedList();
+        if (StringUtils.isNotBlank(dao.getDesc())) {
+            for (String desc : dao.getDesc().split(",")) {
+                sorts.add(MessageFormat.format("{0} desc", toMysqlField(desc)));
+            }
+        }
+        if (StringUtils.isNotBlank(dao.getAsc())) {
+            for (String asc : dao.getAsc().split(",")) {
+                sorts.add(MessageFormat.format("{0} asc", toMysqlField(asc)));
+            }
+        }
+        if (sorts.isEmpty()) return null;
+        return StringUtils.join(sorts, ",");
+    }
+
+    private String toMysqlField(String field) {
+        String replace = "\\.*[A-Z]";
+        Pattern compile = Pattern.compile(replace);
+        Matcher matcher = compile.matcher(field);
+        StringBuffer result = new StringBuffer();
+        Integer lastEnd = 0;
+        while (matcher.find()) {
+            result.append(field.substring(result.length() > 0 ? result.length() - 1 : 0, matcher.start()) + "_").append(field.substring(matcher.start(), matcher.end()));
+            lastEnd = matcher.end();
+        }
+        result.append(field.substring(lastEnd, field.length()));
+        return result.toString();
     }
 
     @Override

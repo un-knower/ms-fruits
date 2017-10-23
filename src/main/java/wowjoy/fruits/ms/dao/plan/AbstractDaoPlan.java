@@ -65,6 +65,8 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         dao.setStartDateDao(vo.getStartDateVo());
         dao.setEndDateDao(vo.getEndDateVo());
         dao.setProjectId(vo.getProjectId());
+        dao.setDesc(vo.getDesc());
+        dao.setAsc(vo.getAsc());
         return this.fillPlanWeek(findProject(dao, vo.getPageNum(), vo.getPageSize(), true), IExecutor.newInstance());
     }
 
@@ -202,6 +204,8 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
     private final void addCheckJoinProject(FruitPlanDao dao) {
         if (dao.getProjectRelation(FruitDict.Dict.ADD).isEmpty() || dao.getProjectRelation(FruitDict.Dict.ADD).size() != 1)
             throw new CheckException("限制添加计划只能关联一个项目");
+        if (dao.getEstimatedEndDate() == null)
+            throw new CheckException("必须填写预计结束时间");
     }
 
     public final void modify(FruitPlanVo vo) {

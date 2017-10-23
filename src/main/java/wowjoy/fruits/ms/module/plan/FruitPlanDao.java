@@ -25,6 +25,24 @@ public class FruitPlanDao extends FruitPlan {
     private Map<FruitDict.Dict, List<String>> projectRelation;
     private volatile List<FruitPlanDao> weeks;
     private String projectId;
+    private String desc;
+    private String asc;
+
+    public String getDesc() {
+        return desc;
+    }
+
+    public void setDesc(String desc) {
+        this.desc = desc;
+    }
+
+    public String getAsc() {
+        return asc;
+    }
+
+    public void setAsc(String asc) {
+        this.asc = asc;
+    }
 
     public List<FruitPlanDao> getWeeks() {
         return weeks;
