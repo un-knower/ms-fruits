@@ -84,6 +84,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         if (StringUtils.isNotBlank(dao.getPlanStatus()))
             criteria.andPlanStatusEqualTo(dao.getPlanStatus());
         criteria.andIsDeletedEqualTo(FruitDict.Dict.N.name());
+        example.setOrderByClause("estimated_end_date desc");
         return example;
     }
 
