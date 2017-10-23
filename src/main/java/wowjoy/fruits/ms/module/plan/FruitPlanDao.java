@@ -20,10 +20,10 @@ public class FruitPlanDao extends FruitPlan {
 
     private Date startDateDao;
     private Date endDateDao;
-    private List<FruitUserDao> users;
+    private volatile List<FruitUserDao> users;
     private Map<FruitDict.Dict, List<String>> userRelation;
     private Map<FruitDict.Dict, List<String>> projectRelation;
-    private List<FruitPlanDao> weeks;
+    private volatile List<FruitPlanDao> weeks;
     private String projectId;
 
     public List<FruitPlanDao> getWeeks() {

@@ -6,7 +6,6 @@ import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.plan.*;
 import wowjoy.fruits.ms.module.relation.entity.PlanProjectRelation;
-import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.DateUtils;
 
@@ -23,8 +22,6 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
     /*********************************************************************************
      * 抽象接口，私有，因为对外的公共接口用来书写业务层，发布api必须在自己的控制范围内，不发布无用的接口。*
      *********************************************************************************/
-
-    protected abstract List<FruitUserDao> findUser(FruitPlanDao dao);
 
     protected abstract List<FruitPlanDao> findProject(FruitPlanDao dao, Integer pageNum, Integer pageSize, boolean isPage);
 
@@ -68,10 +65,10 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         dao.setStartDateDao(vo.getStartDateVo());
         dao.setEndDateDao(vo.getEndDateVo());
         dao.setProjectId(vo.getProjectId());
-        return this.findPlanWeek(findProject(dao, vo.getPageNum(), vo.getPageSize(), false), IExecutor.newInstance());
+        return this.fillPlanWeek(findProject(dao, vo.getPageNum(), vo.getPageSize(), true), IExecutor.newInstance());
     }
 
-    /*若年月不为空，则自动设置开始时间 and 结束时间*/
+    /*若年月不为空，则设置开始时间 and 结束时间*/
     protected final void getStarttimeAndEndtime(FruitPlanVo vo) {
         if (StringUtils.isBlank(vo.getYear()) || StringUtils.isBlank(vo.getMonth()))
             return;
@@ -80,26 +77,28 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         vo.setEndDateVo(Date.from(month.getEndDate().atStartOfDay(ZoneId.systemDefault()).toInstant()));
     }
 
-    /*获取关联计划，关联用户*/
-    private final List<FruitPlanDao> findPlanWeek(List<FruitPlanDao> month, IExecutor iExecutor) {
-        List<Future> weeks = Lists.newLinkedList();
-        month.forEach((i) -> {
-            /*
-             * 1、获取关联计划列表
-             */
-            weeks.add(iExecutor.findPlans(() -> {
+    private final List<FruitPlanDao> fillPlanWeek(List<FruitPlanDao> plans, IExecutor iExecutor) {
+        final List<FruitPlanDao> data = plans;
+        List<String> parents = Lists.newLinkedList();
+        plans.forEach((i) -> parents.add(i.getUuid()));
+        long start = System.nanoTime();
+        List<Future> futures = Lists.newLinkedList();
+        System.out.println(start);
+        plans.forEach((parent) -> {
+            futures.add(iExecutor.submit(() -> {
                 FruitPlanDao dao = FruitPlan.getDao();
-                dao.setParentId(i.getUuid());
-                i.setWeeks(findProject(dao, 0, 0, false));
-                return i;
-            }));
-            /*获取关联用户列表*/
-            weeks.add(iExecutor.findPlans(() -> {
-                i.setUsers(this.findUser(i));
-                return i;
+                dao.setParentId(parent.getUuid());
+                parent.setWeeks(this.findProject(dao, 0, 0, false));
+                return parent;
             }));
         });
-        for (Future week : weeks) {
+        wait(futures, iExecutor);
+        System.out.println(System.nanoTime() - start);
+        return data;
+    }
+
+    public void wait(List<Future> futures, IExecutor iExecutor) {
+        for (Future week : futures) {
             try {
                 week.get(1, TimeUnit.MINUTES);
             } catch (InterruptedException e) {
@@ -111,9 +110,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
                 throw new CheckException("获取计划超时");
             }
         }
-        return month;
     }
-
 
     /**
      * 月计划
@@ -282,7 +279,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
     private static class IExecutor {
         private final ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);
 
-        public <T> Future<T> findPlans(Callable callable) {
+        public <T> Future<T> submit(Callable callable) {
             return service.submit(callable);
         }
 
@@ -293,6 +290,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         public void shutdownNow() {
             service.shutdownNow();
         }
+
     }
 
 }

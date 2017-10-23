@@ -20,8 +20,6 @@ public abstract class AbstractDaoUser implements InterfaceDao {
      * 抽象接口，私有，因为对外的公共接口用来书写业务层，如果真的不需要业务，也可以开放为公共接口 *
      *********************************************************************************/
 
-    protected abstract List<FruitUserDao> findPlan(String planId);
-
     protected abstract void insert(FruitUser... user);
 
     protected abstract FruitUser find(FruitUserDao dao);

@@ -101,8 +101,17 @@
         <include refid="Base_Column_List">
             <property name="replace" value="p"/>
         </include>
+        ,
+        <include refid="User_Column_List">
+            <property name="replace" value="u"/>
+            <property name="prefix" value="user_"/>
+        </include>
+        ,
+        pur.pu_role as user_pu_role
         from fruits_plan p
         LEFT join plan_project_relation ppr on ppr.plan_id = p.uuid
+        LEFT JOIN plan_user_relation pur ON pur.plan_id = p.uuid
+        LEFT JOIN fruits_user u ON pur.user_id = u.user_id
         <if test="example != null">
             <where>
                 <include refid="Example_Where_Clause">
