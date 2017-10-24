@@ -204,6 +204,8 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
     private final void addCheckJoinProject(FruitPlanDao dao) {
         if (dao.getProjectRelation(FruitDict.Dict.ADD).isEmpty() || dao.getProjectRelation(FruitDict.Dict.ADD).size() != 1)
             throw new CheckException("限制添加计划只能关联一个项目");
+        if (dao.getUserRelation(FruitDict.Dict.ADD).isEmpty())
+            throw new CheckException("必须添加至少一个关联用户");
         if (dao.getEstimatedEndDate() == null)
             throw new CheckException("必须填写预计结束时间");
     }
