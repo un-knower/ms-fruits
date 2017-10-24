@@ -107,18 +107,29 @@
             <property name="prefix" value="fuser_"/>
         </include>
         from fruits_task task
-        inner join task_project_relation tpr on task.uuid = tpr.task_id
-        inner join fruits_project fp on tpr.project_id = fp.uuid
-        inner join task_list_relation tlr on tlr.task_id = task.uuid
-        inner join task_user_relation tur on tur.task_id = task.uuid
-        inner join fruits_user fuser on fuser.user_id = tur.user_id
+        left join task_project_relation tpr on task.uuid = tpr.task_id
+        left join fruits_project fp on tpr.project_id = fp.uuid
+        left join task_list_relation tlr on tlr.task_id = task.uuid
+        left join task_user_relation tur on tur.task_id = task.uuid
+        left join fruits_user fuser on fuser.user_id = tur.user_id
         <if test="example != null">
             <where>
                 <include refid="Base_Example_Where_Clause">
                     <property name="replace" value="task"/>
                 </include>
-                <if test="listId != null">
-                    and tlr.list_id = #{listId}
+                <if test="listIds != null">
+                    and tlr.list_id IN
+                    <foreach close=")" collection="listIds" item="listItem" open="("
+                             separator=",">
+                        #{listItem}
+                    </foreach>
+                </if>
+                <if test="projectIds != null">
+                    and tpr.project_id IN
+                    <foreach close=")" collection="projectIds" item="listItem" open="("
+                             separator=",">
+                        #{listItem}
+                    </foreach>
                 </if>
             </where>
         </if>
@@ -138,18 +149,29 @@
             <property name="prefix" value="fuser_"/>
         </include>
         from fruits_task task
-        inner join task_plan_relation tpr on task.uuid = tpr.task_id
-        inner join fruits_plan fp on tpr.plan_id = fp.uuid
-        inner join task_list_relation tlr on tlr.task_id = task.uuid
-        inner join task_user_relation tur on tur.task_id = task.uuid
-        inner join fruits_user fuser on fuser.user_id = tur.user_id
+        left join task_plan_relation tpr on task.uuid = tpr.task_id
+        left join fruits_plan fp on tpr.plan_id = fp.uuid
+        left join task_list_relation tlr on tlr.task_id = task.uuid
+        left join task_user_relation tur on tur.task_id = task.uuid
+        left join fruits_user fuser on fuser.user_id = tur.user_id
         <if test="example != null">
             <where>
                 <include refid="Base_Example_Where_Clause">
                     <property name="replace" value="task"/>
                 </include>
-                <if test="listId != null">
-                    and tlr.list_id = #{listId}
+                <if test="listIds != null">
+                    and tlr.list_id IN
+                    <foreach close=")" collection="listIds" item="listItem" open="("
+                             separator=",">
+                        #{listItem}
+                    </foreach>
+                </if>
+                <if test="planIds != null">
+                    and tpr.plan_id IN
+                    <foreach close=")" collection="planIds" item="listItem" open="("
+                             separator=",">
+                        #{listItem}
+                    </foreach>
                 </if>
             </where>
         </if>

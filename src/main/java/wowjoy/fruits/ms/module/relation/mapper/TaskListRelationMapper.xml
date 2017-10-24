@@ -130,7 +130,7 @@
     insert into task_list_relation (uuid, task_id, list_id, 
       description, modify_date_time, create_date_time, 
       is_deleted)
-    values (#{uuid,jdbcType=VARCHAR}, #{taskId,jdbcType=VARCHAR}, #{listId,jdbcType=VARCHAR}, 
+    values (#{uuid,jdbcType=VARCHAR}, #{taskId,jdbcType=VARCHAR}, #{listId,jdbcType=VARCHAR},
       #{description,jdbcType=VARCHAR}, #{modifyDateTime,jdbcType=TIMESTAMP}, #{createDateTime,jdbcType=TIMESTAMP}, 
       #{isDeleted,jdbcType=VARCHAR})
   </insert>

@@ -117,8 +117,8 @@
                 <include refid="Example_Where_Clause">
                     <property name="replace" value="p"/>
                 </include>
-                <if test="projectId != null">
-                    and ppr.project_id = #{projectId}
+                <if test="projectIds != null">
+                    and ppr.project_id = #{projectIds}
                 </if>
             </where>
         </if>

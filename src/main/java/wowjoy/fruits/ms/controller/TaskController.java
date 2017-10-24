@@ -161,13 +161,11 @@ public class TaskController {
      * 2017年10月16日16:19:46-汪梓文：测试通过
      * `
      *
-     * @param listId
      * @param vo
      * @return
      */
-    @RequestMapping(value = "/project/{listId}", method = RequestMethod.GET)
-    public RestResult findJoinProject(@PathVariable("listId") String listId, @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
-        vo.setListId(listId);
+    @RequestMapping(value = "/project", method = RequestMethod.GET)
+    public RestResult findJoinProject(@JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
         return RestResult.getInstance().setData(daoTask.findJoinProjects(vo));
     }
 
@@ -177,13 +175,11 @@ public class TaskController {
      * 2、提供简单的延期计算功能
      * 2017年10月16日16:20:09-汪梓文：测试通过
      *
-     * @param listId
      * @param vo
      * @return
      */
-    @RequestMapping(value = "/plan/{listId}", method = RequestMethod.GET)
-    public RestResult findJoinPlan(@PathVariable("listId") String listId, @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
-        vo.setListId(listId);
+    @RequestMapping(value = "/plan", method = RequestMethod.GET)
+    public RestResult findJoinPlan(@JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
         return RestResult.getInstance().setData(daoTask.findJoinPlans(vo));
     }
 

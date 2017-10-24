@@ -90,6 +90,8 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         String sort = sortConstrue(dao);
         if (StringUtils.isNotBlank(sort))
             example.setOrderByClause(sort);
+        else
+            example.setOrderByClause("createDateTime desc");
         criteria.andIsDeletedEqualTo(FruitDict.Dict.N.name());
         return example;
     }

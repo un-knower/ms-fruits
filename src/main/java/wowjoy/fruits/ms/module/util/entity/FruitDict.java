@@ -67,7 +67,7 @@ public class FruitDict extends AbstractEntity {
 
         GIRLS("女"),
 
-        DELETE("删除标识"), ADD("添加标识"),
+        DELETE("删除标识"), ADD("添加标识"),SEARCH("查询"),
 
         DESC("倒序"),ASC("升序");
 

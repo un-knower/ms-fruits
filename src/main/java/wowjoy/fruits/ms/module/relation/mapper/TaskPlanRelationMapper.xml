@@ -9,7 +9,7 @@
     -->
     <result column="uuid" jdbcType="VARCHAR" property="uuid" />
     <result column="task_id" jdbcType="VARCHAR" property="taskId" />
-    <result column="plan_id" jdbcType="VARCHAR" property="planId" />
+    <result column="plan_id" jdbcType="VARCHAR" property="planIds" />
     <result column="description" jdbcType="VARCHAR" property="description" />
     <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime" />
     <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime" />
@@ -130,7 +130,7 @@
     insert into task_plan_relation (uuid, task_id, plan_id, 
       description, modify_date_time, create_date_time, 
       is_deleted)
-    values (#{uuid,jdbcType=VARCHAR}, #{taskId,jdbcType=VARCHAR}, #{planId,jdbcType=VARCHAR}, 
+    values (#{uuid,jdbcType=VARCHAR}, #{taskId,jdbcType=VARCHAR}, #{planIds,jdbcType=VARCHAR},
       #{description,jdbcType=VARCHAR}, #{modifyDateTime,jdbcType=TIMESTAMP}, #{createDateTime,jdbcType=TIMESTAMP}, 
       #{isDeleted,jdbcType=VARCHAR})
   </insert>
@@ -148,7 +148,7 @@
       <if test="taskId != null">
         task_id,
       </if>
-      <if test="planId != null">
+      <if test="planIds != null">
         plan_id,
       </if>
       <if test="description != null">
@@ -171,8 +171,8 @@
       <if test="taskId != null">
         #{taskId,jdbcType=VARCHAR},
       </if>
-      <if test="planId != null">
-        #{planId,jdbcType=VARCHAR},
+      <if test="planIds != null">
+        #{planIds,jdbcType=VARCHAR},
       </if>
       <if test="description != null">
         #{description,jdbcType=VARCHAR},
@@ -213,8 +213,8 @@
       <if test="record.taskId != null">
         task_id = #{record.taskId,jdbcType=VARCHAR},
       </if>
-      <if test="record.planId != null">
-        plan_id = #{record.planId,jdbcType=VARCHAR},
+      <if test="record.planIds != null">
+        plan_id = #{record.planIds,jdbcType=VARCHAR},
       </if>
       <if test="record.description != null">
         description = #{record.description,jdbcType=VARCHAR},
@@ -242,7 +242,7 @@
     update task_plan_relation
     set uuid = #{record.uuid,jdbcType=VARCHAR},
       task_id = #{record.taskId,jdbcType=VARCHAR},
-      plan_id = #{record.planId,jdbcType=VARCHAR},
+      plan_id = #{record.planIds,jdbcType=VARCHAR},
       description = #{record.description,jdbcType=VARCHAR},
       modify_date_time = #{record.modifyDateTime,jdbcType=TIMESTAMP},
       create_date_time = #{record.createDateTime,jdbcType=TIMESTAMP},

@@ -28,10 +28,37 @@ public class FruitTaskDao extends FruitTask {
     private Map<FruitDict.Dict, List<TaskPlanRelation>> taskPlanRelation;
     private Map<FruitDict.Dict, List<TaskProjectRelation>> taskProjectRelation;
     private Map<FruitDict.Dict, List<TaskUserRelation>> taskUserRelation;
-    private Map<FruitDict.Dict, TaskListRelation> taskListRelation;
+    private Map<FruitDict.Dict, List<TaskListRelation>> taskListRelation;
+    private List<String> listIds;
+    private List<String> planIds;
+    private List<String> projectIds;
 
     private List<FruitUserDao> users;
     private Integer days;
+
+    public List<String> getListIds() {
+        return listIds;
+    }
+
+    public void setListIds(List<String> listIds) {
+        this.listIds = listIds;
+    }
+
+    public List<String> getPlanIds() {
+        return planIds;
+    }
+
+    public void setPlanIds(List<String> planIds) {
+        this.planIds = planIds;
+    }
+
+    public List<String> getProjectIds() {
+        return projectIds;
+    }
+
+    public void setProjectIds(List<String> projectIds) {
+        this.projectIds = projectIds;
+    }
 
     public Integer getDays() {
         return days;
@@ -97,15 +124,15 @@ public class FruitTaskDao extends FruitTask {
         this.taskUserRelation = taskUserRelation;
     }
 
-    public TaskListRelation getTaskListRelation(FruitDict.Dict dict) {
-        return taskListRelation != null && taskListRelation.containsKey(dict) ? taskListRelation.get(dict) : TaskListRelation.getEmpty();
+    public List<TaskListRelation> getTaskListRelation(FruitDict.Dict dict) {
+        return taskListRelation != null && taskListRelation.containsKey(dict) ? taskListRelation.get(dict) : Lists.newLinkedList();
     }
 
-    public void setTaskListRelation(Map<FruitDict.Dict, TaskListRelation> taskListRelation) {
+    public void setTaskListRelation(Map<FruitDict.Dict, List<TaskListRelation>> taskListRelation) {
         this.taskListRelation = taskListRelation;
     }
 
-    public void setTaskListRelation(FruitDict.Dict dict, TaskListRelation value) {
+    public void setTaskListRelation(FruitDict.Dict dict, List<TaskListRelation> value) {
         if (taskListRelation == null)
             taskListRelation = Maps.newLinkedHashMap();
         this.taskListRelation.put(dict, value);

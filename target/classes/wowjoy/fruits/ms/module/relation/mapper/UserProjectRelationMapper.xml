@@ -9,7 +9,7 @@
     -->
     <result column="uuid" jdbcType="VARCHAR" property="uuid" />
     <result column="user_id" jdbcType="VARCHAR" property="userId" />
-    <result column="project_id" jdbcType="VARCHAR" property="projectId" />
+    <result column="project_id" jdbcType="VARCHAR" property="projectIds" />
     <result column="up_role" jdbcType="VARCHAR" property="upRole" />
     <result column="description" jdbcType="VARCHAR" property="description" />
     <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime" />
@@ -132,7 +132,7 @@
     insert into user_project_relation (uuid, user_id, project_id, 
       up_role, description, modify_date_time, 
       create_date_time, is_deleted)
-    values (#{uuid,jdbcType=VARCHAR}, #{userId,jdbcType=VARCHAR}, #{projectId,jdbcType=VARCHAR}, 
+    values (#{uuid,jdbcType=VARCHAR}, #{userId,jdbcType=VARCHAR}, #{projectIds,jdbcType=VARCHAR},
       #{upRole,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR}, #{modifyDateTime,jdbcType=TIMESTAMP}, 
       #{createDateTime,jdbcType=TIMESTAMP}, #{isDeleted,jdbcType=VARCHAR})
   </insert>
@@ -150,7 +150,7 @@
       <if test="userId != null">
         user_id,
       </if>
-      <if test="projectId != null">
+      <if test="projectIds != null">
         project_id,
       </if>
       <if test="upRole != null">
@@ -176,8 +176,8 @@
       <if test="userId != null">
         #{userId,jdbcType=VARCHAR},
       </if>
-      <if test="projectId != null">
-        #{projectId,jdbcType=VARCHAR},
+      <if test="projectIds != null">
+        #{projectIds,jdbcType=VARCHAR},
       </if>
       <if test="upRole != null">
         #{upRole,jdbcType=VARCHAR},
@@ -221,8 +221,8 @@
       <if test="record.userId != null">
         user_id = #{record.userId,jdbcType=VARCHAR},
       </if>
-      <if test="record.projectId != null">
-        project_id = #{record.projectId,jdbcType=VARCHAR},
+      <if test="record.projectIds != null">
+        project_id = #{record.projectIds,jdbcType=VARCHAR},
       </if>
       <if test="record.upRole != null">
         up_role = #{record.upRole,jdbcType=VARCHAR},
@@ -253,7 +253,7 @@
     update user_project_relation
     set uuid = #{record.uuid,jdbcType=VARCHAR},
       user_id = #{record.userId,jdbcType=VARCHAR},
-      project_id = #{record.projectId,jdbcType=VARCHAR},
+      project_id = #{record.projectIds,jdbcType=VARCHAR},
       up_role = #{record.upRole,jdbcType=VARCHAR},
       description = #{record.description,jdbcType=VARCHAR},
       modify_date_time = #{record.modifyDateTime,jdbcType=TIMESTAMP},

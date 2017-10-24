@@ -8,7 +8,7 @@
       This element was generated on Mon Sep 11 15:24:48 CST 2017.
     -->
     <result column="uuid" jdbcType="VARCHAR" property="uuid" />
-    <result column="plan_id" jdbcType="VARCHAR" property="planId" />
+    <result column="plan_id" jdbcType="VARCHAR" property="planIds" />
     <result column="percent" jdbcType="INTEGER" property="percent" />
     <result column="description" jdbcType="VARCHAR" property="description" />
     <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime" />
@@ -130,7 +130,7 @@
     insert into fruits_plan_summary (uuid, plan_id, percent, 
       description, modify_date_time, create_date_time, 
       is_deleted)
-    values (#{uuid,jdbcType=VARCHAR}, #{planId,jdbcType=VARCHAR}, #{percent,jdbcType=INTEGER}, 
+    values (#{uuid,jdbcType=VARCHAR}, #{planIds,jdbcType=VARCHAR}, #{percent,jdbcType=INTEGER},
       #{description,jdbcType=VARCHAR}, #{modifyDateTime,jdbcType=TIMESTAMP}, #{createDateTime,jdbcType=TIMESTAMP}, 
       #{isDeleted,jdbcType=VARCHAR})
   </insert>
@@ -145,7 +145,7 @@
       <if test="uuid != null">
         uuid,
       </if>
-      <if test="planId != null">
+      <if test="planIds != null">
         plan_id,
       </if>
       <if test="percent != null">
@@ -168,8 +168,8 @@
       <if test="uuid != null">
         #{uuid,jdbcType=VARCHAR},
       </if>
-      <if test="planId != null">
-        #{planId,jdbcType=VARCHAR},
+      <if test="planIds != null">
+        #{planIds,jdbcType=VARCHAR},
       </if>
       <if test="percent != null">
         #{percent,jdbcType=INTEGER},
@@ -210,8 +210,8 @@
       <if test="record.uuid != null">
         uuid = #{record.uuid,jdbcType=VARCHAR},
       </if>
-      <if test="record.planId != null">
-        plan_id = #{record.planId,jdbcType=VARCHAR},
+      <if test="record.planIds != null">
+        plan_id = #{record.planIds,jdbcType=VARCHAR},
       </if>
       <if test="record.percent != null">
         percent = #{record.percent,jdbcType=INTEGER},
@@ -241,7 +241,7 @@
     -->
     update fruits_plan_summary
     set uuid = #{record.uuid,jdbcType=VARCHAR},
-      plan_id = #{record.planId,jdbcType=VARCHAR},
+      plan_id = #{record.planIds,jdbcType=VARCHAR},
       percent = #{record.percent,jdbcType=INTEGER},
       description = #{record.description,jdbcType=VARCHAR},
       modify_date_time = #{record.modifyDateTime,jdbcType=TIMESTAMP},

@@ -12,6 +12,7 @@ import java.util.List;
  */
 @Mapper
 public interface FruitTaskMapperExt {
-    List<FruitTaskDao> selectProjectByExample(@Param("example") FruitTaskExample example, @Param("listId") String listId);
-    List<FruitTaskDao> selectPlanByExample(@Param("example") FruitTaskExample example, @Param("listId") String listId);
+    List<FruitTaskDao> selectProjectByExample(@Param("example") FruitTaskExample example, @Param("listIds") List<String> listIds, @Param("projectIds") List<String> projectIds);
+
+    List<FruitTaskDao> selectPlanByExample(@Param("example") FruitTaskExample example, @Param("listIds") List<String> listIds, @Param("planIds") List<String> planIds);
 }

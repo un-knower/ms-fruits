@@ -107,13 +107,13 @@ public class TaskDaoImpl extends AbstractDaoTask {
     }
 
     @Override
-    protected List<FruitTaskDao> findJoinProjects(FruitTaskDao dao, String listId) {
-        return taskMapper.selectProjectByExample(findJoinExample(dao), listId);
+    protected List<FruitTaskDao> findJoinProjects(FruitTaskDao dao) {
+        return taskMapper.selectProjectByExample(findJoinExample(dao), dao.getListIds(), dao.getProjectIds());
     }
 
     @Override
-    protected List<FruitTaskDao> findJoinPlans(FruitTaskDao dao, String listId) {
-        return taskMapper.selectPlanByExample(findJoinExample(dao), listId);
+    protected List<FruitTaskDao> findJoinPlans(FruitTaskDao dao) {
+        return taskMapper.selectPlanByExample(findJoinExample(dao), dao.getListIds(), dao.getPlanIds());
     }
 
     /*查询模板*/
@@ -173,10 +173,11 @@ public class TaskDaoImpl extends AbstractDaoTask {
         }
 
         public Relation insertList() {
-            TaskListRelation relation = dao.getTaskListRelation(FruitDict.Dict.ADD);
-            if (!relation.isNotEmpty()) return this;
-            relation.setTaskId(dao.getUuid());
-            listDao.insert(relation);
+            if (dao.getTaskListRelation(FruitDict.Dict.ADD).isEmpty()) return this;
+            dao.getTaskListRelation(FruitDict.Dict.ADD).forEach((i) -> {
+                i.setTaskId(dao.getUuid());
+                listDao.insert(i);
+            });
             return this;
         }
 
@@ -186,9 +187,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
         }
 
         public Relation removeProject() {
-            dao.getTaskProjectRelation(FruitDict.Dict.DELETE).forEach((i) -> {
-                projectDao.remove(TaskProjectRelation.newInstance(dao.getUuid(), i.getProjectId()));
-            });
+            dao.getTaskProjectRelation(FruitDict.Dict.DELETE).forEach((i) -> projectDao.remove(TaskProjectRelation.newInstance(dao.getUuid(), i.getProjectId())));
             return this;
         }
 
@@ -198,9 +197,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
         }
 
         public Relation removePlan() {
-            dao.getTaskPlanRelation(FruitDict.Dict.DELETE).forEach((i) -> {
-                planDao.remove(TaskPlanRelation.newInstance(dao.getUuid(), i.getPlanId()));
-            });
+            dao.getTaskPlanRelation(FruitDict.Dict.DELETE).forEach((i) -> planDao.remove(TaskPlanRelation.newInstance(dao.getUuid(), i.getPlanId())));
             return this;
         }
 
@@ -210,9 +207,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
         }
 
         public Relation removeUser() {
-            dao.getTaskUserRelation(FruitDict.Dict.DELETE).forEach((i) -> {
-                userDao.remove(TaskUserRelation.newInstance(dao.getUuid(), i.getUserId()));
-            });
+            dao.getTaskUserRelation(FruitDict.Dict.DELETE).forEach((i) -> userDao.remove(TaskUserRelation.newInstance(dao.getUuid(), i.getUserId())));
             return this;
         }
 
@@ -222,8 +217,8 @@ public class TaskDaoImpl extends AbstractDaoTask {
         }
 
         public Relation removeList() {
-            if (dao.getTaskListRelation(FruitDict.Dict.DELETE).isNotEmpty())
-                listDao.remove(TaskListRelation.newInstance(dao.getUuid(), dao.getTaskListRelation(FruitDict.Dict.DELETE).getListId()));
+            if (dao.getTaskListRelation(FruitDict.Dict.DELETE).isEmpty()) return this;
+            dao.getTaskListRelation(FruitDict.Dict.DELETE).forEach((i) -> listDao.remove(TaskListRelation.newInstance(dao.getUuid(), i.getListId())));
             return this;
         }
 

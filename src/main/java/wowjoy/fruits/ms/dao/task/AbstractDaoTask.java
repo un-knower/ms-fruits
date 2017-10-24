@@ -65,14 +65,14 @@ public abstract class AbstractDaoTask implements InterfaceDao {
      *
      * @return
      */
-    protected abstract List<FruitTaskDao> findJoinProjects(FruitTaskDao dao, String listId);
+    protected abstract List<FruitTaskDao> findJoinProjects(FruitTaskDao dao);
 
     /**
      * 查询关联计划的任务列表
      *
      * @return
      */
-    protected abstract List<FruitTaskDao> findJoinPlans(FruitTaskDao dao, String listId);
+    protected abstract List<FruitTaskDao> findJoinPlans(FruitTaskDao dao);
 
 
     /*******************************
@@ -84,7 +84,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         final FruitTaskDao dao = this.addTemplate(vo);
         dao.setTaskProjectRelation(vo.getTaskProjectRelation());
         if (dao.getTaskProjectRelation(FruitDict.Dict.ADD).isEmpty() || dao.getTaskProjectRelation(FruitDict.Dict.ADD).size() > 1)
-            throw new CheckException("添加任务，必须关联计划，且只能关联一个计划");
+            throw new CheckException("添加任务，必须关联项目，且只能关联一个项目");
         this.insert(dao);
     }
 
@@ -106,7 +106,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         dao.setTaskLevel(vo.getTaskLevel());
         dao.setTaskUserRelation(vo.getTaskUserRelation());
         dao.setTaskListRelation(vo.getTaskListRelation());
-        if (!dao.getTaskListRelation(FruitDict.Dict.ADD).isNotEmpty())
+        if (dao.getTaskListRelation(FruitDict.Dict.ADD).isEmpty())
             throw new CheckException("必须关联列表");
         return dao;
     }
@@ -185,16 +185,16 @@ public abstract class AbstractDaoTask implements InterfaceDao {
     }
 
     private final void changeCheckList(FruitTaskDao dao) {
-        if (!dao.getTaskListRelation(FruitDict.Dict.ADD).isNotEmpty())
+        if (dao.getTaskListRelation(FruitDict.Dict.ADD).isEmpty())
             throw new CheckException("没有目标源，无法切换列表");
         List<TaskListRelation> relations = this.findJoin(TaskListRelation.newInstance(dao.getUuid(), null));
         if (relations.isEmpty()) return;
         if (relations.size() > 1) throw new CheckException("关联列表数据出现一对多情况，请联系开发人员");
-        TaskListRelation delete = dao.getTaskListRelation(FruitDict.Dict.DELETE);
-        if (!delete.isNotEmpty())
-            delete = TaskListRelation.newInstance(null, relations.get(0).getListId());
-        else
-            delete.setListId(relations.get(0).getListId());
+        if (relations.get(0).getListId().equals(dao.getTaskListRelation(FruitDict.Dict.ADD).get(0).getListId()))
+            throw new CheckException("和当前列表相同，操作终止。");
+        List<TaskListRelation> delete = dao.getTaskListRelation(FruitDict.Dict.DELETE);
+        /*每次切换列表时，都删除旧的关联列表*/
+        delete.add(TaskListRelation.newInstance(null, relations.get(0).getListId()));
         dao.setTaskListRelation(FruitDict.Dict.DELETE, delete);
 
     }
@@ -218,7 +218,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
     }
 
     /**
-     * 操作任务前的先决条件
+     * 操作任务前的任务检查
      *
      * @param vo
      * @return
@@ -241,7 +241,9 @@ public abstract class AbstractDaoTask implements InterfaceDao {
      * @return
      */
     public List<FruitTaskDao> findJoinProjects(FruitTaskVo vo) {
-        return this.sortList(this.findJoinProjects(findJoinDao(vo), vo.getListId()));
+        FruitTaskDao dao = findJoinDao(vo);
+        dao.setProjectIds(vo.getId());
+        return this.sortList(this.findJoinProjects(dao));
     }
 
     /**
@@ -251,12 +253,15 @@ public abstract class AbstractDaoTask implements InterfaceDao {
      * @return
      */
     public List<FruitTaskDao> findJoinPlans(FruitTaskVo vo) {
-        return this.sortList(this.findJoinPlans(findJoinDao(vo), vo.getListId()));
+        FruitTaskDao dao = this.findJoinDao(vo);
+        dao.setPlanIds(vo.getId());
+        return this.sortList(this.findJoinPlans(dao));
     }
 
     private FruitTaskDao findJoinDao(FruitTaskVo vo) {
         FruitTaskDao dao = FruitTaskVo.getDao();
         dao.setTitle(vo.getTitle());
+        dao.setListIds(vo.getListId());
         return dao;
     }
 
