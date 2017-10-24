@@ -91,7 +91,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         if (StringUtils.isNotBlank(sort))
             example.setOrderByClause(sort);
         else
-            example.setOrderByClause("createDateTime desc");
+            example.setOrderByClause("create_date_time desc");
         criteria.andIsDeletedEqualTo(FruitDict.Dict.N.name());
         return example;
     }
