@@ -65,7 +65,7 @@ public class FruitPlanDao extends FruitPlan {
     }
 
     public List<String> getProjectRelation(FruitDict.Dict type) {
-        return userRelation != null && projectRelation.containsKey(type) ? projectRelation.get(type) : Lists.newLinkedList();
+        return projectRelation != null && projectRelation.containsKey(type) ? projectRelation.get(type) : Lists.newLinkedList();
     }
 
     public void setUserRelation(Map<FruitDict.Dict, List<String>> userRelation) {
