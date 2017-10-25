@@ -9,7 +9,7 @@
         -->
         <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
         <result column="user_id" jdbcType="VARCHAR" property="userId"/>
-        <result column="plan_id" jdbcType="VARCHAR" property="planIds"/>
+        <result column="plan_id" jdbcType="VARCHAR" property="planId"/>
         <result column="pu_role" jdbcType="VARCHAR" property="puRole"/>
         <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
@@ -133,7 +133,7 @@
         insert into plan_user_relation (uuid, user_id, plan_id,
         pu_role, modify_date_time, create_date_time,
         is_deleted)
-        values (#{uuid,jdbcType=VARCHAR}, #{userId,jdbcType=VARCHAR}, #{planIds,jdbcType=VARCHAR},
+        values (#{uuid,jdbcType=VARCHAR}, #{userId,jdbcType=VARCHAR}, #{planId,jdbcType=VARCHAR},
         #{puRole,jdbcType=VARCHAR}, #{modifyDateTime,jdbcType=TIMESTAMP}, #{createDateTime,jdbcType=TIMESTAMP},
         #{isDeleted,jdbcType=VARCHAR})
     </insert>
@@ -151,7 +151,7 @@
             <if test="userId != null">
                 user_id,
             </if>
-            <if test="planIds != null">
+            <if test="planId != null">
                 plan_id,
             </if>
             <if test="puRole != null">
@@ -174,8 +174,8 @@
             <if test="userId != null">
                 #{userId,jdbcType=VARCHAR},
             </if>
-            <if test="planIds != null">
-                #{planIds,jdbcType=VARCHAR},
+            <if test="planId != null">
+                #{planId,jdbcType=VARCHAR},
             </if>
             <if test="puRole != null">
                 #{puRole,jdbcType=VARCHAR},
@@ -217,8 +217,8 @@
             <if test="record.userId != null">
                 user_id = #{record.userId,jdbcType=VARCHAR},
             </if>
-            <if test="record.planIds != null">
-                plan_id = #{record.planIds,jdbcType=VARCHAR},
+            <if test="record.planId != null">
+                plan_id = #{record.planId,jdbcType=VARCHAR},
             </if>
             <if test="record.puRole != null">
                 pu_role = #{record.puRole,jdbcType=VARCHAR},
@@ -246,7 +246,7 @@
         update plan_user_relation
         set uuid = #{record.uuid,jdbcType=VARCHAR},
         user_id = #{record.userId,jdbcType=VARCHAR},
-        plan_id = #{record.planIds,jdbcType=VARCHAR},
+        plan_id = #{record.planId,jdbcType=VARCHAR},
         pu_role = #{record.puRole,jdbcType=VARCHAR},
         modify_date_time = #{record.modifyDateTime,jdbcType=TIMESTAMP},
         create_date_time = #{record.createDateTime,jdbcType=TIMESTAMP},

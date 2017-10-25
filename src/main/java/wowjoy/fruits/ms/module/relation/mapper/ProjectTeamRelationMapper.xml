@@ -8,7 +8,7 @@
       This element was generated on Tue Sep 12 13:20:42 CST 2017.
     -->
     <result column="uuid" jdbcType="VARCHAR" property="uuid" />
-    <result column="project_id" jdbcType="VARCHAR" property="projectIds" />
+    <result column="project_id" jdbcType="VARCHAR" property="projectId" />
     <result column="team_id" jdbcType="VARCHAR" property="teamId" />
     <result column="tp_role" jdbcType="VARCHAR" property="tpRole" />
     <result column="description" jdbcType="VARCHAR" property="description" />
@@ -132,7 +132,7 @@
     insert into project_team_relation (uuid, project_id, team_id, 
       tp_role, description, modify_date_time, 
       create_date_time, is_deleted)
-    values (#{uuid,jdbcType=VARCHAR}, #{projectIds,jdbcType=VARCHAR}, #{teamId,jdbcType=VARCHAR},
+    values (#{uuid,jdbcType=VARCHAR}, #{projectId,jdbcType=VARCHAR}, #{teamId,jdbcType=VARCHAR},
       #{tpRole,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR}, #{modifyDateTime,jdbcType=TIMESTAMP}, 
       #{createDateTime,jdbcType=TIMESTAMP}, #{isDeleted,jdbcType=VARCHAR})
   </insert>
@@ -147,7 +147,7 @@
       <if test="uuid != null">
         uuid,
       </if>
-      <if test="projectIds != null">
+      <if test="projectId != null">
         project_id,
       </if>
       <if test="teamId != null">
@@ -173,8 +173,8 @@
       <if test="uuid != null">
         #{uuid,jdbcType=VARCHAR},
       </if>
-      <if test="projectIds != null">
-        #{projectIds,jdbcType=VARCHAR},
+      <if test="projectId != null">
+        #{projectId,jdbcType=VARCHAR},
       </if>
       <if test="teamId != null">
         #{teamId,jdbcType=VARCHAR},
@@ -218,8 +218,8 @@
       <if test="record.uuid != null">
         uuid = #{record.uuid,jdbcType=VARCHAR},
       </if>
-      <if test="record.projectIds != null">
-        project_id = #{record.projectIds,jdbcType=VARCHAR},
+      <if test="record.projectId != null">
+        project_id = #{record.projectId,jdbcType=VARCHAR},
       </if>
       <if test="record.teamId != null">
         team_id = #{record.teamId,jdbcType=VARCHAR},
@@ -252,7 +252,7 @@
     -->
     update project_team_relation
     set uuid = #{record.uuid,jdbcType=VARCHAR},
-      project_id = #{record.projectIds,jdbcType=VARCHAR},
+      project_id = #{record.projectId,jdbcType=VARCHAR},
       team_id = #{record.teamId,jdbcType=VARCHAR},
       tp_role = #{record.tpRole,jdbcType=VARCHAR},
       description = #{record.description,jdbcType=VARCHAR},
