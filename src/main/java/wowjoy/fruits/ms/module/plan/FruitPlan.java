@@ -88,7 +88,7 @@ public class FruitPlan extends AbstractEntity {
     }
 
     public void setEndDate(LocalDate endDate) {
-        this.setEstimatedEndDate(Date.from(endDate.atStartOfDay(ZoneId.systemDefault()).toInstant()));
+        this.setEndDate(Date.from(endDate.atStartOfDay(ZoneId.systemDefault()).toInstant()));
     }
 
     /********
