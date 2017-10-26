@@ -134,7 +134,7 @@ public class PlanController {
      * @param vo
      * @return
      */
-    @RequestMapping(value = "/complete/{uuid}", method = RequestMethod.GET)
+    @RequestMapping(value = "/complete/{uuid}", method = RequestMethod.PUT)
     public RestResult complete(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
         vo.setUuidVo(uuid);
         dataPlanDao.complete(vo);
@@ -149,7 +149,7 @@ public class PlanController {
      * @param vo
      * @return
      */
-    @RequestMapping(value = "/end/{uuid}", method = RequestMethod.GET)
+    @RequestMapping(value = "/end/{uuid}", method = RequestMethod.PUT)
     public RestResult end(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
         vo.setUuidVo(uuid);
         dataPlanDao.end(vo);
