@@ -9,8 +9,8 @@ spring:
 eureka:
   client:
     service-url:
-#     defaultZone: http://wangziwen:wangziwen@effiy.cn:8761/eureka/
-      defaultZone: http://wangziwen:wangziwen@localhost:8761/eureka/
+     defaultZone: http://wangziwen:wangziwen@effiy.cn:8761/eureka/
+#      defaultZone: http://wangziwen:wangziwen@localhost:8761/eureka/
   instance:
     prefer-ip-address: true
 
