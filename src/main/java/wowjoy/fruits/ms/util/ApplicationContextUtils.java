@@ -11,7 +11,7 @@ import wowjoy.fruits.ms.module.user.FruitUser;
  */
 @Component
 public class ApplicationContextUtils implements ApplicationContextAware {
-    private static ThreadLocal<FruitUser> currentUser = new ThreadLocal<>();
+    private static ThreadLocal<String> currentUser = new ThreadLocal<>();
     private static ApplicationContext context;
 
     public static void setContext(ApplicationContext context) {
@@ -22,11 +22,11 @@ public class ApplicationContextUtils implements ApplicationContextAware {
         return context;
     }
 
-    public static FruitUser getCurrentUser() {
+    public static String getCurrentUser() {
         return currentUser.get();
     }
 
-    static void setCurrentUser(FruitUser currentUser) {
+    static void setCurrentUser(String currentUser) {
         ApplicationContextUtils.currentUser.set(currentUser);
     }
 

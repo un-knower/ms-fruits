@@ -67,9 +67,9 @@ public class FruitDict extends AbstractEntity {
 
         GIRLS("女"),
 
-        DELETE("删除标识"), ADD("添加标识"),SEARCH("查询"),
+        DELETE("删除标识"), ADD("添加标识"), SEARCH("查询"),
 
-        DESC("倒序"),ASC("升序");
+        DESC("倒序"), ASC("升序");
 
         private String value;
 
@@ -96,7 +96,6 @@ public class FruitDict extends AbstractEntity {
         COMPLETE("已完成"),
         //终止
         END("已终止");
-
 
 
         private String parentCode;
@@ -401,6 +400,43 @@ public class FruitDict extends AbstractEntity {
         }
 
         ProjectTeamDict(String value) {
+            this.setParentCode(Dict.USERPROJECT.name());
+            this.setValue(value);
+        }
+
+    }
+
+    /**
+     * AccountDict 账户字典
+     */
+    public enum AccountDict {
+        COMPANY_EMAIL("公司邮箱"),
+        PRIVATE_EMAIL("私人邮箱"),
+        PHONE("电话"),
+        JOB_NUMBER("工号"),
+        TEMP("临时用户");
+
+
+        private String parentCode;
+        private String value;
+
+        private void setParentCode(String parentCode) {
+            this.parentCode = parentCode;
+        }
+
+        private void setValue(String value) {
+            this.value = value;
+        }
+
+        public String getParentCode() {
+            return parentCode;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        AccountDict(String value) {
             this.setParentCode(Dict.USERPROJECT.name());
             this.setValue(value);
         }

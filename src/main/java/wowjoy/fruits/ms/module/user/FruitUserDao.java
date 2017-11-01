@@ -11,6 +11,16 @@ public class FruitUserDao extends FruitUser {
 
     private String planRole;
 
+    private String principal;
+
+    public String getPrincipal() {
+        return principal;
+    }
+
+    public void setPrincipal(String principal) {
+        this.principal = principal;
+    }
+
     public String getPlanRole() {
         return planRole;
     }

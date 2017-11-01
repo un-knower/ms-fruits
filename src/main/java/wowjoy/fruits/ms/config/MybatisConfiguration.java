@@ -1,18 +1,13 @@
 package wowjoy.fruits.ms.config;
 
-import com.github.pagehelper.autoconfigure.PageHelperProperties;
 import com.zaxxer.hikari.HikariDataSource;
-import org.apache.ibatis.logging.LogFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-
-import javax.sql.DataSource;
 
 /**
  * Create d by wangz iwen on 2017/8/21.
@@ -24,16 +19,6 @@ public class MybatisConfiguration {
     @Autowired
     private Environment environment;
 
-    //    @Bean
-    DataSource dataSource() {
-        DataSourceBuilder dataSourceBuilder = DataSourceBuilder.create();
-        dataSourceBuilder.url(environment.getProperty("jdbc.uri"));
-        dataSourceBuilder.username(environment.getProperty("jdbc.username"));
-        dataSourceBuilder.password(environment.getProperty("jdbc.password"));
-        dataSourceBuilder.driverClassName(environment.getProperty("jdbc.classDriverName"));
-        return dataSourceBuilder.build();
-    }
-
     /**
      * 采用hikari连接池
      *
@@ -42,10 +27,10 @@ public class MybatisConfiguration {
     @Bean
     HikariDataSource hikariDataSource() {
         final HikariDataSource hikariDataSource = new HikariDataSource();
-        hikariDataSource.setJdbcUrl(environment.getProperty("jdbc.uri"));
-        hikariDataSource.setUsername(environment.getProperty("jdbc.username"));
-        hikariDataSource.setPassword(environment.getProperty("jdbc.password"));
-        hikariDataSource.setDriverClassName(environment.getProperty("jdbc.classDriverName"));
+        hikariDataSource.setJdbcUrl(environment.getProperty("tomcat.jdbc.pool.uri"));
+        hikariDataSource.setUsername(environment.getProperty("tomcat.jdbc.pool.username"));
+        hikariDataSource.setPassword(environment.getProperty("tomcat.jdbc.pool.password"));
+        hikariDataSource.setDriverClassName(environment.getProperty("tomcat.jdbc.pool.driverClassName"));
         hikariDataSource.setIdleTimeout(60000);
         hikariDataSource.setMaxLifetime(60000);
         return hikariDataSource;

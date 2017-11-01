@@ -3,10 +3,8 @@ import com.google.gson.JsonElement;
 import org.elasticsearch.client.transport.TransportClient;
 import org.junit.Test;
 import wowjoy.fruits.ms.module.project.FruitProject;
-import wowjoy.fruits.ms.util.JwtUtils;
 
 import java.net.UnknownHostException;
-import java.time.LocalDateTime;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -32,9 +30,4 @@ public class ElasticsearchTest {
         System.out.println(new Gson().toJsonTree(project).toString());
     }
 
-    @Test
-    public void sss() throws Exception {
-        String token = JwtUtils.token(JwtUtils.newHeader(), JwtUtils.newPayLoad("111", LocalDateTime.now().plusDays(1), LocalDateTime.now()));
-        System.out.println(token);
-    }
 }

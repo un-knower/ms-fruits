@@ -71,6 +71,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         else
             example.getOredCriteria().get(0).andParentIdIsNull();
         PageHelper.startPage(pageNum, pageSize);
+        example.setOrderByClause("create_date_time desc");
         return mapper.selectByExampleWithBLOBs(example);
     }
 

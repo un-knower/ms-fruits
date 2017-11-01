@@ -7,6 +7,16 @@ public class FruitUserVo extends FruitUser {
     protected FruitUserVo() {
     }
 
+    private String principal;
+
+    public String getPrincipal() {
+        return principal;
+    }
+
+    public void setPrincipal(String principal) {
+        this.principal = principal;
+    }
+
     @Override
     public String getUserId() {
         return super.getUserId();

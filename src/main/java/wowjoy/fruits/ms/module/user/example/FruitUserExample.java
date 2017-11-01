@@ -1,4 +1,4 @@
-package wowjoy.fruits.ms.module.user;
+package wowjoy.fruits.ms.module.user.example;
 
 import java.util.ArrayList;
 import java.util.Date;

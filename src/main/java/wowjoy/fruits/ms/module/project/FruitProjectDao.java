@@ -21,7 +21,7 @@ import java.util.Map;
  */
 public class FruitProjectDao extends FruitProject {
 
-    private final String DateTimeFormat = "yyyy-MM-dd'T'23:59:59";
+    private transient final String DateTimeFormat = "yyyy-MM-dd'T'23:59:59";
 
     protected FruitProjectDao() {
         setUuid(null);

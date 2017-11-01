@@ -2,7 +2,7 @@ package wowjoy.fruits.ms.module.user.mapper;
 
 import org.apache.ibatis.annotations.Param;
 import wowjoy.fruits.ms.module.user.FruitUser;
-import wowjoy.fruits.ms.module.user.FruitUserExample;
+import wowjoy.fruits.ms.module.user.example.FruitUserExample;
 
 import java.util.List;
 

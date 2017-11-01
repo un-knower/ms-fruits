@@ -6,4 +6,10 @@ server:
 pagehelper:
   helper-dialect: mysql
   reasonable: true
+
+security:
+  user:
+    password: password
+  basic:
+    enabled: false
 #debug: true

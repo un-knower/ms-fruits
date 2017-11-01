@@ -1,5 +1,5 @@
 spring:
-  profiles: dev
+  profiles: remote
   cloud:
     config:
       profile: dev
@@ -9,15 +9,15 @@ spring:
 eureka:
   client:
     service-url:
-     defaultZone: http://wangziwen:wangziwen@effiy.cn:8761/eureka/
-#      defaultZone: http://wangziwen:wangziwen@localhost:8761/eureka/
+#     defaultZone: http://wangziwen:wangziwen@effiy.cn:8761/eureka/
+      defaultZone: http://wangziwen:wangziwen@localhost:8761/eureka/
   instance:
     prefer-ip-address: true
 
 ---
 
 spring:
-  profiles: pro
+  profiles: outer
   cloud:
     config:
       profile: pro

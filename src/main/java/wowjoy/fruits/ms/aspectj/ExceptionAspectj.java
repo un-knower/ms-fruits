@@ -21,6 +21,10 @@ public class ExceptionAspectj {
 
     @Around(value = "pointcut() && @annotation(annotation)")
     public Object around(ProceedingJoinPoint joinPoint, RequestMapping annotation) {
+        return exception(joinPoint);
+    }
+
+    private Object exception(ProceedingJoinPoint joinPoint) {
         try {
             return joinPoint.proceed();
         } catch (RuntimeException e) {

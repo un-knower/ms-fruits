@@ -83,19 +83,14 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         final List<FruitPlanDao> data = plans;
         List<String> parents = Lists.newLinkedList();
         plans.forEach((i) -> parents.add(i.getUuid()));
-        long start = System.nanoTime();
         List<Future> futures = Lists.newLinkedList();
-        System.out.println(start);
-        plans.forEach((parent) -> {
-            futures.add(iExecutor.submit(() -> {
-                FruitPlanDao dao = FruitPlan.getDao();
-                dao.setParentId(parent.getUuid());
-                parent.setWeeks(this.findProject(dao, 0, 0, false));
-                return parent;
-            }));
-        });
+        plans.forEach((parent) -> futures.add(iExecutor.submit(() -> {
+            FruitPlanDao dao = FruitPlan.getDao();
+            dao.setParentId(parent.getUuid());
+            parent.setWeeks(this.findProject(dao, 0, 0, false));
+            return parent;
+        })));
         wait(futures, iExecutor);
-        System.out.println(System.nanoTime() - start);
         return data;
     }
 
