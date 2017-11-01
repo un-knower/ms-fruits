@@ -7,6 +7,7 @@ import wowjoy.fruits.ms.dao.user.AbstractDaoAccount;
 import wowjoy.fruits.ms.dao.user.AbstractDaoUser;
 import wowjoy.fruits.ms.dao.user.AccountDaoImpl;
 import wowjoy.fruits.ms.dao.user.UserDaoImpl;
+import wowjoy.fruits.ms.module.user.FruitAccountVo;
 import wowjoy.fruits.ms.module.user.FruitUserVo;
 import wowjoy.fruits.ms.util.JsonArgument;
 import wowjoy.fruits.ms.util.RestResult;
@@ -29,9 +30,8 @@ public class UserController {
     }
 
     @RequestMapping(value = "/account", method = RequestMethod.GET)
-    public RestResult account(@JsonArgument(type = FruitUserVo.class) FruitUserVo vo) {
-        daoAccount.inserts();
-        return RestResult.getInstance();
+    public RestResult account(@JsonArgument(type = FruitAccountVo.class) FruitAccountVo vo) {
+        return RestResult.getInstance().setData(daoAccount.findByAccount(vo));
     }
 
 }

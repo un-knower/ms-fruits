@@ -23,7 +23,7 @@ public class AccountDaoImpl extends AbstractDaoAccount {
     @Override
     protected void inserts(List<FruitAccountDao> accountDaos) {
         if (accountDaos.isEmpty())
-            throw new CheckException("无可批量添加账单");
+            throw new CheckException("无可批量添加账户");
         accountMapper.inserts(accountDaos);
     }
 
