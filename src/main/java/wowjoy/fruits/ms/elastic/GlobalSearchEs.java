@@ -183,7 +183,7 @@ public class GlobalSearchEs extends AbstractElastic {
         private final Callable extractUser = () -> {
             final LinkedList<GlobalSearch> result = Lists.newLinkedList();
             final AbstractDaoUser dao = ApplicationContextUtils.getContext().getBean(UserDaoImpl.class);
-            final List<FruitUser> users = dao.finds(FruitUser.getFruitUserVo());
+            final List<FruitUser> users = dao.finds(FruitUser.getVo());
             users.forEach((user) -> {
                 GlobalSearch global = GlobalSearch.getInstance(FruitUser.class);
                 global.setTitle(user.getUserName());

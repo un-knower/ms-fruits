@@ -1,9 +1,9 @@
 package wowjoy.fruits.ms.dao.user;
 
+import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.InterfaceDao;
-import wowjoy.fruits.ms.module.user.FruitUser;
-import wowjoy.fruits.ms.module.user.FruitUserDao;
-import wowjoy.fruits.ms.module.user.FruitUserVo;
+import wowjoy.fruits.ms.exception.CheckException;
+import wowjoy.fruits.ms.module.user.*;
 
 import java.util.List;
 
@@ -20,16 +20,30 @@ public abstract class AbstractDaoUser implements InterfaceDao {
 
     protected abstract List<FruitUser> finds(FruitUserDao dao);
 
+    protected abstract void clearByUserId(String... ids);
+
+    protected abstract List<FruitUserDao> findByAccount(FruitUserDao dao);
+
     /***********************
      * PUBLIC 函数，公共接口 *
      ***********************/
 
     public List<FruitUser> finds(FruitUserVo vo) {
-        final FruitUserDao dao = FruitUser.getFruitUserDao();
+        final FruitUserDao dao = FruitUser.getDao();
         dao.setUserEmail(vo.getUserEmail());
         dao.setUserName(vo.getUserName());
         return this.finds(dao);
     }
 
+    public FruitUser finFdByAccount(FruitUserVo vo) {
+        if (StringUtils.isBlank(vo.getPrincipal()))
+            throw new CheckException("账户不存在");
+        FruitUserDao dao = FruitUser.getDao();
+        dao.setPrincipal(vo.getPrincipal());
+        List<FruitUserDao> users = this.findByAccount(dao);
+        if (users.isEmpty())
+            throw new CheckException("账户不存在");
+        return users.get(0);
+    }
 
 }

@@ -1,10 +1,15 @@
 package wowjoy.fruits.ms.module.user;
 
+import com.google.common.collect.Lists;
+
+import java.util.List;
+
 /**
  * Created by wangziwen on 2017/9/14.
  */
 public class FruitUserDao extends FruitUser {
     protected FruitUserDao() {
+        setUuid(null);
     }
 
     private String projectRole;
@@ -19,6 +24,16 @@ public class FruitUserDao extends FruitUser {
 
     public void setPrincipal(String principal) {
         this.principal = principal;
+    }
+
+    private List<FruitAccountDao> accounts;
+
+    public List<FruitAccountDao> getAccounts() {
+        return accounts == null ? (accounts = Lists.newLinkedList()) : accounts;
+    }
+
+    public void setAccounts(List<FruitAccountDao> accounts) {
+        accounts = accounts;
     }
 
     public String getPlanRole() {

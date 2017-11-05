@@ -77,11 +77,11 @@ public class FruitUser extends AbstractEntity {
         return jobTitle;
     }
 
-    public static FruitUserDao getFruitUserDao() {
+    public static FruitUserDao getDao() {
         return new FruitUserDao();
     }
 
-    public static FruitUserVo getFruitUserVo() {
+    public static FruitUserVo getVo() {
         return new FruitUserVo();
     }
 

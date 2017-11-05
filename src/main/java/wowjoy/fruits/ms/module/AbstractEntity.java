@@ -14,8 +14,12 @@ public abstract class AbstractEntity implements InterfaceEntity {
 
     protected AbstractEntity() {
         /*利大于弊，我选择保留，如果有更好的方法，可以尝试*/
-        this.setUuid(UUID.randomUUID().toString().replace("-", ""));
+        this.setUuid(UUID());
         this.setIsDeleted(FruitDict.Dict.N.name());
+    }
+
+    public static String UUID(){
+        return UUID.randomUUID().toString().replace("-", "");
     }
 
     private String uuid;

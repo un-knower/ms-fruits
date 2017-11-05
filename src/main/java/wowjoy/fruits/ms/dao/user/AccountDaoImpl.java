@@ -5,10 +5,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wowjoy.fruits.ms.exception.CheckException;
+import wowjoy.fruits.ms.module.user.FruitAccount;
 import wowjoy.fruits.ms.module.user.FruitAccountDao;
 import wowjoy.fruits.ms.module.user.example.FruitAccountExample;
 import wowjoy.fruits.ms.module.user.mapper.FruitAccountMapper;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -34,5 +37,15 @@ public class AccountDaoImpl extends AbstractDaoAccount {
         if (StringUtils.isNotBlank(dao.getPrincipal()))
             criteria.andPrincipalEqualTo(dao.getPrincipal());
         return accountMapper.relationUser(example);
+    }
+
+    @Override
+    protected void clearByUserId(String... ids) {
+        FruitAccountExample example = new FruitAccountExample();
+        example.createCriteria().andUserIdIn(Arrays.asList(ids));
+        accountMapper.deleteByExample(example);
+        FruitAccountDao dao = FruitAccount.getDao();
+        dao.setIsDeleted(FruitDict.Dict.Y.name());
+        accountMapper.updateByExampleSelective(dao, new FruitAccountExample());
     }
 }

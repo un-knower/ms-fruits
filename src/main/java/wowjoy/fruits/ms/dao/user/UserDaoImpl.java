@@ -7,8 +7,10 @@ import wowjoy.fruits.ms.module.user.FruitUser;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.user.example.FruitUserExample;
 import wowjoy.fruits.ms.module.user.mapper.FruitUserMapper;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -34,6 +36,23 @@ public class UserDaoImpl extends AbstractDaoUser {
         if (StringUtils.isNotBlank(dao.getUserName()))
             criteria.andUserNameLike(MessageFormat.format("%{0}%", dao.getUserName()));
         return mapper.selectByExample(example);
+    }
+
+    @Override
+    protected void clearByUserId(String... ids) {
+        FruitUserExample example = new FruitUserExample();
+        example.createCriteria().andUserIdIn(Arrays.asList(ids));
+        mapper.deleteByExample(example);
+        FruitUserDao dao = FruitUser.getDao();
+        dao.setIsDeleted(FruitDict.Dict.Y.name());
+        mapper.updateByExampleSelective(dao, new FruitUserExample());
+    }
+
+    @Override
+    protected List<FruitUserDao> findByAccount(FruitUserDao dao) {
+        FruitUserExample example = new FruitUserExample();
+        example.createCriteria().andIsDeletedEqualTo(FruitDict.Dict.N.name());
+        return mapper.selectByAccount(example, dao.getPrincipal());
     }
 
 }

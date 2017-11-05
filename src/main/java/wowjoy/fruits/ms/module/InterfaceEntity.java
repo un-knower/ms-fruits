@@ -1,5 +1,7 @@
 package wowjoy.fruits.ms.module;
 
+import java.util.UUID;
+
 /**
  * Created by wangziwen on 2017/10/18.
  */

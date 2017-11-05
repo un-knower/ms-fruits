@@ -1,15 +1,12 @@
 package wowjoy.fruits.ms.dao.user;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.user.FruitAccount;
 import wowjoy.fruits.ms.module.user.FruitAccountDao;
 import wowjoy.fruits.ms.module.user.FruitAccountVo;
-import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -23,20 +20,11 @@ public abstract class AbstractDaoAccount implements InterfaceDao {
 
     protected abstract List<FruitAccountDao> finds(FruitAccountDao dao);
 
+    protected abstract void clearByUserId(String... ids);
+
     /***********************
      * PUBLIC 函数，公共接口 *
      ***********************/
-    public void inserts() {
-        LinkedList<FruitAccountDao> daos = Lists.newLinkedList();
-        FruitAccountDao dao = FruitAccount.getDao();
-        dao.setUuid(FruitAccount.getVo().getUuid());
-        dao.setCredentials("1");
-        dao.setPrincipal("1");
-        dao.setType(FruitDict.AccountDict.COMPANY_EMAIL.getParentCode());
-        dao.setUserId("1");
-        daos.add(dao);
-        inserts(daos);
-    }
 
     /**
      * 查询账号是否存在
@@ -52,4 +40,5 @@ public abstract class AbstractDaoAccount implements InterfaceDao {
         dao.setPrincipal(vo.getPrincipal());
         return finds(dao);
     }
+
 }
