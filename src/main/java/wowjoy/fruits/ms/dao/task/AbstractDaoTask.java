@@ -3,6 +3,8 @@ package wowjoy.fruits.ms.dao.task;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
+import wowjoy.fruits.ms.exception.ExceptionSupport;
+import wowjoy.fruits.ms.exception.ServiceException;
 import wowjoy.fruits.ms.module.relation.entity.TaskListRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskPlanRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskProjectRelation;
@@ -81,19 +83,35 @@ public abstract class AbstractDaoTask implements InterfaceDao {
      *******************************/
 
     public final void addJoinProject(FruitTaskVo vo) {
-        final FruitTaskDao dao = this.addTemplate(vo);
-        dao.setTaskProjectRelation(vo.getTaskProjectRelation());
-        if (dao.getTaskProjectRelation(FruitDict.Dict.ADD).isEmpty() || dao.getTaskProjectRelation(FruitDict.Dict.ADD).size() > 1)
-            throw new CheckException("添加任务，必须关联项目，且只能关联一个项目");
-        this.insert(dao);
+        try {
+            final FruitTaskDao dao = this.addTemplate(vo);
+            dao.setTaskProjectRelation(vo.getTaskProjectRelation());
+            if (dao.getTaskProjectRelation(FruitDict.Dict.ADD).isEmpty() || dao.getTaskProjectRelation(FruitDict.Dict.ADD).size() > 1)
+                throw new CheckException("添加任务，必须关联项目，且只能关联一个项目");
+            this.insert(dao);
+        } catch (ExceptionSupport ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            throw new ServiceException("添加项目任务失败");
+        }
+
     }
 
     public final void addJoinPlan(FruitTaskVo vo) {
-        final FruitTaskDao dao = this.addTemplate(vo);
-        dao.setTaskPlanRelation(vo.getTaskPlanRelation());
-        if (dao.getTaskPlanRelation(FruitDict.Dict.ADD).isEmpty() || dao.getTaskPlanRelation(FruitDict.Dict.ADD).size() > 1)
-            throw new CheckException("添加任务，必须关联计划，且只能关联一个计划");
-        this.insert(dao);
+        try {
+            final FruitTaskDao dao = this.addTemplate(vo);
+            dao.setTaskPlanRelation(vo.getTaskPlanRelation());
+            if (dao.getTaskPlanRelation(FruitDict.Dict.ADD).isEmpty() || dao.getTaskPlanRelation(FruitDict.Dict.ADD).size() > 1)
+                throw new CheckException("添加任务，必须关联计划，且只能关联一个计划");
+            this.insert(dao);
+        } catch (ExceptionSupport ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            throw new ServiceException("添加计划任务失败");
+        }
+
     }
 
     private final FruitTaskDao addTemplate(FruitTaskVo vo) {
@@ -112,17 +130,31 @@ public abstract class AbstractDaoTask implements InterfaceDao {
     }
 
     public final void modifyJoinPlan(FruitTaskVo vo) {
-        final FruitTaskDao dao = modifyTemplate(vo);
-        dao.setTaskPlanRelation(vo.getTaskPlanRelation());
-        this.modifyCheckJoinPlan(dao);
-        this.update(dao);
+        try {
+            final FruitTaskDao dao = modifyTemplate(vo);
+            dao.setTaskPlanRelation(vo.getTaskPlanRelation());
+            this.modifyCheckJoinPlan(dao);
+            this.update(dao);
+        } catch (ExceptionSupport ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            throw new ServiceException("修改计划任务失败");
+        }
     }
 
     public final void modifyJoinProject(FruitTaskVo vo) {
-        final FruitTaskDao dao = modifyTemplate(vo);
-        dao.setTaskProjectRelation(vo.getTaskProjectRelation());
-        this.modifyCheckJoinProject(dao);
-        this.update(dao);
+        try {
+            final FruitTaskDao dao = modifyTemplate(vo);
+            dao.setTaskProjectRelation(vo.getTaskProjectRelation());
+            this.modifyCheckJoinProject(dao);
+            this.update(dao);
+        } catch (ExceptionSupport ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            throw new ServiceException("修改项目任务失败");
+        }
     }
 
     private final void modifyCheckJoinPlan(FruitTaskDao dao) {
@@ -159,29 +191,50 @@ public abstract class AbstractDaoTask implements InterfaceDao {
     }
 
     public final void changeStatusToEnd(FruitTaskVo vo) {
-        final FruitTaskDao dao = changeTemplate(vo);
-        if (FruitDict.TaskDict.END.name().equals(dao.getTaskStatus()))
-            throw new CheckException("任务已结束");
-        dao.setTaskStatus(FruitDict.TaskDict.END.name());
-        update(dao);
+        try {
+            final FruitTaskDao dao = changeTemplate(vo);
+            if (FruitDict.TaskDict.END.name().equals(dao.getTaskStatus()))
+                throw new CheckException("任务已结束");
+            dao.setTaskStatus(FruitDict.TaskDict.END.name());
+            update(dao);
+        } catch (ExceptionSupport ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            throw new ServiceException("更改任务状态为已结束时发生错误");
+        }
     }
 
     public final void changeStatusToStart(FruitTaskVo vo) {
-        final FruitTaskDao dao = changeTemplate(vo);
-        if (FruitDict.TaskDict.START.name().equals(dao.getTaskStatus()))
-            throw new CheckException("任务已开始");
-        dao.setTaskStatus(FruitDict.TaskDict.START.name());
-        update(dao);
+        try {
+            final FruitTaskDao dao = changeTemplate(vo);
+            if (FruitDict.TaskDict.START.name().equals(dao.getTaskStatus()))
+                throw new CheckException("任务已开始");
+            dao.setTaskStatus(FruitDict.TaskDict.START.name());
+            update(dao);
+        } catch (ExceptionSupport ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            throw new ServiceException("更改任务状态为开始时发生错误");
+        }
     }
 
     public final void changeList(FruitTaskVo vo) {
-        if (!this.findByUUID(vo).isNotEmpty())
-            throw new CheckException("任务不存在，不允许操作。");
-        FruitTaskDao dao = FruitTask.getDao();
-        dao.setUuid(vo.getUuidVo());
-        dao.setTaskListRelation(vo.getTaskListRelation());
-        this.changeCheckList(dao);
-        this.update(dao);
+        try {
+            if (!this.findByUUID(vo).isNotEmpty())
+                throw new CheckException("任务不存在，不允许操作。");
+            FruitTaskDao dao = FruitTask.getDao();
+            dao.setUuid(vo.getUuidVo());
+            dao.setTaskListRelation(vo.getTaskListRelation());
+            this.changeCheckList(dao);
+            this.update(dao);
+        } catch (ExceptionSupport ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            throw new ServiceException("更改任务所属列表时发生错误");
+        }
     }
 
     private final void changeCheckList(FruitTaskDao dao) {
@@ -191,7 +244,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         if (relations.isEmpty()) return;
         if (relations.size() > 1) throw new CheckException("关联列表数据出现一对多情况，请联系开发人员");
         if (relations.get(0).getListId().equals(dao.getTaskListRelation(FruitDict.Dict.ADD).get(0).getListId()))
-            throw new CheckException("和当前列表相同，操作终止。");
+            throw new ServiceException("和当前列表相同，操作终止。");
         List<TaskListRelation> delete = dao.getTaskListRelation(FruitDict.Dict.DELETE);
         /*每次切换列表时，都删除旧的关联列表*/
         delete.add(TaskListRelation.newInstance(null, relations.get(0).getListId()));
@@ -212,9 +265,16 @@ public abstract class AbstractDaoTask implements InterfaceDao {
     }
 
     public final void delete(FruitTaskVo vo) {
-        final FruitTaskDao dao = FruitTask.getDao();
-        dao.setUuid(vo.getUuidVo());
-        this.delete(dao);
+        try {
+            final FruitTaskDao dao = FruitTask.getDao();
+            dao.setUuid(vo.getUuidVo());
+            this.delete(dao);
+        } catch (ExceptionSupport ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            throw new ServiceException("删除任务失败");
+        }
     }
 
     /**

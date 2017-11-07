@@ -20,7 +20,7 @@ import javax.annotation.Resource;
 /**
  */
 @RestController
-@RequestMapping("/v1/api/user")
+@RequestMapping("/v1/user")
 public class UserController {
     @Resource(type = AccountDaoImpl.class)
     private AbstractDaoAccount daoAccount;

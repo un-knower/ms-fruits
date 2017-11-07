@@ -7,6 +7,7 @@ import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -17,6 +18,7 @@ import org.springframework.web.client.RestTemplate;
 @EnableFeignClients
 @ComponentScan("wowjoy.fruits.ms")
 @EnableConfigurationProperties
+@EnableTransactionManagement
 public class Application {
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);

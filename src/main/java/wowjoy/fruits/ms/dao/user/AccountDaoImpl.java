@@ -24,14 +24,14 @@ public class AccountDaoImpl extends AbstractDaoAccount {
     private FruitAccountMapper accountMapper;
 
     @Override
-    protected void inserts(List<FruitAccountDao> accountDaos) {
+    public void inserts(List<FruitAccountDao> accountDaos) {
         if (accountDaos.isEmpty())
             throw new CheckException("无可批量添加账户");
         accountMapper.inserts(accountDaos);
     }
 
     @Override
-    protected List<FruitAccountDao> finds(FruitAccountDao dao) {
+    public List<FruitAccountDao> finds(FruitAccountDao dao) {
         FruitAccountExample example = new FruitAccountExample();
         FruitAccountExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(dao.getPrincipal()))
@@ -40,7 +40,7 @@ public class AccountDaoImpl extends AbstractDaoAccount {
     }
 
     @Override
-    protected void clearByUserId(String... ids) {
+    public void clearByUserId(String... ids) {
         FruitAccountExample example = new FruitAccountExample();
         example.createCriteria().andUserIdIn(Arrays.asList(ids));
         accountMapper.deleteByExample(example);

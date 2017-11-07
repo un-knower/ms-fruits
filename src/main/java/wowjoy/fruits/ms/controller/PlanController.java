@@ -19,7 +19,7 @@ import wowjoy.fruits.ms.util.RestResult;
  * Created by wangziwen on 2017/9/11.
  */
 @RestController
-@RequestMapping("/v1/api/plan")
+@RequestMapping("/v1/plan")
 @Transactional
 public class PlanController {
 

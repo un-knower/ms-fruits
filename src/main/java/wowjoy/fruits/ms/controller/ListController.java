@@ -16,7 +16,7 @@ import wowjoy.fruits.ms.util.RestResult;
  * Created by wangziwen on 2017/10/17.
  */
 @RestController
-@RequestMapping("/v1/api/list")
+@RequestMapping("/v1/list")
 public class ListController {
 
 

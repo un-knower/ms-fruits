@@ -16,7 +16,7 @@ import wowjoy.fruits.ms.util.RestResult;
  * 增加项目拼音搜索
  */
 @RestController
-@RequestMapping("/v1/api/project")
+@RequestMapping("/v1/project")
 public class ProjectController {
 
 

@@ -21,7 +21,7 @@ public class FruitTeam extends AbstractEntity {
         return new FruitTeamEmpty(msg);
     }
 
-    public static FruitTeamDao getFruitTeamDao() {
+    public static FruitTeamDao getDao() {
         return new FruitTeamDao();
     }
 

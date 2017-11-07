@@ -3,6 +3,8 @@ package wowjoy.fruits.ms.dao.list;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
+import wowjoy.fruits.ms.exception.ExceptionSupport;
+import wowjoy.fruits.ms.exception.ServiceException;
 import wowjoy.fruits.ms.module.list.FruitList;
 import wowjoy.fruits.ms.module.list.FruitListDao;
 import wowjoy.fruits.ms.module.list.FruitListVo;
@@ -29,9 +31,16 @@ public abstract class AbstractDaoList implements InterfaceDao {
      * @param vo
      */
     public void insertTask(FruitListVo vo) {
-        FruitListDao dao = this.insertTemplate(vo);
-        dao.setlType(FruitDict.Dict.TASK.name());
-        this.insert(dao);
+        try {
+            FruitListDao dao = this.insertTemplate(vo);
+            dao.setlType(FruitDict.Dict.TASK.name());
+            this.insert(dao);
+        } catch (ExceptionSupport ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            throw new ServiceException("添加列表错误");
+        }
     }
 
     /**
@@ -54,13 +63,20 @@ public abstract class AbstractDaoList implements InterfaceDao {
      * @param vo
      */
     public void update(FruitListVo vo) {
-        if (!checkByUUID(vo.getUuidVo()).isNotEmpty())
-            throw new CheckException("任务列表不存在，操作被拒绝");
-        FruitListDao dao = FruitList.getDao();
-        dao.setUuid(vo.getUuidVo());
-        dao.setTitle(vo.getTitle());
-        dao.setDescription(vo.getDescription());
-        this.update(dao);
+        try {
+            if (!checkByUUID(vo.getUuidVo()).isNotEmpty())
+                throw new CheckException("任务列表不存在，操作被拒绝");
+            FruitListDao dao = FruitList.getDao();
+            dao.setUuid(vo.getUuidVo());
+            dao.setTitle(vo.getTitle());
+            dao.setDescription(vo.getDescription());
+            this.update(dao);
+        } catch (ExceptionSupport ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            throw new ServiceException("列表修改失败");
+        }
     }
 
     /**
@@ -69,9 +85,16 @@ public abstract class AbstractDaoList implements InterfaceDao {
      * @param vo
      */
     public void delete(FruitListVo vo) {
-        FruitListDao dao = FruitList.getDao();
-        dao.setUuid(vo.getUuidVo());
-        this.delete(dao);
+        try {
+            FruitListDao dao = FruitList.getDao();
+            dao.setUuid(vo.getUuidVo());
+            this.delete(dao);
+        } catch (ExceptionSupport ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            throw new ServiceException("列表删除失败");
+        }
     }
 
     private FruitList checkByUUID(String uuid) {

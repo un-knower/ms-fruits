@@ -2,6 +2,8 @@ package wowjoy.fruits.ms.dao.project;
 
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
+import wowjoy.fruits.ms.exception.ExceptionSupport;
+import wowjoy.fruits.ms.exception.ServiceException;
 import wowjoy.fruits.ms.module.project.FruitProject;
 import wowjoy.fruits.ms.module.project.FruitProjectDao;
 import wowjoy.fruits.ms.module.project.FruitProjectVo;
@@ -52,26 +54,41 @@ public abstract class AbstractDaoProject implements InterfaceDao {
      *******************************/
 
     public final void delete(FruitProjectVo vo) {
-        if (!this.findByUUID(vo).isNotEmpty())
-            throw new CheckException("项目不存在");
-        delete(vo.getUuidVo());
+        try {
+            if (!this.findByUUID(vo).isNotEmpty())
+                throw new CheckException("项目不存在");
+            delete(vo.getUuidVo());
+        } catch (ExceptionSupport ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            throw new CheckException("删除项目出错");
+        }
     }
 
     public final void add(FruitProjectVo vo) {
-        final FruitProjectDao dao = FruitProject.getProjectDao();
-        dao.setUuid(vo.getUuid());
-        dao.setTitle(vo.getTitle());
-        dao.setProjectStatus(vo.getProjectStatus());
-        dao.setPredictEndDate(vo.getPredictEndDate());
-        dao.setDescription(vo.getDescription());
-        dao.setTeamRelation(vo.getTeamRelation());
-        dao.setUserRelation(vo.getUserRelation());
-        dao.setProjectStatus(FruitDict.ProjectDict.UNDERWAY.name());
-        this.addCheckJoinTeam(dao).addCheckJoinUser(dao);
-        this.insert(dao);
+        try {
+            final FruitProjectDao dao = FruitProject.getProjectDao();
+            dao.setUuid(vo.getUuid());
+            dao.setTitle(vo.getTitle());
+            dao.setProjectStatus(vo.getProjectStatus());
+            dao.setPredictStartDate(vo.getPredictStartDate());
+            dao.setPredictEndDate(vo.getPredictEndDate());
+            dao.setDescription(vo.getDescription());
+            dao.setTeamRelation(vo.getTeamRelation());
+            dao.setUserRelation(vo.getUserRelation());
+            dao.setProjectStatus(FruitDict.ProjectDict.UNDERWAY.name());
+            this.addCheckJoinTeam(dao).addCheckJoinUser(dao);
+            this.insert(dao);
+        } catch (ExceptionSupport ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            throw new ServiceException("添加项目出错");
+        }
     }
 
-    private final AbstractDaoProject addCheckJoinTeam(FruitProjectDao dao) {
+    private AbstractDaoProject addCheckJoinTeam(FruitProjectDao dao) {
         if (dao.getTeamRelation(FruitDict.Dict.ADD).isEmpty())
             throw new CheckException("必须绑定一个负责团队");
         Integer count = 0;
@@ -91,7 +108,7 @@ public abstract class AbstractDaoProject implements InterfaceDao {
         return this;
     }
 
-    private final void addCheckJoinUser(FruitProjectDao dao) {
+    private void addCheckJoinUser(FruitProjectDao dao) {
         if (dao.getUserRelation(FruitDict.Dict.ADD).isEmpty())
             throw new CheckException("必须绑定一个负责人");
         Integer count = 0;
@@ -145,25 +162,33 @@ public abstract class AbstractDaoProject implements InterfaceDao {
      * @param vo
      */
     public final void modify(FruitProjectVo vo) {
-        FruitProjectDao project = this.findByUUID(vo);
-        if (!project.isNotEmpty())
-            throw new CheckException("项目不存在");
-        final FruitProjectDao dao = FruitProject.getProjectDao();
-        dao.setUuid(vo.getUuidVo());
-        dao.setTitle(vo.getTitle());
-        dao.setDescription(vo.getDescription());
-        dao.setPredictEndDate(vo.getPredictEndDate());
-        dao.setTeamRelation(vo.getTeamRelation());
-        dao.setUserRelation(vo.getUserRelation());
-        this.modifyCheckJoinUser(dao).modifyCheckJoinTeam(dao);
+        try {
+            FruitProjectDao project = this.findByUUID(vo);
+            if (!project.isNotEmpty())
+                throw new CheckException("项目不存在");
+            final FruitProjectDao dao = FruitProject.getProjectDao();
+            dao.setUuid(vo.getUuidVo());
+            dao.setTitle(vo.getTitle());
+            dao.setDescription(vo.getDescription());
+            dao.setPredictStartDate(vo.getPredictStartDate());
+            dao.setPredictEndDate(vo.getPredictEndDate());
+            dao.setTeamRelation(vo.getTeamRelation());
+            dao.setUserRelation(vo.getUserRelation());
+            this.modifyCheckJoinUser(dao).modifyCheckJoinTeam(dao);
 
-        this.update(dao);
+            this.update(dao);
+        } catch (ExceptionSupport ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            throw new ServiceException("修改项目是发生错误");
+        }
     }
 
     /**
      * 检查修改关联用户的数据
      */
-    private final AbstractDaoProject modifyCheckJoinUser(FruitProjectDao dao) {
+    private AbstractDaoProject modifyCheckJoinUser(FruitProjectDao dao) {
         Integer count = 0;
         if (dao.getUserRelation(FruitDict.Dict.ADD).isEmpty()) return this;
         for (UserProjectRelation userRelation : dao.getUserRelation(FruitDict.Dict.ADD)) {
@@ -190,7 +215,7 @@ public abstract class AbstractDaoProject implements InterfaceDao {
     /**
      * 检查修改关联团队的数据
      */
-    private final void modifyCheckJoinTeam(FruitProjectDao dao) {
+    private void modifyCheckJoinTeam(FruitProjectDao dao) {
         Integer count = 0;
         /*是否需要添加团队*/
         if (dao.getTeamRelation(FruitDict.Dict.ADD).isEmpty()) return;
@@ -216,18 +241,25 @@ public abstract class AbstractDaoProject implements InterfaceDao {
     }
 
     public final void complete(FruitProjectVo vo) {
-        FruitProjectDao project = this.findByUUID(vo);
-        if (!project.isNotEmpty())
-            throw new CheckException("项目不存在");
-        if (FruitDict.ProjectDict.COMPLETE.equals(project.getProjectStatus()))
-            throw new CheckException("项目已完成，错误的操作");
-        final FruitProjectDao data = FruitProject.getProjectDao();
-        data.setUuid(vo.getUuidVo());
+        try {
+            FruitProjectDao project = this.findByUUID(vo);
+            if (!project.isNotEmpty())
+                throw new CheckException("项目不存在");
+            if (FruitDict.ProjectDict.COMPLETE.getParentCode().equals(project.getProjectStatus()))
+                throw new CheckException("项目已完成，错误的操作");
+            final FruitProjectDao data = FruitProject.getProjectDao();
+            data.setUuid(vo.getUuidVo());
         /*使用系统默认时间*/
-        data.setEndDate(LocalDateTime.now());
-        data.setProjectStatus(FruitDict.ProjectDict.COMPLETE.name());
-        data.setStatusDescription(vo.getStatusDescription());
-        this.update(data);
+            data.setEndDate(LocalDateTime.now());
+            data.setProjectStatus(FruitDict.ProjectDict.COMPLETE.name());
+            data.setStatusDescription(vo.getStatusDescription());
+            this.update(data);
+        } catch (ExceptionSupport ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            throw new ServiceException("变更项目状态时出错");
+        }
     }
 
 }

@@ -95,7 +95,7 @@ public class ProjectDaoImpl extends AbstractDaoProject {
     }
 
     @Override
-    protected void delete(String uuid) {
+    public void delete(String uuid) {
         if (StringUtils.isBlank(uuid))
             throw new CheckException("【项目】uuid无效。");
         FruitProjectExample example = new FruitProjectExample();
@@ -108,12 +108,12 @@ public class ProjectDaoImpl extends AbstractDaoProject {
     }
 
     @Override
-    protected List<UserProjectRelation> findJoin(UserProjectRelation relation) {
+    public List<UserProjectRelation> findJoin(UserProjectRelation relation) {
         return userDao.finds(relation);
     }
 
     @Override
-    protected List<ProjectTeamRelation> findJoin(ProjectTeamRelation relation) {
+    public List<ProjectTeamRelation> findJoin(ProjectTeamRelation relation) {
         return teamDao.finds(relation);
     }
 
@@ -125,7 +125,7 @@ public class ProjectDaoImpl extends AbstractDaoProject {
         private final AbstractDaoRelation UserDao;
         private final FruitProjectDao Dao;
 
-        public Relation(AbstractDaoRelation teamDao, AbstractDaoRelation userDao, FruitProjectDao dao) {
+        Relation(AbstractDaoRelation teamDao, AbstractDaoRelation userDao, FruitProjectDao dao) {
             this.TeamDao = teamDao;
             this.UserDao = userDao;
             this.Dao = dao;

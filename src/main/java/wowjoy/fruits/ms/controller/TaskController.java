@@ -17,7 +17,7 @@ import javax.annotation.Resource;
  * Created by wangziwen on 2017/8/30.
  */
 @RestController
-@RequestMapping("/v1/api/task")
+@RequestMapping("/v1/task")
 public class TaskController {
     @Resource(type = TaskDaoImpl.class)
     private AbstractDaoTask daoTask;

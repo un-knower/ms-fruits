@@ -12,6 +12,7 @@ import java.util.Date;
  */
 public class FruitProject extends AbstractEntity {
     private String title;
+    private Date predictStartDate;
     private Date predictEndDate;
     private Date endDate;
     private String projectStatus;
@@ -59,6 +60,14 @@ public class FruitProject extends AbstractEntity {
 
     public String getTitle() {
         return title;
+    }
+
+    public Date getPredictStartDate() {
+        return predictStartDate;
+    }
+
+    public void setPredictStartDate(Date predictStartDate) {
+        this.predictStartDate = predictStartDate;
     }
 
     /***********************

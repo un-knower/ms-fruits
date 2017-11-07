@@ -1,5 +1,6 @@
 package wowjoy.fruits.ms.module;
 
+import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.exception.NullException;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;

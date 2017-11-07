@@ -56,7 +56,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
     }
 
     @Override
-    protected List<FruitTaskDao> finds(FruitTaskDao dao) {
+    public List<FruitTaskDao> finds(FruitTaskDao dao) {
         FruitTaskExample example = new FruitTaskExample();
         FruitTaskExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(dao.getUuid()))
@@ -67,7 +67,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
     }
 
     @Override
-    protected void update(FruitTaskDao dao) {
+    public void update(FruitTaskDao dao) {
         FruitTaskExample example = new FruitTaskExample();
         FruitTaskExample.Criteria criteria = example.createCriteria();
         criteria.andUuidEqualTo(dao.getUuid());
@@ -81,7 +81,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
     }
 
     @Override
-    protected void delete(FruitTaskDao dao) {
+    public void delete(FruitTaskDao dao) {
         FruitTaskExample example = new FruitTaskExample();
         FruitTaskExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(dao.getUuid()))
@@ -92,27 +92,27 @@ public class TaskDaoImpl extends AbstractDaoTask {
     }
 
     @Override
-    protected List<TaskPlanRelation> findJoin(TaskPlanRelation relation) {
+    public List<TaskPlanRelation> findJoin(TaskPlanRelation relation) {
         return planDao.finds(relation);
     }
 
     @Override
-    protected List<TaskProjectRelation> findJoin(TaskProjectRelation relation) {
+    public List<TaskProjectRelation> findJoin(TaskProjectRelation relation) {
         return projectDao.finds(relation);
     }
 
     @Override
-    protected List<TaskListRelation> findJoin(TaskListRelation relation) {
+    public List<TaskListRelation> findJoin(TaskListRelation relation) {
         return listDao.finds(relation);
     }
 
     @Override
-    protected List<FruitTaskDao> findJoinProjects(FruitTaskDao dao) {
+    public List<FruitTaskDao> findJoinProjects(FruitTaskDao dao) {
         return taskMapper.selectProjectByExample(findJoinExample(dao), dao.getListIds(), dao.getProjectIds());
     }
 
     @Override
-    protected List<FruitTaskDao> findJoinPlans(FruitTaskDao dao) {
+    public List<FruitTaskDao> findJoinPlans(FruitTaskDao dao) {
         return taskMapper.selectPlanByExample(findJoinExample(dao), dao.getListIds(), dao.getPlanIds());
     }
 

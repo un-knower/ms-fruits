@@ -28,7 +28,7 @@ public class UserDaoImpl extends AbstractDaoUser {
     }
 
     @Override
-    protected List<FruitUser> finds(FruitUserDao dao) {
+    public List<FruitUser> finds(FruitUserDao dao) {
         final FruitUserExample example = new FruitUserExample();
         final FruitUserExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(dao.getUserEmail()))
@@ -39,7 +39,7 @@ public class UserDaoImpl extends AbstractDaoUser {
     }
 
     @Override
-    protected void clearByUserId(String... ids) {
+    public void clearByUserId(String... ids) {
         FruitUserExample example = new FruitUserExample();
         example.createCriteria().andUserIdIn(Arrays.asList(ids));
         mapper.deleteByExample(example);
@@ -49,7 +49,7 @@ public class UserDaoImpl extends AbstractDaoUser {
     }
 
     @Override
-    protected List<FruitUserDao> findByAccount(FruitUserDao dao) {
+    public List<FruitUserDao> findByAccount(FruitUserDao dao) {
         FruitUserExample example = new FruitUserExample();
         example.createCriteria().andIsDeletedEqualTo(FruitDict.Dict.N.name());
         return mapper.selectByAccount(example, dao.getPrincipal());

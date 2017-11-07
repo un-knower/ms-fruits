@@ -4,6 +4,8 @@ import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
+import wowjoy.fruits.ms.exception.ExceptionSupport;
+import wowjoy.fruits.ms.exception.ServiceException;
 import wowjoy.fruits.ms.module.plan.*;
 import wowjoy.fruits.ms.module.relation.entity.PlanProjectRelation;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
@@ -182,18 +184,25 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
     }
 
     public final void add(FruitPlanVo vo) {
-        FruitPlanDao dao = FruitPlan.getDao();
-        dao.setUuid(vo.getUuid());
-        dao.setPlanStatus(FruitDict.PlanDict.PENDING.name());
-        dao.setEstimatedStartDate(vo.getEstimatedStartDate() != null ? vo.getEstimatedStartDate() : new Date());
-        dao.setEstimatedEndDate(vo.getEstimatedEndDate());
-        dao.setTitle(vo.getTitle());
-        dao.setParentId(vo.getParentId());
-        dao.setDescription(vo.getDescription());
-        dao.setUserRelation(vo.getUserRelation());
-        dao.setProjectRelation(vo.getProjectRelation());
-        this.addCheckJoinProject(dao);
-        this.insert(dao);
+        try {
+            FruitPlanDao dao = FruitPlan.getDao();
+            dao.setUuid(vo.getUuid());
+            dao.setPlanStatus(FruitDict.PlanDict.PENDING.name());
+            dao.setEstimatedStartDate(vo.getEstimatedStartDate() != null ? vo.getEstimatedStartDate() : new Date());
+            dao.setEstimatedEndDate(vo.getEstimatedEndDate());
+            dao.setTitle(vo.getTitle());
+            dao.setParentId(vo.getParentId());
+            dao.setDescription(vo.getDescription());
+            dao.setUserRelation(vo.getUserRelation());
+            dao.setProjectRelation(vo.getProjectRelation());
+            this.addCheckJoinProject(dao);
+            this.insert(dao);
+        } catch (ExceptionSupport ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            throw new ServiceException("添加计划出错");
+        }
     }
 
     private final void addCheckJoinProject(FruitPlanDao dao) {
@@ -206,18 +215,25 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
     }
 
     public final void modify(FruitPlanVo vo) {
-        if (!this.findByUUID(vo.getUuidVo()).isNotEmpty()) throw new CheckException("计划不存在，修改失败");
-        FruitPlanDao dao = FruitPlan.getDao();
-        dao.setUuid(vo.getUuidVo());
-        dao.setTitle(vo.getTitle());
-        dao.setDescription(vo.getDescription());
-        dao.setEstimatedStartDate(vo.getEstimatedStartDate());
-        dao.setEstimatedEndDate(vo.getEstimatedEndDate());
-        dao.setPercent(vo.getPercent());
-        dao.setUserRelation(vo.getUserRelation());
-        dao.setProjectRelation(vo.getProjectRelation());
-        this.modifyCheckJoinProject(dao);
-        this.update(dao);
+        try {
+            if (!this.findByUUID(vo.getUuidVo()).isNotEmpty()) throw new CheckException("计划不存在，修改失败");
+            FruitPlanDao dao = FruitPlan.getDao();
+            dao.setUuid(vo.getUuidVo());
+            dao.setTitle(vo.getTitle());
+            dao.setDescription(vo.getDescription());
+            dao.setEstimatedStartDate(vo.getEstimatedStartDate());
+            dao.setEstimatedEndDate(vo.getEstimatedEndDate());
+            dao.setPercent(vo.getPercent());
+            dao.setUserRelation(vo.getUserRelation());
+            dao.setProjectRelation(vo.getProjectRelation());
+            this.modifyCheckJoinProject(dao);
+            this.update(dao);
+        } catch (ExceptionSupport ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            throw new ServiceException("修改计划错误");
+        }
     }
 
     private final void modifyCheckJoinProject(FruitPlanDao dao) {
@@ -227,13 +243,20 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
     }
 
     public final void insertSummary(FruitPlanSummaryVo vo) {
-        if (!this.findByUUID(vo.getPlanId()).isNotEmpty()) throw new CheckException("计划不存在，修改失败");
-        FruitPlanSummaryDao dao = FruitPlanSummary.getDao();
-        dao.setUuid(vo.getUuid());
-        dao.setPlanId(vo.getPlanId());
-        dao.setPercent(vo.getPercent());
-        dao.setDescription(vo.getDescription());
-        this.insertSummary(dao);
+        try {
+            if (!this.findByUUID(vo.getPlanId()).isNotEmpty()) throw new CheckException("计划不存在，修改失败");
+            FruitPlanSummaryDao dao = FruitPlanSummary.getDao();
+            dao.setUuid(vo.getUuid());
+            dao.setPlanId(vo.getPlanId());
+            dao.setPercent(vo.getPercent());
+            dao.setDescription(vo.getDescription());
+            this.insertSummary(dao);
+        }  catch (ExceptionSupport ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            throw new ServiceException("添加摘要错误");
+        }
     }
 
     /**
@@ -242,8 +265,15 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
      * @param vo
      */
     public final void end(FruitPlanVo vo) {
-        vo.setPlanStatus(FruitDict.PlanDict.END.name());
-        this.modifyStatus(vo);
+        try {
+            vo.setPlanStatus(FruitDict.PlanDict.END.name());
+            this.modifyStatus(vo);
+        } catch (CheckException ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            throw new ServiceException("计划终止错误");
+        }
     }
 
     /**
@@ -252,8 +282,15 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
      * @param vo
      */
     public final void complete(FruitPlanVo vo) {
-        vo.setPlanStatus(FruitDict.PlanDict.COMPLETE.name());
-        this.modifyStatus(vo);
+        try {
+            vo.setPlanStatus(FruitDict.PlanDict.COMPLETE.name());
+            this.modifyStatus(vo);
+        }  catch (ExceptionSupport ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            throw new ServiceException("计划状态转为完成时出现错误");
+        }
     }
 
     /**

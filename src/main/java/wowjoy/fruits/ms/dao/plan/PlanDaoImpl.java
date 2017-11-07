@@ -165,7 +165,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
     }
 
     @Override
-    protected void delete(String uuid) {
+    public void delete(String uuid) {
         FruitPlanExample example = new FruitPlanExample();
         example.createCriteria().andUuidEqualTo(uuid);
         mapper.deleteByExample(example);
@@ -177,12 +177,12 @@ public class PlanDaoImpl extends AbstractDaoPlan {
     }
 
     @Override
-    protected void insertSummary(FruitPlanSummaryDao dao) {
+    public void insertSummary(FruitPlanSummaryDao dao) {
         summaryMapper.insertSelective(dao);
     }
 
     @Override
-    protected void deleteSummarys(FruitPlanSummaryDao dao) {
+    public void deleteSummarys(FruitPlanSummaryDao dao) {
         FruitPlanSummaryExample example = new FruitPlanSummaryExample();
         FruitPlanSummaryExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(dao.getPlanId()))
@@ -195,7 +195,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
     }
 
     @Override
-    protected List<PlanProjectRelation> findJoin(PlanProjectRelation relation) {
+    public List<PlanProjectRelation> findJoin(PlanProjectRelation relation) {
         return projectDao.finds(relation);
     }
 

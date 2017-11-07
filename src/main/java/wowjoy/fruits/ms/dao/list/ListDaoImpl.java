@@ -19,19 +19,19 @@ public class ListDaoImpl extends AbstractDaoList {
     private FruitListMapper mapper;
 
     @Override
-    protected void insert(FruitListDao dao) {
+    public void insert(FruitListDao dao) {
         mapper.insert(dao);
     }
 
     @Override
-    protected void update(FruitListDao dao) {
+    public void update(FruitListDao dao) {
         FruitListExample example = new FruitListExample();
         example.createCriteria().andUuidEqualTo(dao.getUuid());
         mapper.updateByExampleSelective(dao, example);
     }
 
     @Override
-    protected List<FruitListDao> finds(FruitListDao dao) {
+    public List<FruitListDao> finds(FruitListDao dao) {
         FruitListExample example = new FruitListExample();
         FruitListExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(dao.getUuid()))
@@ -44,7 +44,7 @@ public class ListDaoImpl extends AbstractDaoList {
     }
 
     @Override
-    protected void delete(FruitListDao dao) {
+    public void delete(FruitListDao dao) {
         FruitListExample example = new FruitListExample();
         if (StringUtils.isNotBlank(dao.getUuid()))
             example.createCriteria().andUuidEqualTo(dao.getUuid());

@@ -8,4 +8,5 @@ import org.slf4j.LoggerFactory;
  */
 public interface InterfaceDao {
     Logger logger = LoggerFactory.getLogger(InterfaceDao.class);
+
 }
