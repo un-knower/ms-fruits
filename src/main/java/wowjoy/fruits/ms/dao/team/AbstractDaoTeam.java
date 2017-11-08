@@ -8,8 +8,11 @@ import wowjoy.fruits.ms.exception.ServiceException;
 import wowjoy.fruits.ms.module.team.FruitTeam;
 import wowjoy.fruits.ms.module.team.FruitTeamDao;
 import wowjoy.fruits.ms.module.team.FruitTeamVo;
+import wowjoy.fruits.ms.module.user.FruitUserDao;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Created by wangziwen on 2017/9/6.
@@ -44,7 +47,10 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
         FruitTeamDao dao = FruitTeam.getDao();
         dao.setTitle(vo.getTitle());
         dao.setUuid(vo.getUuidVo());
-        return this.findRelation(dao);
+        List<FruitTeamDao> result = this.findRelation(dao);
+        /*检索团队leader*/
+        result.forEach((i) -> i.searchLeader());
+        return result;
     }
 
     public final void insert(FruitTeamVo vo) {

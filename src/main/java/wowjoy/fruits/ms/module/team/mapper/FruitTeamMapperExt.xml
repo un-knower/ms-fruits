@@ -11,7 +11,7 @@
         <collection property="users" ofType="wowjoy.fruits.ms.module.user.FruitUser" resultMap="UserResultMap"
                     columnPrefix="user_"/>
     </resultMap>
-    <resultMap id="UserResultMap" type="wowjoy.fruits.ms.module.user.FruitUser">
+    <resultMap id="UserResultMap" type="wowjoy.fruits.ms.module.user.FruitUserDao">
         <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
         <result column="user_id" jdbcType="VARCHAR" property="userId"/>
         <result column="user_name" jdbcType="VARCHAR" property="userName"/>
@@ -23,6 +23,9 @@
         <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
+
+        <!-- 团队担任角色 -->
+        <result column="ut_role" jdbcType="VARCHAR" property="teamRole"/>
     </resultMap>
     <sql id="Example_Where_Clause">
         <where>
@@ -86,9 +89,12 @@
         <include refid="Base_Column_List">
             <property name="replace" value="t"/>
         </include>
+        ,
+        utr.ut_role as user_ut_role
         FROM
         fruits_team t
-        LEFT JOIN (user_team_relation utr,fruits_user u) on t.uuid = utr.`team_id` and u.user_id = utr.user_id
+        LEFT JOIN user_team_relation utr on t.uuid = utr.`team_id`
+        LEFT JOIN fruits_user u on u.user_id = utr.user_id
         <if test="_parameter != null">
             <include refid="Example_Where_Clause">
                 <property name="prefix" value="t"/>

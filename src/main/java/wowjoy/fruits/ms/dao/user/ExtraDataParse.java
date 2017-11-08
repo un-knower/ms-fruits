@@ -85,15 +85,15 @@ public class ExtraDataParse {
     private String accountType(Integer accountType) {
         switch (accountType) {
             case 0:
-                return FruitDict.AccountDict.TEMP.getParentCode();
+                return FruitDict.AccountDict.TEMP.name();
             case 1:
-                return FruitDict.AccountDict.PRIVATE_EMAIL.getParentCode();
+                return FruitDict.AccountDict.PRIVATE_EMAIL.name();
             case 2:
-                return FruitDict.AccountDict.PHONE.getParentCode();
+                return FruitDict.AccountDict.PHONE.name();
             case 3:
-                return FruitDict.AccountDict.JOB_NUMBER.getParentCode();
+                return FruitDict.AccountDict.JOB_NUMBER.name();
             case 4:
-                return FruitDict.AccountDict.COMPANY_EMAIL.getParentCode();
+                return FruitDict.AccountDict.COMPANY_EMAIL.name();
             default:
                 return "-1";
         }

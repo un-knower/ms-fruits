@@ -14,7 +14,15 @@ public class FruitUserDao extends FruitUser {
 
     private String projectRole;
 
+    /**
+     * 计划角色
+     */
     private String planRole;
+
+    /**
+     * 团队角色
+     */
+    private String teamRole;
 
     private String principal;
 
@@ -27,6 +35,14 @@ public class FruitUserDao extends FruitUser {
     }
 
     private List<FruitAccountDao> accounts;
+
+    public String getTeamRole() {
+        return teamRole;
+    }
+
+    public void setTeamRole(String teamRole) {
+        this.teamRole = teamRole;
+    }
 
     public List<FruitAccountDao> getAccounts() {
         return accounts == null ? (accounts = Lists.newLinkedList()) : accounts;

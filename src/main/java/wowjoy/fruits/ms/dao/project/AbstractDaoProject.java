@@ -245,7 +245,7 @@ public abstract class AbstractDaoProject implements InterfaceDao {
             FruitProjectDao project = this.findByUUID(vo);
             if (!project.isNotEmpty())
                 throw new CheckException("项目不存在");
-            if (FruitDict.ProjectDict.COMPLETE.getParentCode().equals(project.getProjectStatus()))
+            if (FruitDict.ProjectDict.COMPLETE.name().equals(project.getProjectStatus()))
                 throw new CheckException("项目已完成，错误的操作");
             final FruitProjectDao data = FruitProject.getProjectDao();
             data.setUuid(vo.getUuidVo());
