@@ -53,10 +53,10 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         FruitPlanExample example = this.findTemplate(dao);
         if (StringUtils.isNotBlank(dao.getParentId()))
             example.getOredCriteria().get(0).andParentIdIsNotNull();
+        else if (dao.getParentIds() != null && !dao.getParentIds().isEmpty())
+            example.getOredCriteria().get(0).andParentIdIn(dao.getParentIds());
         else
             example.getOredCriteria().get(0).andParentIdIsNull();
-        if (dao.getParentIds() != null && !dao.getParentIds().isEmpty())
-            example.getOredCriteria().get(0).andParentIdIn(dao.getParentIds());
         if (isPage) PageHelper.startPage(pageNum, pageSize);
         return mapper.selectByProjectId(example, dao.getProjectId());
     }

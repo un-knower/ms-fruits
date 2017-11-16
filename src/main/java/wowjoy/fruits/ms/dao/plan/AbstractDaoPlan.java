@@ -63,7 +63,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
      */
     public final List<FruitPlanDao> findMonthWeek(FruitPlanVo vo, boolean isPage) {
         List<FruitPlanDao> planDaoList = findProject(this.findMonthWeekTemplate(vo), vo.getPageNum(), vo.getPageSize(), isPage);
-        if (planDaoList.isEmpty()) return null;
+        if (planDaoList.isEmpty()) return Lists.newLinkedList();
         PlanThread planThread = PlanThread.newInstance();
         List<String> ids = toIds(planDaoList);
         planThread.submit(() -> {
@@ -79,7 +79,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
             return planDaoList;
         }
         planDaoList.forEach((plan) -> {
-            plan.setWeeks(Lists.newArrayList());
+            plan.setWeeks(Lists.newLinkedList());
             planThread.submit(() -> {
                 FruitPlanVo childVo = FruitPlan.getVo();
                 childVo.setParentId(plan.getUuid());
