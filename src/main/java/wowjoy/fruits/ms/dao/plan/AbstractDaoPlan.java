@@ -79,7 +79,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
             return planDaoList;
         }
         planDaoList.forEach((plan) -> {
-            plan.setWeeks(Lists.newLinkedList());
+            plan.setWeeks(Lists.newArrayList());
             planThread.submit(() -> {
                 FruitPlanVo childVo = FruitPlan.getVo();
                 childVo.setParentId(plan.getUuid());
