@@ -1,5 +1,6 @@
 package wowjoy.fruits.ms.dao.user;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -44,14 +45,14 @@ public class UserDaoImpl extends AbstractDaoUser {
         example.createCriteria().andUserIdIn(Arrays.asList(ids));
         mapper.deleteByExample(example);
         FruitUserDao dao = FruitUser.getDao();
-        dao.setIsDeleted(FruitDict.Dict.Y.name());
+        dao.setIsDeleted(FruitDict.Systems.Y.name());
         mapper.updateByExampleSelective(dao, new FruitUserExample());
     }
 
     @Override
     public List<FruitUserDao> findByAccount(FruitUserDao dao) {
         FruitUserExample example = new FruitUserExample();
-        example.createCriteria().andIsDeletedEqualTo(FruitDict.Dict.N.name());
+        example.createCriteria().andIsDeletedEqualTo(FruitDict.Systems.N.name());
         return mapper.selectByAccount(example, dao.getPrincipal());
     }
 

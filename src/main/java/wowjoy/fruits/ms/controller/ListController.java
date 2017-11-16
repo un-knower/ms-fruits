@@ -25,29 +25,6 @@ public class ListController {
     private AbstractDaoList listDao;
 
     /**
-     * 查询任务列表
-     *
-     * @param vo
-     * @return
-     */
-    @RequestMapping(value = "/task", method = RequestMethod.GET)
-    public RestResult findTasks(@JsonArgument(type = FruitListVo.class) FruitListVo vo) {
-        return RestResult.getInstance().setData(listDao.findTask(vo));
-    }
-
-    /**
-     * 添加任务列表
-     *
-     * @param vo
-     * @return
-     */
-    @RequestMapping(value = "/task", method = RequestMethod.POST)
-    public RestResult insertTask(@JsonArgument(type = FruitListVo.class) FruitListVo vo) {
-        listDao.insertTask(vo);
-        return RestResult.getInstance().setData(vo.getUuid());
-    }
-
-    /**
      * 修改列表
      *
      * @param uuid
@@ -73,5 +50,11 @@ public class ListController {
         vo.setUuidVo(uuid);
         listDao.delete(vo);
         return RestResult.getInstance().setData(vo.getUuidVo());
+    }
+
+    @RequestMapping(value = "project", method = RequestMethod.POST)
+    public RestResult addProject(@JsonArgument(type = FruitListVo.class) FruitListVo vo) {
+        listDao.insertProject(vo);
+        return RestResult.getInstance().setData(vo);
     }
 }

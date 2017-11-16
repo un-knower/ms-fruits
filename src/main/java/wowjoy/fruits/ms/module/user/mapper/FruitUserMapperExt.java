@@ -13,4 +13,5 @@ public interface FruitUserMapperExt {
     void inserts(@Param("inserts") FruitUser[] users);
 
     List<FruitUserDao> selectByAccount(@Param("example") FruitUserExample example, @Param("principal") String principal);
+
 }

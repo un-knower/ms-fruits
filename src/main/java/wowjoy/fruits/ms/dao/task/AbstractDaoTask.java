@@ -1,20 +1,27 @@
 package wowjoy.fruits.ms.dao.task;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.exception.ExceptionSupport;
 import wowjoy.fruits.ms.exception.ServiceException;
+import wowjoy.fruits.ms.module.list.FruitListDao;
+import wowjoy.fruits.ms.module.plan.FruitPlanDao;
 import wowjoy.fruits.ms.module.relation.entity.TaskListRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskPlanRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskProjectRelation;
 import wowjoy.fruits.ms.module.task.FruitTask;
 import wowjoy.fruits.ms.module.task.FruitTaskDao;
 import wowjoy.fruits.ms.module.task.FruitTaskVo;
+import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.*;
 
 /**
  * Created by wangziwen on 2017/8/30.
@@ -41,153 +48,66 @@ public abstract class AbstractDaoTask implements InterfaceDao {
     protected abstract void delete(FruitTaskDao dao);
 
     /**
-     * 查询关联计划信息
-     *
-     * @return
-     */
-    protected abstract List<TaskPlanRelation> findJoin(TaskPlanRelation relation);
-
-    /**
-     * 查询关联项目信息
-     *
-     * @return
-     */
-    protected abstract List<TaskProjectRelation> findJoin(TaskProjectRelation relation);
-
-
-    /**
-     * 查询关联列表信息
-     *
-     * @return
-     */
-    protected abstract List<TaskListRelation> findJoin(TaskListRelation relation);
-
-    /**
      * 查询关联项目的任务列表
      *
      * @return
      */
-    protected abstract List<FruitTaskDao> findJoinProjects(FruitTaskDao dao);
+    protected abstract List<FruitTaskDao> findByPlanId(FruitTaskDao dao);
 
-    /**
-     * 查询关联计划的任务列表
-     *
-     * @return
-     */
-    protected abstract List<FruitTaskDao> findJoinPlans(FruitTaskDao dao);
+    protected abstract List<FruitTaskDao> findByListId(FruitTaskDao dao);
 
+    protected abstract List<FruitListDao> findProjectList(List<String> projectId);
+
+    protected abstract List<FruitTaskDao> findUserByTaskIds(List<String> taskIds);
+
+    protected abstract List<FruitTaskDao> findPlanByTaskIds(List<String> taskIds);
+
+    protected abstract List<FruitTaskDao> userFindByDao(FruitTaskDao dao);
 
     /*******************************
      * PUBLIC 函数，公共接口         *
      * 尽量保证规范，不直接调用dao接口 *
      *******************************/
 
-    public final void addJoinProject(FruitTaskVo vo) {
+    /**
+     * 筛选出符合条件的添加函数
+     *
+     * @param vo
+     */
+    public final void insert(FruitTaskVo vo) {
         try {
-            final FruitTaskDao dao = this.addTemplate(vo);
-            dao.setTaskProjectRelation(vo.getTaskProjectRelation());
-            if (dao.getTaskProjectRelation(FruitDict.Dict.ADD).isEmpty() || dao.getTaskProjectRelation(FruitDict.Dict.ADD).size() > 1)
-                throw new CheckException("添加任务，必须关联项目，且只能关联一个项目");
-            this.insert(dao);
+            this.insert(TaskTemplate.newInstance(vo)
+                    .insertTemplate()
+                    .insertJoinPlan()
+                    .insertJoinProject()
+                    .checkInsert()
+                    .queryAddResult());
         } catch (ExceptionSupport ex) {
             throw ex;
         } catch (RuntimeException ex) {
             ex.printStackTrace();
-            throw new ServiceException("添加项目任务失败");
+            throw new CheckException("插入任务时，发生未处理异常，联系 Boss 严");
         }
 
     }
 
-    public final void addJoinPlan(FruitTaskVo vo) {
+    public final void modify(FruitTaskVo vo) {
         try {
-            final FruitTaskDao dao = this.addTemplate(vo);
-            dao.setTaskPlanRelation(vo.getTaskPlanRelation());
-            if (dao.getTaskPlanRelation(FruitDict.Dict.ADD).isEmpty() || dao.getTaskPlanRelation(FruitDict.Dict.ADD).size() > 1)
-                throw new CheckException("添加任务，必须关联计划，且只能关联一个计划");
-            this.insert(dao);
+            if (!this.findByUUID(vo).isNotEmpty())
+                throw new CheckException("任务不存在，不允许修改。");
+            this.update(TaskTemplate.newInstance(vo)
+                    .modifyTemplate()
+                    .modifyCheckJoinPlan()
+                    .modifyCheckJoinProject()
+                    .checkModify()
+                    .queryModifyResult());
         } catch (ExceptionSupport ex) {
             throw ex;
         } catch (RuntimeException ex) {
             ex.printStackTrace();
-            throw new ServiceException("添加计划任务失败");
+            throw new CheckException("修改任务时，发生未处理异常，联系 Boss 严");
         }
 
-    }
-
-    private final FruitTaskDao addTemplate(FruitTaskVo vo) {
-        final FruitTaskDao dao = FruitTask.getDao();
-        dao.setUuid(vo.getUuid());
-        dao.setTaskStatus(FruitDict.TaskDict.START.name());
-        dao.setDescription(vo.getDescription());
-        dao.setEstimatedEndDate(vo.getEstimatedEndDate());
-        dao.setTitle(vo.getTitle());
-        dao.setTaskLevel(vo.getTaskLevel());
-        dao.setTaskUserRelation(vo.getTaskUserRelation());
-        dao.setTaskListRelation(vo.getTaskListRelation());
-        if (dao.getTaskListRelation(FruitDict.Dict.ADD).isEmpty())
-            throw new CheckException("必须关联列表");
-        return dao;
-    }
-
-    public final void modifyJoinPlan(FruitTaskVo vo) {
-        try {
-            final FruitTaskDao dao = modifyTemplate(vo);
-            dao.setTaskPlanRelation(vo.getTaskPlanRelation());
-            this.modifyCheckJoinPlan(dao);
-            this.update(dao);
-        } catch (ExceptionSupport ex) {
-            throw ex;
-        } catch (RuntimeException ex) {
-            ex.printStackTrace();
-            throw new ServiceException("修改计划任务失败");
-        }
-    }
-
-    public final void modifyJoinProject(FruitTaskVo vo) {
-        try {
-            final FruitTaskDao dao = modifyTemplate(vo);
-            dao.setTaskProjectRelation(vo.getTaskProjectRelation());
-            this.modifyCheckJoinProject(dao);
-            this.update(dao);
-        } catch (ExceptionSupport ex) {
-            throw ex;
-        } catch (RuntimeException ex) {
-            ex.printStackTrace();
-            throw new ServiceException("修改项目任务失败");
-        }
-    }
-
-    private final void modifyCheckJoinPlan(FruitTaskDao dao) {
-        if (dao.getTaskPlanRelation(FruitDict.Dict.ADD).isEmpty()) return;
-        if (dao.getTaskPlanRelation(FruitDict.Dict.ADD).size() > 1) throw new CheckException("只能尝试覆盖一个计划");
-        List<TaskPlanRelation> relation = this.findJoin(TaskPlanRelation.newInstance(dao.getUuid(), null));
-        if (relation.isEmpty()) return;
-        List<TaskPlanRelation> delete = dao.getTaskPlanRelation(FruitDict.Dict.DELETE);
-        relation.forEach((i) -> delete.add(TaskPlanRelation.newInstance(dao.getUuid(), i.getPlanId())));
-        dao.setTaskPlanRelation(FruitDict.Dict.DELETE, delete);
-    }
-
-    private final void modifyCheckJoinProject(FruitTaskDao dao) {
-        if (dao.getTaskProjectRelation(FruitDict.Dict.ADD).isEmpty()) return;
-        if (dao.getTaskProjectRelation(FruitDict.Dict.ADD).size() > 1) throw new CheckException("只能尝试覆盖一个项目");
-        List<TaskProjectRelation> relation = this.findJoin(TaskProjectRelation.newInstance(dao.getUuid(), null));
-        if (relation.isEmpty()) return;
-        List<TaskProjectRelation> delete = dao.getTaskProjectRelation(FruitDict.Dict.DELETE);
-        relation.forEach((i) -> delete.add(TaskProjectRelation.newInstance(dao.getUuid(), i.getProjectId())));
-        dao.setTaskProjectRelation(FruitDict.Dict.DELETE, delete);
-    }
-
-    private final FruitTaskDao modifyTemplate(FruitTaskVo vo) {
-        if (!this.findByUUID(vo).isNotEmpty())
-            throw new CheckException("任务不存在，不允许修改。");
-        final FruitTaskDao dao = FruitTask.getDao();
-        dao.setUuid(vo.getUuidVo());
-        dao.setTitle(vo.getTitle());
-        dao.setTaskLevel(vo.getTaskLevel());
-        dao.setDescription(vo.getDescription());
-        dao.setTaskUserRelation(vo.getTaskUserRelation());
-        dao.setTaskPlanRelation(null);
-        return dao;
     }
 
     public final void changeStatusToEnd(FruitTaskVo vo) {
@@ -227,7 +147,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
             FruitTaskDao dao = FruitTask.getDao();
             dao.setUuid(vo.getUuidVo());
             dao.setTaskListRelation(vo.getTaskListRelation());
-            this.changeCheckList(dao);
+            this.checkChangeList(dao);
             this.update(dao);
         } catch (ExceptionSupport ex) {
             throw ex;
@@ -237,22 +157,15 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         }
     }
 
-    private final void changeCheckList(FruitTaskDao dao) {
-        if (dao.getTaskListRelation(FruitDict.Dict.ADD).isEmpty())
+    private void checkChangeList(FruitTaskDao dao) {
+        if (dao.getTaskListRelation(FruitDict.Systems.ADD).isEmpty())
             throw new CheckException("没有目标源，无法切换列表");
-        List<TaskListRelation> relations = this.findJoin(TaskListRelation.newInstance(dao.getUuid(), null));
-        if (relations.isEmpty()) return;
-        if (relations.size() > 1) throw new CheckException("关联列表数据出现一对多情况，请联系开发人员");
-        if (relations.get(0).getListId().equals(dao.getTaskListRelation(FruitDict.Dict.ADD).get(0).getListId()))
-            throw new ServiceException("和当前列表相同，操作终止。");
-        List<TaskListRelation> delete = dao.getTaskListRelation(FruitDict.Dict.DELETE);
         /*每次切换列表时，都删除旧的关联列表*/
-        delete.add(TaskListRelation.newInstance(null, relations.get(0).getListId()));
-        dao.setTaskListRelation(FruitDict.Dict.DELETE, delete);
+        dao.setTaskListRelation(FruitDict.Systems.DELETE, Lists.newArrayList(TaskListRelation.newInstance(dao.getUuid(), null)));
 
     }
 
-    private final FruitTaskDao changeTemplate(FruitTaskVo vo) {
+    private FruitTaskDao changeTemplate(FruitTaskVo vo) {
         final FruitTask task = this.findByUUID(vo);
         if (!task.isNotEmpty())
             throw new CheckException("任务不存在，不予修改。");
@@ -283,7 +196,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
      * @param vo
      * @return
      */
-    private final FruitTask findByUUID(FruitTaskVo vo) {
+    private FruitTask findByUUID(FruitTaskVo vo) {
         if (StringUtils.isBlank(vo.getUuidVo()))
             throw new CheckException("查询标识不存在");
         final FruitTaskDao dao = FruitTask.getDao();
@@ -295,39 +208,308 @@ public abstract class AbstractDaoTask implements InterfaceDao {
     }
 
     /**
-     * 查询关联项目任务列表
-     *
-     * @param vo
-     * @return
+     * 查询指定计划下的所有任务
      */
-    public List<FruitTaskDao> findJoinProjects(FruitTaskVo vo) {
-        FruitTaskDao dao = findJoinDao(vo);
-        dao.setProjectIds(vo.getId());
-        return this.sortList(this.findJoinProjects(dao));
+    public List<FruitTaskDao> findByPlanId(FruitTaskVo vo) {
+        if (StringUtils.isBlank(vo.getPlanId()))
+            throw new CheckException("需要指定要查询的计划");
+        FruitTaskDao dao = FruitTask.getDao();
+        dao.setPlanId(vo.getPlanId());
+        List<FruitTaskDao> tasks = this.findByPlanId(dao);
+        List<String> ids = toIds(tasks);
+        TaskThread.getInstance()
+                .execute(this.plugUser(ids, tasks))
+                .execute(this.plugUtil(tasks))
+                .get();
+        return tasks;
     }
 
     /**
-     * 查询关联计划的任务列表
+     * 查询指定列表的任务信息
      *
      * @param vo
      * @return
      */
-    public List<FruitTaskDao> findJoinPlans(FruitTaskVo vo) {
-        FruitTaskDao dao = this.findJoinDao(vo);
-        dao.setPlanIds(vo.getId());
-        return this.sortList(this.findJoinPlans(dao));
+    public List<FruitTaskDao> findByListId(FruitTaskVo vo) {
+        if (StringUtils.isBlank(vo.getListId()))
+            throw new CheckException("需要指定要查询的列表");
+        FruitTaskDao dao = TaskTemplate.newInstance(vo).findTemplate();
+        dao.setListId(vo.getListId());
+        List<FruitTaskDao> tasks = this.findByListId(dao);
+        List<String> ids = toIds(tasks);
+        TaskThread.getInstance()
+                .execute(this.plugPlan(ids, tasks))
+                .execute(this.plugUser(ids, tasks))
+                .execute(this.plugUtil(tasks))
+                .get();
+        return tasks;
     }
 
-    private FruitTaskDao findJoinDao(FruitTaskVo vo) {
-        FruitTaskDao dao = FruitTaskVo.getDao();
-        dao.setTitle(vo.getTitle());
-        dao.setListIds(vo.getListId());
-        return dao;
+
+    /**
+     * 查询指定项目下所有关联任务
+     * 若任务有关联计划则需要查询出关联的计划
+     * 函数思路：
+     * 1、查询项目的任务列表集合
+     * 2、查询每个列表对应的任务集合
+     * 3、组合每个任务的详细信息，例如计划信息、用户信息
+     *
+     * @param vo
+     * @return
+     */
+    public List<FruitListDao> findJoinProjects(FruitTaskVo vo) {
+        if (vo.getProjectIds() == null || vo.getProjectIds().isEmpty())
+            throw new CheckException("项目id不能为空！");
+        FruitTaskDao dao = TaskTemplate.newInstance(vo).findTemplate();
+        dao.setProjectIds(vo.getProjectIds());
+        List<FruitListDao> lists = this.findProjectList(dao.getProjectIds());
+        TaskThread taskThread = TaskThread.getInstance();
+
+        lists.forEach((list) -> {
+            taskThread.execute(() -> {
+                FruitTaskDao taskDao = FruitTask.getDao();
+                taskDao.setListId(list.getUuid());
+                List<FruitTaskDao> tasks = this.findByListId(taskDao);
+                List<String> ids = toIds(tasks);
+                TaskThread.getInstance()
+                        .execute(this.plugPlan(ids, tasks))
+                        .execute(this.plugUser(ids, tasks))
+                        .execute(this.plugUtil(tasks))
+                        .get();
+                list.setTasks(tasks);
+                return true;
+            });
+        });
+
+        taskThread.get();
+        return lists;
     }
 
-    private List<FruitTaskDao> sortList(List<FruitTaskDao> list) {
-        list.forEach((i) -> i.sortUsers().computeDays());
-        return list;
+    private List<String> toIds(List<FruitTaskDao> tasks) {
+        List<String> taskIds = Lists.newLinkedList();
+        tasks.forEach((i) -> taskIds.add(i.getUuid()));
+        return taskIds;
     }
+
+    private Callable plugPlan(List<String> taskIds, List<FruitTaskDao> tasks) {
+        return () -> {
+            Map<String, FruitPlanDao> planDaoMap = Maps.newLinkedHashMap();
+            this.findPlanByTaskIds(taskIds).forEach((i) -> planDaoMap.put(i.getUuid(), i.getPlan()));
+            tasks.forEach((task) -> task.setPlan(planDaoMap.get(task.getUuid())));
+            return true;
+        };
+    }
+
+    private Callable plugUser(List<String> taskIds, List<FruitTaskDao> tasks) {
+        return () -> {
+            TaskThread thread = TaskThread.getInstance();
+            Map<String, List<FruitUserDao>> userDaoMap = Maps.newLinkedHashMap();
+            this.findUserByTaskIds(taskIds).forEach((i) -> userDaoMap.put(i.getUuid(), i.getUsers()));
+            tasks.forEach((task) -> task.setUsers(userDaoMap.get(task.getUuid())));
+            return true;
+        };
+    }
+
+    private Callable plugUtil(List<FruitTaskDao> tasks) {
+        return () -> {
+            tasks.forEach((i) -> i.computeDays());
+            return true;
+        };
+    }
+
+
+    private static class TaskThread {
+        private final ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        private final List<Future> futures = Lists.newLinkedList();
+
+        public static TaskThread getInstance() {
+            return new TaskThread();
+        }
+
+        public TaskThread execute(Callable callable) {
+            futures.add(executorService.submit(callable));
+            return this;
+        }
+
+        public void get() {
+            try {
+                for (Future future : futures) future.get();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                futures.forEach((i) -> i.cancel(true));
+                throw new CheckException("中断线程");
+            } catch (ExecutionException e) {
+                throw new CheckException("获取线程数据异常，线程已终止");
+            }
+        }
+
+    }
+
+    /**
+     * 检查添加信息合法性
+     * 返回处理后的添加信息
+     */
+    private static class TaskTemplate {
+        private final FruitTaskVo vo;
+        private final FruitTaskDao dao = new FruitTaskDao();
+
+        private TaskTemplate(final FruitTaskVo vo) {
+            this.vo = vo;
+        }
+
+        public static TaskTemplate newInstance(FruitTaskVo vo) {
+            return new TaskTemplate(vo);
+        }
+
+        /**
+         * 获取添加结果
+         *
+         * @return
+         */
+        private FruitTaskDao queryAddResult() {
+            return dao;
+        }
+
+        /**
+         * 添加前限制
+         *
+         * @return
+         */
+        private TaskTemplate checkInsert() {
+            if (dao.getTaskPlanRelation(FruitDict.Systems.ADD).isEmpty() && dao.getTaskProjectRelation(FruitDict.Systems.ADD).isEmpty())
+                throw new CheckException("未检测到任务所关联的元素");
+            if (!dao.getTaskPlanRelation(FruitDict.Systems.ADD).isEmpty() && !dao.getTaskProjectRelation(FruitDict.Systems.ADD).isEmpty())
+                throw new CheckException("检测到关联多个元素，这是不合法的");
+            return this;
+        }
+
+        /**
+         * 检查是否是项目关联
+         *
+         * @return
+         */
+        private TaskTemplate insertJoinProject() {
+            try {
+                if (!vo.getTaskProjectRelation(FruitDict.Systems.ADD).isEmpty()) {
+                    if (vo.getTaskProjectRelation(FruitDict.Systems.ADD).size() > 1)
+                        throw new CheckException("必须关联项目，且只能关联一个项目");
+                    dao.setTaskProjectRelation(vo.getTaskProjectRelation());
+                }
+                return this;
+            } catch (ExceptionSupport ex) {
+                throw ex;
+            } catch (RuntimeException ex) {
+                ex.printStackTrace();
+                throw new ServiceException("添加项目任务失败");
+            }
+
+        }
+
+        /**
+         * 检查是否是计划关联
+         *
+         * @return
+         */
+        private TaskTemplate insertJoinPlan() {
+            try {
+                if (!vo.getTaskPlanRelation(FruitDict.Systems.ADD).isEmpty()) {
+                    if (vo.getTaskPlanRelation(FruitDict.Systems.ADD).size() > 1)
+                        throw new CheckException("必须关联计划，且只能关联一个计划");
+                    dao.setTaskPlanRelation(vo.getTaskPlanRelation());
+                }
+                return this;
+            } catch (ExceptionSupport ex) {
+                throw ex;
+            } catch (RuntimeException ex) {
+                ex.printStackTrace();
+                throw new ServiceException("添加计划任务失败");
+            }
+        }
+
+        /**
+         * 任务添加统一模板
+         *
+         * @return
+         */
+        private TaskTemplate insertTemplate() {
+            dao.setUuid(vo.getUuid());
+            dao.setTaskStatus(FruitDict.TaskDict.START.name());
+            dao.setDescription(vo.getDescription());
+            dao.setEstimatedEndDate(vo.getEstimatedEndDate());
+            dao.setTitle(vo.getTitle());
+            dao.setTaskLevel(vo.getTaskLevel());
+            dao.setTaskUserRelation(vo.getTaskUserRelation());
+            dao.setTaskListRelation(vo.getTaskListRelation());
+            if (dao.getTaskListRelation(FruitDict.Systems.ADD).isEmpty())
+                throw new CheckException("必须关联列表");
+            if (dao.getTaskListRelation(FruitDict.Systems.ADD).size() > 1)
+                throw new CheckException("一次只能关联一个列表");
+            return this;
+        }
+
+        /**
+         * 获取修改结果
+         *
+         * @return
+         */
+        private FruitTaskDao queryModifyResult() {
+            return dao;
+        }
+
+        /**
+         * 添加前限制
+         *
+         * @return
+         */
+        private TaskTemplate checkModify() {
+            if (!dao.getTaskPlanRelation(FruitDict.Systems.ADD).isEmpty() && !dao.getTaskProjectRelation(FruitDict.Systems.ADD).isEmpty())
+                throw new CheckException("检测到关联多个元素，这是不合法的");
+            return this;
+        }
+
+        private TaskTemplate modifyCheckJoinPlan() {
+            if (vo.getTaskPlanRelation(FruitDict.Systems.DELETE).isEmpty()) return this;
+            if (vo.getTaskPlanRelation(FruitDict.Systems.ADD).isEmpty()) return this;
+            this.insertJoinPlan();
+            dao.setTaskPlanRelation(FruitDict.Systems.DELETE, Lists.newArrayList(TaskPlanRelation.newInstance(dao.getUuid(), null)));
+            return this;
+        }
+
+        /**
+         * 检测是否需要删除当前关联
+         * 检查必须有
+         */
+        private TaskTemplate modifyCheckJoinProject() {
+            if (vo.getTaskProjectRelation(FruitDict.Systems.DELETE).isEmpty()) return this;
+            if (vo.getTaskProjectRelation(FruitDict.Systems.ADD).isEmpty()) return this;
+            insertJoinProject();
+            dao.setTaskProjectRelation(FruitDict.Systems.DELETE, Lists.newArrayList(TaskProjectRelation.newInstance(dao.getUuid(), null)));
+            return this;
+        }
+
+        private TaskTemplate modifyTemplate() {
+            dao.setUuid(vo.getUuidVo());
+            dao.setTitle(vo.getTitle());
+            dao.setTaskLevel(vo.getTaskLevel());
+            dao.setDescription(vo.getDescription());
+            dao.setTaskUserRelation(vo.getTaskUserRelation());
+            return this;
+        }
+
+        public FruitTaskDao findTemplate() {
+            dao.setTitle(vo.getTitle());
+            return dao;
+        }
+
+    }
+
+    /************************************************************************************************
+     *                                       个人中心专供                                            *
+     ************************************************************************************************/
+    public List<FruitTaskDao> userFindByVo(FruitTaskVo vo) {
+        List<FruitTaskDao> tasks = this.userFindByDao(TaskTemplate.newInstance(vo).findTemplate());
+        tasks.forEach((i) -> i.computeDays());
+        return tasks;
+    }
+
 }
-

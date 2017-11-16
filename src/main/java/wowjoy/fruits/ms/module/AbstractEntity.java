@@ -1,6 +1,5 @@
 package wowjoy.fruits.ms.module;
 
-import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.exception.NullException;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
@@ -12,14 +11,15 @@ import java.util.UUID;
  * 实体类基类
  */
 public abstract class AbstractEntity implements InterfaceEntity {
+    protected transient final String DateTimeFormat = "yyyy-MM-dd'T'23:59:59";
 
     protected AbstractEntity() {
         /*利大于弊，我选择保留，如果有更好的方法，可以尝试*/
         this.setUuid(UUID());
-        this.setIsDeleted(FruitDict.Dict.N.name());
+        this.setIsDeleted(FruitDict.Systems.N.name());
     }
 
-    public static String UUID(){
+    public static String UUID() {
         return UUID.randomUUID().toString().replace("-", "");
     }
 

@@ -1,19 +1,21 @@
 package wowjoy.fruits.ms.dao.plan;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.exception.ExceptionSupport;
 import wowjoy.fruits.ms.exception.ServiceException;
 import wowjoy.fruits.ms.module.plan.*;
-import wowjoy.fruits.ms.module.relation.entity.PlanProjectRelation;
+import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.DateUtils;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -26,6 +28,8 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
      *********************************************************************************/
 
     protected abstract List<FruitPlanDao> findProject(FruitPlanDao dao, Integer pageNum, Integer pageSize, boolean isPage);
+
+    protected abstract List<FruitPlanDao> findUserByPlanIds(List<String> planIds);
 
     protected abstract List<FruitPlanDao> find(FruitPlanDao dao, Integer pageNum, Integer pageSize);
 
@@ -40,8 +44,6 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
     protected abstract void insertSummary(FruitPlanSummaryDao dao);
 
     protected abstract void deleteSummarys(FruitPlanSummaryDao dao);
-
-    protected abstract List<PlanProjectRelation> findJoin(PlanProjectRelation relation);
 
     /*******************************
      * PUBLIC 函数，公共接口         *
@@ -59,21 +61,49 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
      * @param vo
      * @return
      */
-    public final List<FruitPlanDao> findMonthWeek(FruitPlanVo vo) {
-        this.getStarttimeAndEndtime(vo);
+    public final List<FruitPlanDao> findMonthWeek(FruitPlanVo vo, boolean isPage) {
+        List<FruitPlanDao> planDaoList = findProject(this.findMonthWeekTemplate(vo), vo.getPageNum(), vo.getPageSize(), isPage);
+        if (planDaoList.isEmpty()) return null;
+        PlanThread planThread = PlanThread.newInstance();
+        List<String> ids = toIds(planDaoList);
+        planThread.submit(() -> {
+            List<FruitPlanDao> users = this.findUserByPlanIds(ids);
+            LinkedHashMap<String, List<FruitUserDao>> userMaps = Maps.newLinkedHashMap();
+            users.forEach((i) -> userMaps.put(i.getUuid(), i.getUsers()));
+            planDaoList.forEach((i) -> i.setUsers(userMaps.get(i.getUuid())));
+            return true;
+        });
+        /*只递归两层，相当于月、周*/
+        if (StringUtils.isNotBlank(vo.getParentId())) {
+            planThread.get();
+            return planDaoList;
+        }
+        planDaoList.forEach((plan) -> planThread.submit(() -> {
+            FruitPlanVo childVo = FruitPlan.getVo();
+            childVo.setParentId(plan.getUuid());
+            plan.setWeeks(this.findMonthWeek(childVo, false));
+            return true;
+        }));
+        planThread.get();
+        return planDaoList;
+    }
+
+    private FruitPlanDao findMonthWeekTemplate(FruitPlanVo vo) {
+        this.getStartTimeAndEndTime(vo);
         final FruitPlanDao dao = FruitPlan.getDao();
         dao.setTitle(vo.getTitle());
+        dao.setParentId(vo.getParentId());
         dao.setPlanStatus(vo.getPlanStatus());
         dao.setStartDateDao(vo.getStartDateVo());
         dao.setEndDateDao(vo.getEndDateVo());
         dao.setProjectId(vo.getProjectId());
         dao.setDesc(vo.getDesc());
         dao.setAsc(vo.getAsc());
-        return this.fillPlanWeek(findProject(dao, vo.getPageNum(), vo.getPageSize(), true), IExecutor.newInstance());
+        return dao;
     }
 
     /*若年月不为空，则设置开始时间 and 结束时间*/
-    protected final void getStarttimeAndEndtime(FruitPlanVo vo) {
+    protected final void getStartTimeAndEndTime(FruitPlanVo vo) {
         if (StringUtils.isBlank(vo.getYear()) || StringUtils.isBlank(vo.getMonth()))
             return;
         DateUtils.Month<DateUtils.Week.WeekChinese> month = DateUtils.getMonthByYearMonth(Integer.valueOf(vo.getYear()), Integer.valueOf(Integer.valueOf(vo.getMonth())));
@@ -81,34 +111,10 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         vo.setEndDateVo(Date.from(month.getEndDate().atStartOfDay(ZoneId.systemDefault()).toInstant()));
     }
 
-    private final List<FruitPlanDao> fillPlanWeek(List<FruitPlanDao> plans, IExecutor iExecutor) {
-        final List<FruitPlanDao> data = plans;
-        List<String> parents = Lists.newLinkedList();
-        plans.forEach((i) -> parents.add(i.getUuid()));
-        List<Future> futures = Lists.newLinkedList();
-        plans.forEach((parent) -> futures.add(iExecutor.submit(() -> {
-            FruitPlanDao dao = FruitPlan.getDao();
-            dao.setParentId(parent.getUuid());
-            parent.setWeeks(this.findProject(dao, 0, 0, false));
-            return parent;
-        })));
-        wait(futures, iExecutor);
-        return data;
-    }
-
-    public void wait(List<Future> futures, IExecutor iExecutor) {
-        for (Future week : futures) {
-            try {
-                week.get(1, TimeUnit.MINUTES);
-            } catch (InterruptedException e) {
-                iExecutor.shutdownNow();
-                throw new CheckException("获取计划中断");
-            } catch (ExecutionException e) {
-            } catch (TimeoutException e) {
-                iExecutor.shutdownNow();
-                throw new CheckException("获取计划超时");
-            }
-        }
+    private List<String> toIds(List<FruitPlanDao> plans) {
+        List<String> result = Lists.newLinkedList();
+        plans.forEach((i) -> result.add(i.getUuid()));
+        return result;
     }
 
     /**
@@ -206,9 +212,9 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
     }
 
     private final void addCheckJoinProject(FruitPlanDao dao) {
-        if (dao.getProjectRelation(FruitDict.Dict.ADD).isEmpty() || dao.getProjectRelation(FruitDict.Dict.ADD).size() != 1)
+        if (dao.getProjectRelation(FruitDict.Systems.ADD).isEmpty() || dao.getProjectRelation(FruitDict.Systems.ADD).size() != 1)
             throw new CheckException("限制添加计划只能关联一个项目");
-        if (dao.getUserRelation(FruitDict.Dict.ADD).isEmpty())
+        if (dao.getUserRelation(FruitDict.Systems.ADD).isEmpty())
             throw new CheckException("必须添加至少一个关联用户");
         if (dao.getEstimatedEndDate() == null)
             throw new CheckException("必须填写预计结束时间");
@@ -237,9 +243,9 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
     }
 
     private final void modifyCheckJoinProject(FruitPlanDao dao) {
-        if (dao.getProjectRelation(FruitDict.Dict.ADD).isEmpty()) return;
-        if (StringUtils.isBlank(dao.getProjectRelation(FruitDict.Dict.ADD).get(0))) return;
-        dao.setProjectRelation(FruitDict.Dict.DELETE, Lists.newArrayList(this.findJoin(PlanProjectRelation.newInstance(dao.getUuid())).get(0).getProjectId()));
+        if (dao.getProjectRelation(FruitDict.Systems.ADD).isEmpty()) return;
+        if (StringUtils.isBlank(dao.getProjectRelation(FruitDict.Systems.ADD).get(0))) return;
+        dao.setProjectRelation(FruitDict.Systems.DELETE, Lists.newArrayList(""));
     }
 
     public final void insertSummary(FruitPlanSummaryVo vo) {
@@ -251,7 +257,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
             dao.setPercent(vo.getPercent());
             dao.setDescription(vo.getDescription());
             this.insertSummary(dao);
-        }  catch (ExceptionSupport ex) {
+        } catch (ExceptionSupport ex) {
             throw ex;
         } catch (RuntimeException ex) {
             ex.printStackTrace();
@@ -285,7 +291,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         try {
             vo.setPlanStatus(FruitDict.PlanDict.COMPLETE.name());
             this.modifyStatus(vo);
-        }  catch (ExceptionSupport ex) {
+        } catch (ExceptionSupport ex) {
             throw ex;
         } catch (RuntimeException ex) {
             ex.printStackTrace();
@@ -314,19 +320,34 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
      * 内部类  *
      **********/
 
-    private static class IExecutor {
+    private static class PlanThread {
         private final ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);
+        private List<Future> futures = Lists.newLinkedList();
 
-        public <T> Future<T> submit(Callable callable) {
-            return service.submit(callable);
+        public PlanThread submit(Callable callable) {
+            futures.add(service.submit(callable));
+            return this;
         }
 
-        public static IExecutor newInstance() {
-            return new IExecutor();
+        public List<Future> get() {
+            try {
+                for (Future week : futures) week.get(1, TimeUnit.MINUTES);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new CheckException("主线程中断");
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+                throw new CheckException("线程异常中断");
+            } catch (TimeoutException e) {
+                throw new CheckException("线程超时");
+            } finally {
+                service.shutdownNow();
+            }
+            return futures;
         }
 
-        public void shutdownNow() {
-            service.shutdownNow();
+        public static PlanThread newInstance() {
+            return new PlanThread();
         }
 
     }

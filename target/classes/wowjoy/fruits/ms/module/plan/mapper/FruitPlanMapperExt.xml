@@ -18,6 +18,7 @@
         <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
+        <result column="task_id" jdbcType="VARCHAR" property="taskId"/>
         <collection property="users" ofType="wowjoy.fruits.ms.module.user.FruitUser" resultMap="UserResultMap"
                     columnPrefix="user_"/>
     </resultMap>
@@ -95,27 +96,18 @@
     ${replace}.create_date_time as ${prefix}create_date_time,
     ${replace}.is_deleted as ${prefix}is_deleted
   </sql>
-    <select id="selectUserByProject" parameterType="wowjoy.fruits.ms.module.plan.example.FruitPlanExample"
+    <select id="selectByProjectId" parameterType="wowjoy.fruits.ms.module.plan.example.FruitPlanExample"
             resultMap="ResultMapWithBLOBs">
         select
         <include refid="Base_Column_List">
-            <property name="replace" value="p"/>
+            <property name="replace" value="plan"/>
         </include>
-        ,
-        <include refid="User_Column_List">
-            <property name="replace" value="u"/>
-            <property name="prefix" value="user_"/>
-        </include>
-        ,
-        pur.pu_role as user_pu_role
-        from fruits_plan p
-        LEFT join plan_project_relation ppr on ppr.plan_id = p.uuid
-        LEFT JOIN plan_user_relation pur ON pur.plan_id = p.uuid
-        LEFT JOIN fruits_user u ON pur.user_id = u.user_id
+        from fruits_plan plan
+        LEFT join plan_project_relation ppr on ppr.plan_id = plan.uuid
         <if test="example != null">
             <where>
                 <include refid="Example_Where_Clause">
-                    <property name="replace" value="p"/>
+                    <property name="replace" value="plan"/>
                 </include>
                 <if test="projectId != null">
                     and ppr.project_id = #{projectId}
@@ -123,7 +115,32 @@
             </where>
         </if>
         <if test="example.orderByClause != null">
-            order by p.${example.orderByClause}
+            order by plan.${example.orderByClause}
         </if>
+    </select>
+
+    <select id="selectUserByPlanIds" resultMap="ResultMapWithBLOBs">
+        select
+        <include refid="Base_Column_List">
+            <property name="replace" value="plan"/>
+        </include>
+        ,
+        <include refid="User_Column_List">
+            <property name="replace" value="fruitUser"/>
+            <property name="prefix" value="user_"/>
+        </include>
+        from fruits_plan plan
+        left join plan_user_relation userRelation on userRelation.plan_id = plan.uuid
+        left join fruits_user fruitUser on fruitUser.user_id = userRelation.user_id
+        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
+            <where>
+                <if test="planIds != null">
+                    and plan.uuid in
+                    <foreach collection="planIds" item="id" close=")" open="(" separator=",">
+                        #{id}
+                    </foreach>
+                </if>
+            </where>
+        </trim>
     </select>
 </mapper>

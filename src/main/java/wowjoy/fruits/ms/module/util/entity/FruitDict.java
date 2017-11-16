@@ -36,11 +36,43 @@ public class FruitDict extends AbstractEntity {
     public String getDictName() {
         return dictName;
     }
+    /**
+     * 系统字典
+     */
+    public enum Systems{
+        N("NO"),
+
+        Y("YES"),
+
+        MAN("男"),
+
+        GIRLS("女"),
+
+        DELETE("删除标识"), ADD("添加标识"), SEARCH("查询"),
+
+        DESC("倒序"), ASC("升序"),
+
+        TEST("测试-数据Key");
+
+        private String value;
+
+        public String getValue() {
+            return value;
+        }
+
+        public void setValue(String value) {
+            this.value = value;
+        }
+
+        Systems(String value) {
+            this.value = value;
+        }
+    }
 
     /**
      * dict 管理项目所有父节点，便于父节点的管理和维护。
      */
-    public enum Dict {
+    public enum Parents {
         /**
          * 业务字典
          */
@@ -54,22 +86,7 @@ public class FruitDict extends AbstractEntity {
         MEILESTONE("里程碑"),
         USERTEAM("用户-团队"),
         USERPROJECT("用户-项目"),
-        MS_FRUITS("Elasticsearch-INDEX-TYPE"),
-
-        /**
-         * 系统字典
-         */
-        N("NO"),
-
-        Y("YES"),
-
-        MAN("男"),
-
-        GIRLS("女"),
-
-        DELETE("删除标识"), ADD("添加标识"), SEARCH("查询"),
-
-        DESC("倒序"), ASC("升序");
+        MS_FRUITS("Elasticsearch-INDEX-TYPE");
 
         private String value;
 
@@ -81,7 +98,7 @@ public class FruitDict extends AbstractEntity {
             return value;
         }
 
-        Dict(String value) {
+        Parents(String value) {
             this.setValue(value);
         }
     }
@@ -118,7 +135,7 @@ public class FruitDict extends AbstractEntity {
         }
 
         PlanDict(String value) {
-            this.setParentCode(Dict.PLAN.name());
+            this.setParentCode(Parents.PLAN.name());
             this.setValue(value);
         }
     }
@@ -153,7 +170,7 @@ public class FruitDict extends AbstractEntity {
 
 
         ProjectDict(String value) {
-            this.setParentCode(Dict.PROJECT.name());
+            this.setParentCode(Parents.PROJECT.name());
             this.setValue(value);
         }
     }
@@ -194,7 +211,7 @@ public class FruitDict extends AbstractEntity {
         }
 
         TaskDict(String value) {
-            this.setParentCode(Dict.TASK.name());
+            this.setParentCode(Parents.TASK.name());
             this.setValue(value);
         }
     }
@@ -229,7 +246,7 @@ public class FruitDict extends AbstractEntity {
         }
 
         MilestoneDict(String value) {
-            this.setParentCode(Dict.MEILESTONE.name());
+            this.setParentCode(Parents.MEILESTONE.name());
             this.setValue(value);
         }
     }
@@ -268,7 +285,7 @@ public class FruitDict extends AbstractEntity {
         }
 
         TaskUserDict(String value) {
-            this.setParentCode(Dict.TASKUSER.name());
+            this.setParentCode(Parents.TASKUSER.name());
             this.setValue(value);
         }
     }
@@ -301,7 +318,7 @@ public class FruitDict extends AbstractEntity {
         }
 
         PlanUserDict(String value) {
-            this.setParentCode(Dict.PLANUSER.name());
+            this.setParentCode(Parents.PLANUSER.name());
             this.setValue(value);
         }
     }
@@ -334,7 +351,7 @@ public class FruitDict extends AbstractEntity {
         }
 
         UserTeamDict(String value) {
-            this.setParentCode(Dict.USERTEAM.name());
+            this.setParentCode(Parents.USERTEAM.name());
             this.setValue(value);
         }
     }
@@ -367,7 +384,7 @@ public class FruitDict extends AbstractEntity {
         }
 
         UserProjectDict(String value) {
-            this.setParentCode(Dict.USERTEAM.name());
+            this.setParentCode(Parents.USERTEAM.name());
             this.setValue(value);
         }
     }
@@ -400,7 +417,7 @@ public class FruitDict extends AbstractEntity {
         }
 
         ProjectTeamDict(String value) {
-            this.setParentCode(Dict.USERPROJECT.name());
+            this.setParentCode(Parents.USERPROJECT.name());
             this.setValue(value);
         }
 
@@ -437,7 +454,7 @@ public class FruitDict extends AbstractEntity {
         }
 
         AccountDict(String value) {
-            this.setParentCode(Dict.USERPROJECT.name());
+            this.setParentCode(Parents.USERPROJECT.name());
             this.setValue(value);
         }
 
@@ -468,7 +485,7 @@ public class FruitDict extends AbstractEntity {
         }
 
         ESType(String value) {
-            this.setParentCode(Dict.MS_FRUITS.name());
+            this.setParentCode(Parents.MS_FRUITS.name());
             this.setValue(value);
         }
     }

@@ -6,6 +6,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMapping;
+import wowjoy.fruits.ms.exception.ExceptionSupport;
 import wowjoy.fruits.ms.util.RestResult;
 
 /**
@@ -27,9 +28,11 @@ public class ExceptionAspectj {
     private Object exception(ProceedingJoinPoint joinPoint) {
         try {
             return joinPoint.proceed();
+        } catch (ExceptionSupport ex) {
+            return RestResult.newError(ex.getMessage());
         } catch (RuntimeException e) {
             e.printStackTrace();
-            return RestResult.newError(e.getMessage());
+            return RestResult.newError("后台发生无法处理的异常，联系开发人员");
         } catch (Throwable throwable) {
             throwable.printStackTrace();
         }

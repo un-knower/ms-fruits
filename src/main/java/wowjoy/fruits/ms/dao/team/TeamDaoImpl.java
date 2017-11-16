@@ -89,14 +89,14 @@ public class TeamDaoImpl extends AbstractDaoTeam {
         }
 
         public void insertUsers() {
-            data.getInUsers(FruitDict.Dict.ADD).forEach((i) -> {
+            data.getInUsers(FruitDict.Systems.ADD).forEach((i) -> {
                 i.setTeamId(data.getUuid());
                 dao.insert(i);
             });
         }
 
         public Relation deleteUser() {
-            data.getInUsers(FruitDict.Dict.DELETE).forEach((i) -> dao.remove(UserTeamRelation.newInstance(i.getUserId(), data.getUuid())));
+            data.getInUsers(FruitDict.Systems.DELETE).forEach((i) -> dao.remove(UserTeamRelation.newInstance(i.getUserId(), data.getUuid())));
             return this;
         }
 

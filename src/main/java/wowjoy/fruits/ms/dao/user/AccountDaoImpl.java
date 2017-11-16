@@ -45,7 +45,7 @@ public class AccountDaoImpl extends AbstractDaoAccount {
         example.createCriteria().andUserIdIn(Arrays.asList(ids));
         accountMapper.deleteByExample(example);
         FruitAccountDao dao = FruitAccount.getDao();
-        dao.setIsDeleted(FruitDict.Dict.Y.name());
+        dao.setIsDeleted(FruitDict.Systems.Y.name());
         accountMapper.updateByExampleSelective(dao, new FruitAccountExample());
     }
 }

@@ -18,6 +18,7 @@
         <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
+        <result column="task_id" jdbcType="VARCHAR" property="taskId"/>
     </resultMap>
     <sql id="Base_Column_List">
         ${replace}.uuid,
@@ -74,7 +75,7 @@
         <if test="example != null">
             <where>
                 <include refid="Example_Where_Clause">
-                  <property name="replace" value="fu"/>
+                    <property name="replace" value="fu"/>
                 </include>
                 <if test="principal != null">
                     AND fa.principal = #{principal}

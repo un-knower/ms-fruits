@@ -43,7 +43,7 @@ import java.util.concurrent.*;
 public class GlobalSearchEs extends AbstractElastic {
 
     private final String Index;
-    private final ArrayList<String> Types = Lists.newArrayList(FruitDict.Dict.PROJECT.name().toLowerCase(), FruitDict.Dict.TEAM.name().toLowerCase());
+    private final ArrayList<String> Types = Lists.newArrayList(FruitDict.Parents.PROJECT.name().toLowerCase(), FruitDict.Parents.TEAM.name().toLowerCase());
 
     public GlobalSearchEs() {
         this.Index = MessageFormat.format("{0}_{1}", super.Index, "global");
@@ -108,16 +108,16 @@ public class GlobalSearchEs extends AbstractElastic {
          * 融合了Executor和BlockingQueue的功能。
          */
         private final CompletionService<List<GlobalSearch>> initESExecutor = new ExecutorCompletionService<>(executorService);
-        private final Map<FruitDict.Dict, Callable> callables;
+        private final Map<FruitDict.Parents, Callable> callables;
         private final TransportClient thisClient;
         private final String index;
         private final List<String> types;
 
         public DataSource(TransportClient thisClient, String index, List<String> types) {
             callables = Maps.newLinkedHashMap();
-            callables.put(FruitDict.Dict.PROJECT, extractProjects);
-            callables.put(FruitDict.Dict.TEAM, extractTeam);
-            callables.put(FruitDict.Dict.USER, extractUser);
+            callables.put(FruitDict.Parents.PROJECT, extractProjects);
+            callables.put(FruitDict.Parents.TEAM, extractTeam);
+            callables.put(FruitDict.Parents.USER, extractUser);
             this.thisClient = thisClient;
             this.index = index;
             this.types = types;
@@ -155,7 +155,7 @@ public class GlobalSearchEs extends AbstractElastic {
                 GlobalSearch global = GlobalSearch.getInstance(FruitProjectDao.class);
                 global.setTitle(projectDao.getTitle());
                 global.setEntity(projectDao);
-                global.setType(FruitDict.Dict.PROJECT);
+                global.setType(FruitDict.Parents.PROJECT);
                 result.add(global);
             });
             return result;
@@ -172,7 +172,7 @@ public class GlobalSearchEs extends AbstractElastic {
                 GlobalSearch global = GlobalSearch.getInstance(FruitTeamDao.class);
                 global.setTitle(i.getTitle());
                 global.setEntity(i);
-                global.setType(FruitDict.Dict.TEAM);
+                global.setType(FruitDict.Parents.TEAM);
                 result.add(global);
             });
             return result;
@@ -188,7 +188,7 @@ public class GlobalSearchEs extends AbstractElastic {
                 GlobalSearch global = GlobalSearch.getInstance(FruitUser.class);
                 global.setTitle(user.getUserName());
                 global.setEntity(user);
-                global.setType(FruitDict.Dict.USER);
+                global.setType(FruitDict.Parents.USER);
                 result.add(global);
             });
             return result;

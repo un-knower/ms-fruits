@@ -2,7 +2,6 @@ package wowjoy.fruits.ms.module.team;
 
 import com.google.common.collect.Lists;
 import wowjoy.fruits.ms.module.relation.entity.UserTeamRelation;
-import wowjoy.fruits.ms.module.user.FruitUser;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
@@ -30,7 +29,7 @@ public class FruitTeamDao extends FruitTeam {
     /**
      * 增删关联用户
      */
-    private Map<FruitDict.Dict, List<UserTeamRelation>> inUsers;
+    private Map<FruitDict.Systems, List<UserTeamRelation>> inUsers;
 
     /**
      * 检索团队leader
@@ -58,11 +57,11 @@ public class FruitTeamDao extends FruitTeam {
         this.leader = leader;
     }
 
-    public List<UserTeamRelation> getInUsers(FruitDict.Dict dict) {
-        return inUsers != null && inUsers.containsKey(dict) ? inUsers.get(dict) : Lists.newLinkedList();
+    public List<UserTeamRelation> getInUsers(FruitDict.Systems parents) {
+        return inUsers != null && inUsers.containsKey(parents) ? inUsers.get(parents) : Lists.newLinkedList();
     }
 
-    public void setInUsers(Map<FruitDict.Dict, List<UserTeamRelation>> inUsers) {
+    public void setInUsers(Map<FruitDict.Systems, List<UserTeamRelation>> inUsers) {
         this.inUsers = inUsers;
     }
 

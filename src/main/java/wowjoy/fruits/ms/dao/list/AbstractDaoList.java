@@ -25,21 +25,21 @@ public abstract class AbstractDaoList implements InterfaceDao {
 
     protected abstract void delete(FruitListDao dao);
 
-    /**
-     * 添加任务列表
-     *
-     * @param vo
-     */
-    public void insertTask(FruitListVo vo) {
+    protected abstract List<FruitListDao> findByProjectId(List<String> projectIds);
+
+    public final void insertProject(FruitListVo vo) {
         try {
-            FruitListDao dao = this.insertTemplate(vo);
-            dao.setlType(FruitDict.Dict.TASK.name());
+            FruitListDao dao = insertTemplate(vo);
+            dao.setListRelation(vo.getListRelation());
+            dao.setlType(FruitDict.Parents.PROJECT.name());
+            if (dao.getListRelation(FruitDict.Systems.ADD).isEmpty())
+                throw new CheckException("添加项目列表时，必须绑定项目id");
             this.insert(dao);
         } catch (ExceptionSupport ex) {
             throw ex;
         } catch (RuntimeException ex) {
             ex.printStackTrace();
-            throw new ServiceException("添加列表错误");
+            throw new CheckException("项目列表添加失败");
         }
     }
 
@@ -62,10 +62,10 @@ public abstract class AbstractDaoList implements InterfaceDao {
      *
      * @param vo
      */
-    public void update(FruitListVo vo) {
+    public final void update(FruitListVo vo) {
         try {
             if (!checkByUUID(vo.getUuidVo()).isNotEmpty())
-                throw new CheckException("任务列表不存在，操作被拒绝");
+                throw new CheckException("列表不存在，操作被拒绝");
             FruitListDao dao = FruitList.getDao();
             dao.setUuid(vo.getUuidVo());
             dao.setTitle(vo.getTitle());
@@ -80,11 +80,11 @@ public abstract class AbstractDaoList implements InterfaceDao {
     }
 
     /**
-     * 删除任务列表
+     * 删除列表
      *
      * @param vo
      */
-    public void delete(FruitListVo vo) {
+    public final void delete(FruitListVo vo) {
         try {
             FruitListDao dao = FruitList.getDao();
             dao.setUuid(vo.getUuidVo());
@@ -108,15 +108,4 @@ public abstract class AbstractDaoList implements InterfaceDao {
         return finds.get(0);
     }
 
-    public List<FruitListDao> findTask(FruitListVo vo) {
-        FruitListDao dao = this.findTempalte(vo);
-        dao.setlType(FruitDict.Dict.TASK.name());
-        return this.finds(dao);
-    }
-
-    private FruitListDao findTempalte(FruitListVo vo) {
-        FruitListDao dao = FruitList.getDao();
-        dao.setTitle(vo.getTitle());
-        return dao;
-    }
 }

@@ -8,12 +8,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /**
  * Create d by wangz iwen on 2017/8/21.
  */
 @Configuration
 @MapperScan("wowjoy.fruits.ms.module")
+@EnableTransactionManagement
 public class MybatisConfiguration {
     private final static String SQLSESSIONFACTORYBEAN_TYPEALIASESPACKAGE = "wowjoy.fruits.ms";
     @Autowired
@@ -32,7 +34,7 @@ public class MybatisConfiguration {
         hikariDataSource.setPassword(environment.getProperty("tomcat.jdbc.pool.password"));
         hikariDataSource.setDriverClassName(environment.getProperty("tomcat.jdbc.pool.driverClassName"));
         hikariDataSource.setIdleTimeout(60000);
-        hikariDataSource.setMaxLifetime(60000);
+        hikariDataSource.setMaxLifetime(1800000);
         return hikariDataSource;
     }
 

@@ -8,6 +8,8 @@ import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
+import wowjoy.fruits.ms.exception.CheckException;
+import wowjoy.fruits.ms.exception.ExceptionSupport;
 
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
@@ -30,13 +32,25 @@ public class ArgumentInterceptor implements HandlerMethodArgumentResolver {
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer, NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
         final HttpServletRequest request = (HttpServletRequest) webRequest.getNativeRequest();
         final JsonElement data = RequestMethod.GET.name().toLowerCase().equals(request.getMethod().toLowerCase()) ? findGet(request.getParameterMap()) : findNotGet(request.getInputStream());
-        return toType(data, parameter.getParameterAnnotation(JsonArgument.class).type());
+        try {
+            return toType(data, parameter.getParameterAnnotation(JsonArgument.class).type());
+        } catch (ExceptionSupport ex) {
+            throw new CheckException(ex.getMessage());
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            throw new CheckException("入参转换发生未知的异常，请联系开发人员");
+        }
     }
 
     private <T> T toType(JsonElement parameter, Class<T> type) {
         if (Object.class.getName().equals(type.getName()))
             return (T) type;
-        return gsonBuilder.fromJson(parameter, TypeToken.of(type).getType());
+        try {
+            return gsonBuilder.fromJson(parameter, TypeToken.of(type).getType());
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            throw new CheckException("参数不符合设计需求，请联系接口开发人员核对接口入参");
+        }
     }
 
     private JsonElement findNotGet(ServletInputStream inputStream) throws IOException {

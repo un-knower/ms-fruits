@@ -20,8 +20,8 @@ public class FruitPlanVo extends FruitPlan {
     /*提供月份*/
     private String month;
     private String projectId;
-    private Map<FruitDict.Dict, List<String>> userRelation;
-    private Map<FruitDict.Dict, List<String>> projectRelation;
+    private Map<FruitDict.Systems, List<String>> userRelation;
+    private Map<FruitDict.Systems, List<String>> projectRelation;
     private String desc;
     private String asc;
 
@@ -65,26 +65,26 @@ public class FruitPlanVo extends FruitPlan {
         this.month = month;
     }
 
-    public Map<FruitDict.Dict, List<String>> getUserRelation() {
+    public Map<FruitDict.Systems, List<String>> getUserRelation() {
         return userRelation;
     }
 
-    public void setUserRelation(Map<FruitDict.Dict, List<String>> userRelation) {
+    public void setUserRelation(Map<FruitDict.Systems, List<String>> userRelation) {
         this.userRelation = userRelation;
     }
 
-    public Map<FruitDict.Dict, List<String>> getProjectRelation() {
+    public Map<FruitDict.Systems, List<String>> getProjectRelation() {
         return projectRelation;
     }
 
-    public void setProjectRelation(Map<FruitDict.Dict, List<String>> projectRelation) {
+    public void setProjectRelation(Map<FruitDict.Systems, List<String>> projectRelation) {
         this.projectRelation = projectRelation;
     }
 
     private Map<String, List<String>> parset(Map<String, List<String>> relation) {
         LinkedHashMap<String, List<String>> result = Maps.newLinkedHashMap();
-        ArrayList<FruitDict.Dict> dicts = Lists.newArrayList(FruitDict.Dict.DELETE, FruitDict.Dict.ADD);
-        dicts.forEach((i) -> {
+        ArrayList<FruitDict.Systems> parents = Lists.newArrayList(FruitDict.Systems.DELETE, FruitDict.Systems.ADD);
+        parents.forEach((i) -> {
             if (relation.containsKey(i.name().toLowerCase()))
                 result.put(i.name().toLowerCase(), relation.get(i.name().toLowerCase()));
         });

@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wowjoy.fruits.ms.dao.relation.impl.PlanProjectDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.PlanUserDaoImpl;
-import wowjoy.fruits.ms.dao.user.UserDaoImpl;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.plan.FruitPlan;
 import wowjoy.fruits.ms.module.plan.FruitPlanDao;
@@ -47,8 +46,6 @@ public class PlanDaoImpl extends AbstractDaoPlan {
     @Qualifier("planProjectDaoImpl")
     @Autowired
     private PlanProjectDaoImpl projectDao;
-    @Autowired
-    private UserDaoImpl userDao;
 
 
     @Override
@@ -58,8 +55,16 @@ public class PlanDaoImpl extends AbstractDaoPlan {
             example.getOredCriteria().get(0).andParentIdIsNotNull();
         else
             example.getOredCriteria().get(0).andParentIdIsNull();
+        if (dao.getParentIds() != null && !dao.getParentIds().isEmpty())
+            example.getOredCriteria().get(0).andParentIdIn(dao.getParentIds());
         if (isPage) PageHelper.startPage(pageNum, pageSize);
-        return mapper.selectUserByProject(example, dao.getProjectId());
+        return mapper.selectByProjectId(example, dao.getProjectId());
+    }
+
+    @Override
+    protected List<FruitPlanDao> findUserByPlanIds(List<String> planIds) {
+        if (planIds == null || planIds.isEmpty()) return Lists.newLinkedList();
+        return mapper.selectUserByPlanIds(planIds);
     }
 
     @Override
@@ -93,7 +98,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
             example.setOrderByClause(sort);
         else
             example.setOrderByClause("create_date_time desc");
-        criteria.andIsDeletedEqualTo(FruitDict.Dict.N.name());
+        criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
         return example;
     }
 
@@ -134,7 +139,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
             throw new CheckException("【计划】uuId不能为空");
         FruitPlanExample example = new FruitPlanExample();
         example.createCriteria().andUuidEqualTo(uuid);
-        List<FruitPlanDao> data = mapper.selectUserByProject(example, null);
+        List<FruitPlanDao> data = mapper.selectByProjectId(example, null);
         if (data.isEmpty())
             return FruitPlan.newEmpty("计划不存在");
         return data.get(0);
@@ -194,11 +199,6 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         summaryMapper.deleteByExample(example);
     }
 
-    @Override
-    public List<PlanProjectRelation> findJoin(PlanProjectRelation relation) {
-        return projectDao.finds(relation);
-    }
-
     private static class Relation {
         private final PlanUserDaoImpl userDao;
         private final PlanProjectDaoImpl projectdao;
@@ -216,14 +216,14 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         }
 
         public Relation insertUser() {
-            planDao.getUserRelation(FruitDict.Dict.ADD).forEach((i) -> {
+            planDao.getUserRelation(FruitDict.Systems.ADD).forEach((i) -> {
                 userDao.insert(PlanUserRelation.getInstance(planDao.getUuid(), i, FruitDict.PlanUserDict.PRINCIPAL));
             });
             return this;
         }
 
         public Relation removeUser() {
-            planDao.getUserRelation(FruitDict.Dict.DELETE).forEach((i) ->
+            planDao.getUserRelation(FruitDict.Systems.DELETE).forEach((i) ->
                     userDao.remove(PlanUserRelation.getInstance(planDao.getUuid(), i, null))
             );
             return this;
@@ -234,14 +234,14 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         }
 
         public void insertProject() {
-            planDao.getProjectRelation(FruitDict.Dict.ADD).forEach((i) -> {
+            planDao.getProjectRelation(FruitDict.Systems.ADD).forEach((i) -> {
                 projectdao.insert(PlanProjectRelation.newInstance(planDao.getUuid(), i));
             });
         }
 
         public Relation removeProject() {
-            planDao.getProjectRelation(FruitDict.Dict.DELETE).forEach((i) ->
-                    projectdao.remove(PlanProjectRelation.newInstance(planDao.getUuid(), i))
+            planDao.getProjectRelation(FruitDict.Systems.DELETE).forEach((i) ->
+                    projectdao.remove(PlanProjectRelation.newInstance(planDao.getUuid(), StringUtils.isBlank(i) ? null : i))
             );
             return this;
         }

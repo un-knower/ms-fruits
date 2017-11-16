@@ -59,7 +59,7 @@ public class PlanController {
      */
     @RequestMapping(value = "/project", method = RequestMethod.GET)
     public RestResult findMonthWeek(@JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlanVo) {
-        return RestResult.getInstance().setData(dataPlanDao.findMonthWeek(fruitPlanVo));
+        return RestResult.getInstance().setData(dataPlanDao.findMonthWeek(fruitPlanVo, true));
     }
 
     /**

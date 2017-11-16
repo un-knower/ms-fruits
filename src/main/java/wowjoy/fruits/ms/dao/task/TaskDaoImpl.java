@@ -1,14 +1,18 @@
 package wowjoy.fruits.ms.dao.task;
 
+import com.github.pagehelper.PageHelper;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import wowjoy.fruits.ms.dao.list.ListDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.TaskListDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.TaskPlanDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.TaskProjectDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.TaskUserDaoImpl;
+import wowjoy.fruits.ms.module.list.FruitListDao;
 import wowjoy.fruits.ms.module.relation.entity.TaskListRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskPlanRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskProjectRelation;
@@ -17,6 +21,7 @@ import wowjoy.fruits.ms.module.task.FruitTaskDao;
 import wowjoy.fruits.ms.module.task.FruitTaskExample;
 import wowjoy.fruits.ms.module.task.mapper.FruitTaskMapper;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
+import wowjoy.fruits.ms.util.ApplicationContextUtils;
 
 import java.text.MessageFormat;
 import java.util.List;
@@ -36,23 +41,24 @@ public class TaskDaoImpl extends AbstractDaoTask {
     private FruitTaskMapper taskMapper;
     @Qualifier("taskPlanDaoImpl")
     @Autowired
-    private TaskPlanDaoImpl planDao;
+    private TaskPlanDaoImpl taskPlanDao;
     @Qualifier("taskProjectDaoImpl")
     @Autowired
-    private TaskProjectDaoImpl projectDao;
+    private TaskProjectDaoImpl taskProjectDao;
     @Qualifier("taskUserDaoImpl")
     @Autowired
-    private TaskUserDaoImpl userDao;
+    private TaskUserDaoImpl taskUserDao;
     @Qualifier("taskListDaoImpl")
     @Autowired
-    private TaskListDaoImpl listDao;
-
+    private TaskListDaoImpl taskListDao;
+    @Autowired
+    private ListDaoImpl listDao;
 
     @Override
     public void insert(FruitTaskDao dao) {
         /*插入任务*/
         taskMapper.insertSelective(dao);
-        Relation.getInstance(dao, planDao, projectDao, userDao, listDao).insertList().insertPlan().insertProject().insertUser();
+        Relation.getInstance(dao, taskPlanDao, taskProjectDao, taskUserDao, taskListDao).insertList().insertPlan().insertProject().insertUser();
     }
 
     @Override
@@ -72,12 +78,11 @@ public class TaskDaoImpl extends AbstractDaoTask {
         FruitTaskExample.Criteria criteria = example.createCriteria();
         criteria.andUuidEqualTo(dao.getUuid());
         taskMapper.updateByExampleSelective(dao, example);
-        Relation.getInstance(dao, planDao, projectDao, userDao, listDao)
+        Relation.getInstance(dao, taskPlanDao, taskProjectDao, taskUserDao, taskListDao)
                 /*删除列表、计划、项目、用户的关联信息*/
                 .removeList().removePlan().removeProject().removeUser()
                 /*添加列表、计划、项目、用户的关联信息*/
                 .insertList().insertPlan().insertProject().insertUser();
-
     }
 
     @Override
@@ -88,41 +93,54 @@ public class TaskDaoImpl extends AbstractDaoTask {
             criteria.andUuidEqualTo(dao.getUuid());
         taskMapper.deleteByExample(example);
         /*删除项目、计划、用户关联信息*/
-        Relation.getInstance(dao, planDao, projectDao, userDao, listDao).removeLists().removePlans().removeProjects().removeUsers();
+        Relation.getInstance(dao, taskPlanDao, taskProjectDao, taskUserDao, taskListDao).removeLists().removePlans().removeProjects().removeUsers();
     }
 
     @Override
-    public List<TaskPlanRelation> findJoin(TaskPlanRelation relation) {
-        return planDao.finds(relation);
+    protected List<FruitTaskDao> findByPlanId(FruitTaskDao dao) {
+        PageHelper.startPage(dao.getPageNum(), dao.getPageSize());
+        return taskMapper.selectByTaskPlan(dao.getPlanId());
     }
 
     @Override
-    public List<TaskProjectRelation> findJoin(TaskProjectRelation relation) {
-        return projectDao.finds(relation);
+    public List<FruitTaskDao> findByListId(FruitTaskDao dao) {
+        PageHelper.startPage(dao.getPageNum(), dao.getPageSize());
+        long start = System.currentTimeMillis();
+        List<FruitTaskDao> data = taskMapper.selectByTaskList(dao.getListId());
+        long end = System.currentTimeMillis();
+        logger.info("查询耗时findByListId：" + (end - start));
+        return data;
     }
 
     @Override
-    public List<TaskListRelation> findJoin(TaskListRelation relation) {
-        return listDao.finds(relation);
+    protected List<FruitListDao> findProjectList(List<String> projectId) {
+        return listDao.findByProjectId(projectId);
     }
 
     @Override
-    public List<FruitTaskDao> findJoinProjects(FruitTaskDao dao) {
-        return taskMapper.selectProjectByExample(findJoinExample(dao), dao.getListIds(), dao.getProjectIds());
-    }
-
-    @Override
-    public List<FruitTaskDao> findJoinPlans(FruitTaskDao dao) {
-        return taskMapper.selectPlanByExample(findJoinExample(dao), dao.getListIds(), dao.getPlanIds());
-    }
-
-    /*查询模板*/
-    private FruitTaskExample findJoinExample(FruitTaskDao dao) {
+    protected List<FruitTaskDao> findUserByTaskIds(List<String> taskIds) {
+        if (taskIds == null || taskIds.isEmpty())
+            return Lists.newLinkedList();
         FruitTaskExample example = new FruitTaskExample();
-        FruitTaskExample.Criteria criteria = example.createCriteria();
-        if (StringUtils.isNotBlank(dao.getTitle()))
-            criteria.andTitleEqualTo(dao.getTitle());
-        return example;
+        example.createCriteria().andUuidIn(taskIds);
+        long start = System.currentTimeMillis();
+        List<FruitTaskDao> data = taskMapper.selectUserByTask(example);
+        long end = System.currentTimeMillis();
+        logger.info("查询耗时findUserByTaskIds：" + (end - start));
+        return data;
+    }
+
+    @Override
+    protected List<FruitTaskDao> findPlanByTaskIds(List<String> taskIds) {
+        if (taskIds == null || taskIds.isEmpty())
+            return Lists.newLinkedList();
+        FruitTaskExample example = new FruitTaskExample();
+        example.createCriteria().andUuidIn(taskIds);
+        long start = System.currentTimeMillis();
+        List<FruitTaskDao> data = taskMapper.selectPlanByTask(example);
+        long end = System.currentTimeMillis();
+        logger.info("查询耗时findUserByTaskIds：" + (end - start));
+        return data;
     }
 
     /**
@@ -148,7 +166,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
         }
 
         public Relation insertPlan() {
-            dao.getTaskPlanRelation(FruitDict.Dict.ADD).forEach((i) -> {
+            dao.getTaskPlanRelation(FruitDict.Systems.ADD).forEach((i) -> {
                 i.setTaskId(dao.getUuid());
                 planDao.insert(i);
             });
@@ -156,7 +174,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
         }
 
         public Relation insertProject() {
-            dao.getTaskProjectRelation(FruitDict.Dict.ADD).forEach((i) -> {
+            dao.getTaskProjectRelation(FruitDict.Systems.ADD).forEach((i) -> {
                 i.setTaskId(dao.getUuid());
                 projectDao.insert(i);
             });
@@ -164,7 +182,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
         }
 
         public Relation insertUser() {
-            dao.getTaskUserRelation(FruitDict.Dict.ADD).forEach((i) -> {
+            dao.getTaskUserRelation(FruitDict.Systems.ADD).forEach((i) -> {
                 i.setTaskId(dao.getUuid());
                 i.setUserRole(FruitDict.TaskUserDict.EXECUTOR);
                 userDao.insert(i);
@@ -173,8 +191,8 @@ public class TaskDaoImpl extends AbstractDaoTask {
         }
 
         public Relation insertList() {
-            if (dao.getTaskListRelation(FruitDict.Dict.ADD).isEmpty()) return this;
-            dao.getTaskListRelation(FruitDict.Dict.ADD).forEach((i) -> {
+            if (dao.getTaskListRelation(FruitDict.Systems.ADD).isEmpty()) return this;
+            dao.getTaskListRelation(FruitDict.Systems.ADD).forEach((i) -> {
                 i.setTaskId(dao.getUuid());
                 listDao.insert(i);
             });
@@ -187,7 +205,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
         }
 
         public Relation removeProject() {
-            dao.getTaskProjectRelation(FruitDict.Dict.DELETE).forEach((i) -> projectDao.remove(TaskProjectRelation.newInstance(dao.getUuid(), i.getProjectId())));
+            dao.getTaskProjectRelation(FruitDict.Systems.DELETE).forEach((i) -> projectDao.remove(TaskProjectRelation.newInstance(dao.getUuid(), i.getProjectId())));
             return this;
         }
 
@@ -197,7 +215,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
         }
 
         public Relation removePlan() {
-            dao.getTaskPlanRelation(FruitDict.Dict.DELETE).forEach((i) -> planDao.remove(TaskPlanRelation.newInstance(dao.getUuid(), i.getPlanId())));
+            dao.getTaskPlanRelation(FruitDict.Systems.DELETE).forEach((i) -> planDao.remove(TaskPlanRelation.newInstance(dao.getUuid(), i.getPlanId())));
             return this;
         }
 
@@ -207,7 +225,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
         }
 
         public Relation removeUser() {
-            dao.getTaskUserRelation(FruitDict.Dict.DELETE).forEach((i) -> userDao.remove(TaskUserRelation.newInstance(dao.getUuid(), i.getUserId())));
+            dao.getTaskUserRelation(FruitDict.Systems.DELETE).forEach((i) -> userDao.remove(TaskUserRelation.newInstance(dao.getUuid(), i.getUserId())));
             return this;
         }
 
@@ -217,10 +235,26 @@ public class TaskDaoImpl extends AbstractDaoTask {
         }
 
         public Relation removeList() {
-            if (dao.getTaskListRelation(FruitDict.Dict.DELETE).isEmpty()) return this;
-            dao.getTaskListRelation(FruitDict.Dict.DELETE).forEach((i) -> listDao.remove(TaskListRelation.newInstance(dao.getUuid(), i.getListId())));
+            if (dao.getTaskListRelation(FruitDict.Systems.DELETE).isEmpty()) return this;
+            dao.getTaskListRelation(FruitDict.Systems.DELETE).forEach((i) -> listDao.remove(TaskListRelation.newInstance(dao.getUuid(), i.getListId())));
             return this;
         }
 
+    }
+
+    /************************************************************************************************
+     *                                       个人中心专供                                            *
+     ************************************************************************************************/
+
+    @Override
+    protected List<FruitTaskDao> userFindByDao(FruitTaskDao dao) {
+        FruitTaskExample example = new FruitTaskExample();
+        FruitTaskExample.Criteria criteria = example.createCriteria();
+        if (StringUtils.isNotBlank(dao.getTitle()))
+            criteria.andTitleLike(MessageFormat.format("%{0}%", dao.getTitle()));
+        if (StringUtils.isNotBlank(dao.getTaskStatus()))
+            criteria.andTaskStatusEqualTo(dao.getTaskStatus());
+        PageHelper.startPage(dao.getPageNum(), dao.getPageSize());
+        return taskMapper.userSelectByExample(example, ApplicationContextUtils.getCurrentUser().getUserId());
     }
 }

@@ -10,5 +10,5 @@ import wowjoy.fruits.ms.module.util.entity.FruitDict;
 public abstract class AbstractElastic {
     @Autowired
     protected TransportClient esClient;
-    protected final String Index = FruitDict.Dict.MS_FRUITS.name().toLowerCase();
+    protected final String Index = FruitDict.Parents.MS_FRUITS.name().toLowerCase();
 }

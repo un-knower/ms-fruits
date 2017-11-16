@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="wowjoy.fruits.ms.module.list.mapper.FruitListMapperExt">
+    <resultMap id="BaseResultMap" type="wowjoy.fruits.ms.module.list.FruitListDao">
+        <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
+        <result column="title" jdbcType="VARCHAR" property="title"/>
+        <result column="l_type" jdbcType="VARCHAR" property="lType"/>
+        <result column="description" jdbcType="VARCHAR" property="description"/>
+        <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
+        <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
+        <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
+    </resultMap>
+    <sql id="Example_Where_Clause">
+        <foreach collection="example.oredCriteria" item="criteria" separator="or">
+            <if test="criteria.valid">
+                <trim prefix="(" prefixOverrides="and" suffix=")">
+                    <foreach collection="criteria.criteria" item="criterion">
+                        <choose>
+                            <when test="criterion.noValue">
+                                and ${replace}.${criterion.condition}
+                            </when>
+                            <when test="criterion.singleValue">
+                                and ${replace}.${criterion.condition} #{criterion.value}
+                            </when>
+                            <when test="criterion.betweenValue">
+                                and ${replace}.${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                            </when>
+                            <when test="criterion.listValue">
+                                and ${replace}.${criterion.condition}
+                                <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                                    #{listItem}
+                                </foreach>
+                            </when>
+                        </choose>
+                    </foreach>
+                </trim>
+            </if>
+        </foreach>
+    </sql>
+    <sql id="Base_Column_List">
+    ${replace}.uuid,
+    ${replace}.title,
+    ${replace}.l_type,
+    ${replace}.description,
+    ${replace}.modify_date_time,
+    ${replace}.create_date_time,
+    ${replace}.is_deleted
+  </sql>
+
+    <select id="selectByProjectId" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List">
+            <property name="replace" value="list"/>
+        </include>
+        from fruits_list list
+        inner join project_list_relation listRelation on list.uuid = listRelation.list_id
+        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
+            <where>
+                <if test="example != null">
+                    <include refid="Example_Where_Clause">
+                        <property name="replace" value="list"/>
+                    </include>
+                </if>
+                <if test="projectIds != null">
+                    and listRelation.project_id in
+                    <foreach collection="projectIds" item="id" open="(" close=")" separator=",">
+                        #{id}
+                    </foreach>
+                </if>
+            </where>
+        </trim>
+        <if test="example.orderByClause != null">
+            order by ${example.orderByClause}
+        </if>
+    </select>
+
+</mapper>

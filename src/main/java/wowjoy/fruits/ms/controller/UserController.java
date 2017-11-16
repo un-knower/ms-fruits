@@ -27,9 +27,7 @@ public class UserController {
 
     @RequestMapping(method = RequestMethod.POST)
     public RestResult finds() {
-        FruitUserVo vo = FruitUser.getVo();
-        vo.setUserName("严老板");
-        return RestResult.getInstance().setData(vo);
+        return RestResult.getInstance().setData(ApplicationContextUtils.getCurrentUser());
     }
 
     @RequestMapping(value = "/account", method = RequestMethod.GET)

@@ -13,5 +13,8 @@ import java.util.List;
 @Mapper
 public interface FruitPlanMapperExt {
 
-    List<FruitPlanDao> selectUserByProject(@Param("example") FruitPlanExample example, @Param("projectId") String projectId);
+    List<FruitPlanDao> selectByProjectId(@Param("example") FruitPlanExample example, @Param("projectId") String projectId);
+
+    List<FruitPlanDao> selectUserByPlanIds(@Param("planIds") List<String> planIds);
+
 }

@@ -26,6 +26,16 @@ public class FruitUserDao extends FruitUser {
 
     private String principal;
 
+    private String taskId;
+
+    public String getTaskId() {
+        return taskId;
+    }
+
+    public void setTaskId(String taskId) {
+        this.taskId = taskId;
+    }
+
     public String getPrincipal() {
         return principal;
     }

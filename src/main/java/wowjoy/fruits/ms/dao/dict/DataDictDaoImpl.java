@@ -31,7 +31,7 @@ public class DataDictDaoImpl extends AbstractDaoDict {
 
     private DataDictDaoImpl commonEnum() {
         /*基础*/
-        for (Field field : FruitDict.Dict.class.getFields()) {
+        for (Field field : FruitDict.Parents.class.getFields()) {
             FruitDict data = new FruitDict();
             data.setDictCode(field.getName());
             data.setDictName(field.getName());

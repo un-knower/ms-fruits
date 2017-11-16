@@ -14,7 +14,7 @@ public class GlobalSearch<T> extends AbstractEntity {
     private String title;
     private T entity;
     private String content;
-    private FruitDict.Dict type;
+    private FruitDict.Parents type;
 
     public String getTitle() {
         return title;
@@ -33,11 +33,11 @@ public class GlobalSearch<T> extends AbstractEntity {
         this.content = new Gson().toJsonTree(entity).toString();
     }
 
-    public FruitDict.Dict getType() {
+    public FruitDict.Parents getType() {
         return type;
     }
 
-    public void setType(FruitDict.Dict type) {
+    public void setType(FruitDict.Parents type) {
         this.type = type;
     }
 

@@ -4,6 +4,7 @@ import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.exception.ExceptionSupport;
 import wowjoy.fruits.ms.exception.ServiceException;
+import wowjoy.fruits.ms.module.list.FruitListVo;
 import wowjoy.fruits.ms.module.project.FruitProject;
 import wowjoy.fruits.ms.module.project.FruitProjectDao;
 import wowjoy.fruits.ms.module.project.FruitProjectVo;
@@ -89,10 +90,10 @@ public abstract class AbstractDaoProject implements InterfaceDao {
     }
 
     private AbstractDaoProject addCheckJoinTeam(FruitProjectDao dao) {
-        if (dao.getTeamRelation(FruitDict.Dict.ADD).isEmpty())
+        if (dao.getTeamRelation(FruitDict.Systems.ADD).isEmpty())
             throw new CheckException("必须绑定一个负责团队");
         Integer count = 0;
-        for (ProjectTeamRelation teamRelation : dao.getTeamRelation(FruitDict.Dict.ADD)) {
+        for (ProjectTeamRelation teamRelation : dao.getTeamRelation(FruitDict.Systems.ADD)) {
             try {
                 FruitDict.UserProjectDict.valueOf(teamRelation.getTpRole());
             } catch (Exception e) {
@@ -109,10 +110,10 @@ public abstract class AbstractDaoProject implements InterfaceDao {
     }
 
     private void addCheckJoinUser(FruitProjectDao dao) {
-        if (dao.getUserRelation(FruitDict.Dict.ADD).isEmpty())
+        if (dao.getUserRelation(FruitDict.Systems.ADD).isEmpty())
             throw new CheckException("必须绑定一个负责人");
         Integer count = 0;
-        for (UserProjectRelation projectRelation : dao.getUserRelation(FruitDict.Dict.ADD)) {
+        for (UserProjectRelation projectRelation : dao.getUserRelation(FruitDict.Systems.ADD)) {
             try {
                 FruitDict.UserProjectDict.valueOf(projectRelation.getUpRole());
             } catch (Exception e) {
@@ -190,8 +191,8 @@ public abstract class AbstractDaoProject implements InterfaceDao {
      */
     private AbstractDaoProject modifyCheckJoinUser(FruitProjectDao dao) {
         Integer count = 0;
-        if (dao.getUserRelation(FruitDict.Dict.ADD).isEmpty()) return this;
-        for (UserProjectRelation userRelation : dao.getUserRelation(FruitDict.Dict.ADD)) {
+        if (dao.getUserRelation(FruitDict.Systems.ADD).isEmpty()) return this;
+        for (UserProjectRelation userRelation : dao.getUserRelation(FruitDict.Systems.ADD)) {
             try {
                 FruitDict.UserProjectDict.valueOf(userRelation.getUpRole());
             } catch (Exception e) {
@@ -206,9 +207,9 @@ public abstract class AbstractDaoProject implements InterfaceDao {
             throw new CheckException("只能尝试覆盖一个负责人");
         List<UserProjectRelation> principal = this.findJoin(UserProjectRelation.newInstance(dao.getUuid(), null, FruitDict.UserProjectDict.PRINCIPAL.name()));
         if (principal.isEmpty()) return this;
-        List<UserProjectRelation> delete = dao.getUserRelation(FruitDict.Dict.DELETE);
+        List<UserProjectRelation> delete = dao.getUserRelation(FruitDict.Systems.DELETE);
         delete.add(UserProjectRelation.newInstance(null, principal.get(0).getUserId(), principal.get(0).getUpRole()));
-        dao.setUserRelation(FruitDict.Dict.DELETE, delete);
+        dao.setUserRelation(FruitDict.Systems.DELETE, delete);
         return this;
     }
 
@@ -218,8 +219,8 @@ public abstract class AbstractDaoProject implements InterfaceDao {
     private void modifyCheckJoinTeam(FruitProjectDao dao) {
         Integer count = 0;
         /*是否需要添加团队*/
-        if (dao.getTeamRelation(FruitDict.Dict.ADD).isEmpty()) return;
-        for (ProjectTeamRelation teamRelation : dao.getTeamRelation(FruitDict.Dict.ADD)) {
+        if (dao.getTeamRelation(FruitDict.Systems.ADD).isEmpty()) return;
+        for (ProjectTeamRelation teamRelation : dao.getTeamRelation(FruitDict.Systems.ADD)) {
             try {
                 FruitDict.UserProjectDict.valueOf(teamRelation.getTpRole());
             } catch (Exception e) {
@@ -235,9 +236,9 @@ public abstract class AbstractDaoProject implements InterfaceDao {
         List<ProjectTeamRelation> principal = this.findJoin(ProjectTeamRelation.newInstance(dao.getUuid(), null, FruitDict.ProjectTeamDict.PRINCIPAL.name()));
         /*没有关联项目结束检查*/
         if (principal.isEmpty()) return;
-        List<ProjectTeamRelation> delete = dao.getTeamRelation(FruitDict.Dict.DELETE);
+        List<ProjectTeamRelation> delete = dao.getTeamRelation(FruitDict.Systems.DELETE);
         delete.add(ProjectTeamRelation.newInstance(null, principal.get(0).getTeamId(), principal.get(0).getTpRole()));
-        dao.setTeamRelation(FruitDict.Dict.DELETE, delete);
+        dao.setTeamRelation(FruitDict.Systems.DELETE, delete);
     }
 
     public final void complete(FruitProjectVo vo) {
@@ -260,6 +261,10 @@ public abstract class AbstractDaoProject implements InterfaceDao {
             ex.printStackTrace();
             throw new ServiceException("变更项目状态时出错");
         }
+    }
+
+    public final void insertList(FruitListVo vo) {
+
     }
 
 }

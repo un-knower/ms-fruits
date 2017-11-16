@@ -16,9 +16,7 @@ import org.springframework.web.client.RestTemplate;
 @SpringBootApplication
 @EnableEurekaClient
 @EnableFeignClients
-@ComponentScan("wowjoy.fruits.ms")
 @EnableConfigurationProperties
-@EnableTransactionManagement
 public class Application {
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);

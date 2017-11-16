@@ -3,6 +3,7 @@ package wowjoy.fruits.ms.module.project;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
+import wowjoy.fruits.ms.module.relation.entity.ProjectListRelation;
 import wowjoy.fruits.ms.module.relation.entity.ProjectTeamRelation;
 import wowjoy.fruits.ms.module.relation.entity.UserProjectRelation;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
@@ -21,46 +22,59 @@ import java.util.Map;
  */
 public class FruitProjectDao extends FruitProject {
 
-    private transient final String DateTimeFormat = "yyyy-MM-dd'T'23:59:59";
-
     protected FruitProjectDao() {
         setUuid(null);
     }
 
-    private Map<FruitDict.Dict, List<ProjectTeamRelation>> teamRelation;
-    private Map<FruitDict.Dict, List<UserProjectRelation>> userRelation;
+    private Map<FruitDict.Systems, List<ProjectTeamRelation>> teamRelation;
+    private Map<FruitDict.Systems, List<UserProjectRelation>> userRelation;
+    private Map<FruitDict.Systems, List<ProjectListRelation>> listRelation;
 
     private List<FruitUserDao> users;
     private FruitUserDao principal;
 
     private Integer days;
 
-    public List<ProjectTeamRelation> getTeamRelation(FruitDict.Dict type) {
+    public List<ProjectTeamRelation> getTeamRelation(FruitDict.Systems type) {
         return teamRelation != null && teamRelation.containsKey(type) ? teamRelation.get(type) : Lists.newLinkedList();
     }
 
-    public List<UserProjectRelation> getUserRelation(FruitDict.Dict type) {
+    public List<UserProjectRelation> getUserRelation(FruitDict.Systems type) {
         return userRelation != null && userRelation.containsKey(type) ? userRelation.get(type) : Lists.newLinkedList();
     }
 
-    public void setTeamRelation(Map<FruitDict.Dict, List<ProjectTeamRelation>> teamRelation) {
+    public List<ProjectListRelation> getListRelation(FruitDict.Systems type) {
+        return listRelation != null && listRelation.containsKey(type) ? listRelation.get(type) : Lists.newLinkedList();
+    }
+
+    public void setTeamRelation(Map<FruitDict.Systems, List<ProjectTeamRelation>> teamRelation) {
         this.teamRelation = teamRelation;
     }
 
-    public void setTeamRelation(FruitDict.Dict dict, List<ProjectTeamRelation> value) {
+    public void setTeamRelation(FruitDict.Systems parents, List<ProjectTeamRelation> value) {
         if (teamRelation == null)
             teamRelation = Maps.newLinkedHashMap();
-        teamRelation.put(dict, value);
+        teamRelation.put(parents, value);
     }
 
-    public void setUserRelation(Map<FruitDict.Dict, List<UserProjectRelation>> userRelation) {
+    public void setUserRelation(Map<FruitDict.Systems, List<UserProjectRelation>> userRelation) {
         this.userRelation = userRelation;
     }
 
-    public void setUserRelation(FruitDict.Dict dict, List<UserProjectRelation> value) {
+    public void setUserRelation(FruitDict.Systems parents, List<UserProjectRelation> value) {
         if (userRelation == null)
             userRelation = Maps.newLinkedHashMap();
-        userRelation.put(dict, value);
+        userRelation.put(parents, value);
+    }
+
+    public void setListRelation(Map<FruitDict.Systems, List<ProjectListRelation>> listRelation) {
+        this.listRelation = listRelation;
+    }
+
+    public void setListRelation(FruitDict.Systems parents, List<ProjectListRelation> value) {
+        if (listRelation == null)
+            listRelation = Maps.newLinkedHashMap();
+        listRelation.put(parents, value);
     }
 
     public Integer getDays() {

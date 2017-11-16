@@ -23,29 +23,29 @@ public class FruitProjectVo extends FruitProject {
     }
 
     private String uuidVo;
-    private Map<FruitDict.Dict, List<ProjectTeamRelation>> teamRelation;
-    private Map<FruitDict.Dict, List<UserProjectRelation>> userRelation;
+    private Map<FruitDict.Systems, List<ProjectTeamRelation>> teamRelation;
+    private Map<FruitDict.Systems, List<UserProjectRelation>> userRelation;
 
-    public Map<FruitDict.Dict, List<ProjectTeamRelation>> getTeamRelation() {
+    public Map<FruitDict.Systems, List<ProjectTeamRelation>> getTeamRelation() {
         return teamRelation;
     }
 
-    public void setTeamRelation(Map<FruitDict.Dict, List<ProjectTeamRelation>> teamRelation) {
+    public void setTeamRelation(Map<FruitDict.Systems, List<ProjectTeamRelation>> teamRelation) {
         this.teamRelation = teamRelation;
     }
 
-    public Map<FruitDict.Dict, List<UserProjectRelation>> getUserRelation() {
+    public Map<FruitDict.Systems, List<UserProjectRelation>> getUserRelation() {
         return userRelation;
     }
 
-    public void setUserRelation(Map<FruitDict.Dict, List<UserProjectRelation>> userRelation) {
+    public void setUserRelation(Map<FruitDict.Systems, List<UserProjectRelation>> userRelation) {
         this.userRelation = userRelation;
     }
 
     private <T extends AbstractEntity> Map<String, List<T>> parset(Map<String, List<T>> relation) {
         LinkedHashMap<String, List<T>> result = Maps.newLinkedHashMap();
-        ArrayList<FruitDict.Dict> dicts = Lists.newArrayList(FruitDict.Dict.DELETE, FruitDict.Dict.ADD);
-        dicts.forEach((i) -> {
+        ArrayList<FruitDict.Systems> parents = Lists.newArrayList(FruitDict.Systems.DELETE, FruitDict.Systems.ADD);
+        parents.forEach((i) -> {
             if (relation.containsKey(i.name().toLowerCase()))
                 result.put(i.name().toLowerCase(), relation.get(i.name().toLowerCase()));
         });

@@ -1,10 +1,7 @@
 package wowjoy.fruits.ms.module.user;
 
 
-import com.google.gson.annotations.Expose;
-import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.module.AbstractEntity;
-import wowjoy.fruits.ms.module.relation.entity.UserProjectRelation;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.util.Date;
@@ -19,7 +16,7 @@ public class FruitUser extends AbstractEntity {
 
     public FruitUser(String userId) {
         this.userId = userId;
-        this.setUserSex(FruitDict.Dict.MAN.name());
+        this.setUserSex(FruitDict.Systems.MAN.name());
     }
 
     private String userId;

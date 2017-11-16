@@ -1,7 +1,7 @@
+import com.google.common.collect.Maps;
 import org.junit.Test;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.LinkedHashMap;
 
 /**
  * Created by wangziwen on 2017/9/14.
@@ -31,10 +31,8 @@ public class ExtendsTest {
 
     @Test
     public void test() {
-        String string = null;
-        string.split(",");
-
-
+        LinkedHashMap<Object, Object> map = Maps.newLinkedHashMap();
+        System.out.println(map.get("111"));
     }
 
 }

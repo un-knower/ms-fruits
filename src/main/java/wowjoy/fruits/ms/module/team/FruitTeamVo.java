@@ -15,13 +15,13 @@ public class FruitTeamVo extends FruitTeam {
 
     private String uuidVo;
 
-    private Map<FruitDict.Dict, List<UserTeamRelation>> inUsers;
+    private Map<FruitDict.Systems, List<UserTeamRelation>> inUsers;
 
-    public Map<FruitDict.Dict, List<UserTeamRelation>> getInUsers() {
+    public Map<FruitDict.Systems, List<UserTeamRelation>> getInUsers() {
         return inUsers;
     }
 
-    public void setUsers(Map<FruitDict.Dict, List<UserTeamRelation>> users) {
+    public void setUsers(Map<FruitDict.Systems, List<UserTeamRelation>> users) {
         this.inUsers = users;
     }
 

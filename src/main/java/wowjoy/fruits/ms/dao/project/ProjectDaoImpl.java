@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import wowjoy.fruits.ms.dao.relation.AbstractDaoRelation;
+import wowjoy.fruits.ms.dao.relation.impl.ProjectListDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.ProjectTeamDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.UserProjectDaoImpl;
 import wowjoy.fruits.ms.exception.CheckException;
@@ -36,6 +36,7 @@ public class ProjectDaoImpl extends AbstractDaoProject {
     @Qualifier("userProjectDaoImpl")
     @Autowired
     private UserProjectDaoImpl userDao;
+
 
     @Override
     public void insert(FruitProjectDao dao) {
@@ -121,17 +122,17 @@ public class ProjectDaoImpl extends AbstractDaoProject {
      * 非静态类，对外部类提供关联功能
      */
     private static class Relation {
-        private final AbstractDaoRelation TeamDao;
-        private final AbstractDaoRelation UserDao;
+        private final ProjectTeamDaoImpl TeamDao;
+        private final UserProjectDaoImpl UserDao;
         private final FruitProjectDao Dao;
 
-        Relation(AbstractDaoRelation teamDao, AbstractDaoRelation userDao, FruitProjectDao dao) {
+        Relation(ProjectTeamDaoImpl teamDao, UserProjectDaoImpl userDao, FruitProjectDao dao) {
             this.TeamDao = teamDao;
             this.UserDao = userDao;
             this.Dao = dao;
         }
 
-        public static Relation getInstance(AbstractDaoRelation teamDao, AbstractDaoRelation userDao, FruitProjectDao dao) {
+        public static Relation getInstance(ProjectTeamDaoImpl teamDao, UserProjectDaoImpl userDao, FruitProjectDao dao) {
             return new Relation(teamDao, userDao, dao);
         }
 
@@ -147,7 +148,7 @@ public class ProjectDaoImpl extends AbstractDaoProject {
          * 删除指定关联用户
          */
         private Relation removeUserRelation() {
-            Dao.getUserRelation(FruitDict.Dict.DELETE).forEach((i) -> {
+            Dao.getUserRelation(FruitDict.Systems.DELETE).forEach((i) -> {
                 if (StringUtils.isBlank(i.getUserId()))
                     throw new CheckException("未指明删除的关联用户");
                 UserDao.remove(UserProjectRelation.newInstance(Dao.getUuid(), i.getUserId(), StringUtils.isNotBlank(i.getUpRole()) ? i.getUpRole() : null));
@@ -168,7 +169,7 @@ public class ProjectDaoImpl extends AbstractDaoProject {
          * 删除指定关联团队
          */
         private Relation removeTeamRelation() {
-            Dao.getTeamRelation(FruitDict.Dict.DELETE).forEach((i) -> {
+            Dao.getTeamRelation(FruitDict.Systems.DELETE).forEach((i) -> {
                 if (StringUtils.isBlank(i.getTeamId()))
                     throw new CheckException("未指明删除的关联团队");
                 TeamDao.remove(ProjectTeamRelation.newInstance(Dao.getUuid(), i.getTeamId(), StringUtils.isNotBlank(i.getTpRole()) ? i.getTpRole() : null));
@@ -176,11 +177,12 @@ public class ProjectDaoImpl extends AbstractDaoProject {
             return this;
         }
 
+
         /**
          * 添加用户关联
          */
         private Relation insertUserRelation() {
-            Dao.getUserRelation(FruitDict.Dict.ADD).forEach((i) -> {
+            Dao.getUserRelation(FruitDict.Systems.ADD).forEach((i) -> {
                 i.setProjectId(Dao.getUuid());
                 UserDao.insert(i);
             });
@@ -191,7 +193,7 @@ public class ProjectDaoImpl extends AbstractDaoProject {
          * 添加团队关联
          */
         private Relation insertTeamRelation() {
-            Dao.getTeamRelation(FruitDict.Dict.ADD).forEach((i) -> {
+            Dao.getTeamRelation(FruitDict.Systems.ADD).forEach((i) -> {
                 i.setProjectId(Dao.getUuid());
                 TeamDao.insert(i);
             });
