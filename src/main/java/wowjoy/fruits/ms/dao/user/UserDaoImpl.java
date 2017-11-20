@@ -31,7 +31,7 @@ public class UserDaoImpl extends AbstractDaoUser {
         final FruitUserExample example = new FruitUserExample();
         final FruitUserExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(dao.getUserName()))
-            criteria.andUserNameLike(dao.getUserName());
+            criteria.andUserNameEqualTo(dao.getUserName());
         return mapper.selectByExample(example);
     }
 

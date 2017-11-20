@@ -22,24 +22,6 @@ public class FruitPlanVo extends FruitPlan {
     private String projectId;
     private Map<FruitDict.Systems, List<String>> userRelation;
     private Map<FruitDict.Systems, List<String>> projectRelation;
-    private String desc;
-    private String asc;
-
-    public String getDesc() {
-        return desc;
-    }
-
-    public void setDesc(String desc) {
-        this.desc = desc;
-    }
-
-    public String getAsc() {
-        return asc;
-    }
-
-    public void setAsc(String asc) {
-        this.asc = asc;
-    }
 
     public String getProjectId() {
         return projectId;
