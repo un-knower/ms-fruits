@@ -1,4 +1,6 @@
 import com.google.common.collect.Maps;
+import com.google.gson.Gson;
+import com.google.gson.stream.JsonReader;
 import org.junit.Test;
 
 import java.util.LinkedHashMap;
@@ -31,8 +33,6 @@ public class ExtendsTest {
 
     @Test
     public void test() {
-        LinkedHashMap<Object, Object> map = Maps.newLinkedHashMap();
-        System.out.println(map.get("111"));
     }
 
 }

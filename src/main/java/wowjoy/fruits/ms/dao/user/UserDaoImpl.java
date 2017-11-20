@@ -9,6 +9,7 @@ import wowjoy.fruits.ms.module.user.example.FruitUserExample;
 import wowjoy.fruits.ms.module.user.mapper.FruitUserMapper;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.List;
 
@@ -31,7 +32,7 @@ public class UserDaoImpl extends AbstractDaoUser {
         final FruitUserExample example = new FruitUserExample();
         final FruitUserExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(dao.getUserName()))
-            criteria.andUserNameEqualTo(dao.getUserName());
+            criteria.andUserNameLike(MessageFormat.format("%{0}%", dao.getUserName()));
         return mapper.selectByExample(example);
     }
 

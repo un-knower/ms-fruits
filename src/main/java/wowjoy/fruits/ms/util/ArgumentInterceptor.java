@@ -31,7 +31,7 @@ public class ArgumentInterceptor implements HandlerMethodArgumentResolver {
     @Override
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer, NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
         final HttpServletRequest request = (HttpServletRequest) webRequest.getNativeRequest();
-        final JsonElement data = RequestMethod.GET.name().toLowerCase().equals(request.getMethod().toLowerCase()) ? findGet(request.getParameterMap()) : findNotGet(request.getInputStream());
+        final String data = RequestMethod.GET.name().toLowerCase().equals(request.getMethod().toLowerCase()) ? findGet(request.getParameterMap()) : findNotGet(request.getInputStream());
         try {
             return toType(data, parameter.getParameterAnnotation(JsonArgument.class).type());
         } catch (ExceptionSupport ex) {
@@ -42,7 +42,7 @@ public class ArgumentInterceptor implements HandlerMethodArgumentResolver {
         }
     }
 
-    private <T> T toType(JsonElement parameter, Class<T> type) {
+    private <T> T toType(String parameter, Class<T> type) {
         if (Object.class.getName().equals(type.getName()))
             return (T) type;
         try {
@@ -53,16 +53,15 @@ public class ArgumentInterceptor implements HandlerMethodArgumentResolver {
         }
     }
 
-    private JsonElement findNotGet(ServletInputStream inputStream) throws IOException {
+    private String findNotGet(ServletInputStream inputStream) throws IOException {
         StringBuffer parameter = new StringBuffer();
         final InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
         while (inputStreamReader.ready())
             parameter.append((char) inputStreamReader.read());
-        final JsonElement parse = new JsonParser().parse(parameter.toString());
-        return parse.isJsonNull() ? new JsonObject() : parse;
+        return parameter.toString();
     }
 
-    private JsonObject findGet(Map<String, String[]> parameterMap) {
+    private String findGet(Map<String, String[]> parameterMap) {
         final JsonObject result = new JsonObject();
         parameterMap.forEach((k, v) -> {
             if (v != null && v.length <= 1)
@@ -70,7 +69,7 @@ public class ArgumentInterceptor implements HandlerMethodArgumentResolver {
             else
                 result.add(k, this.gsonBuilder.toJsonTree(v));
         });
-        return result;
+        return result.toString();
     }
 
 
