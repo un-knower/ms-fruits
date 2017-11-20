@@ -103,17 +103,14 @@ public class PlanDaoImpl extends AbstractDaoPlan {
     }
 
     private String sortConstrue(FruitPlanDao dao) {
-        if (StringUtils.isNotBlank(dao.getDesc()) && StringUtils.isNotBlank(dao.getAsc())) return null;
         LinkedList<String> sorts = Lists.newLinkedList();
         if (StringUtils.isNotBlank(dao.getDesc())) {
-            for (String desc : dao.getDesc().split(",")) {
+            for (String desc : dao.getDesc().split(","))
                 sorts.add(MessageFormat.format("{0} desc", toMysqlField(desc)));
-            }
         }
         if (StringUtils.isNotBlank(dao.getAsc())) {
-            for (String asc : dao.getAsc().split(",")) {
+            for (String asc : dao.getAsc().split(","))
                 sorts.add(MessageFormat.format("{0} asc", toMysqlField(asc)));
-            }
         }
         if (sorts.isEmpty()) return null;
         return StringUtils.join(sorts, ",");

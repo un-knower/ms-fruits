@@ -26,6 +26,7 @@ import wowjoy.fruits.ms.module.project.FruitProjectDao;
 import wowjoy.fruits.ms.module.team.FruitTeam;
 import wowjoy.fruits.ms.module.team.FruitTeamDao;
 import wowjoy.fruits.ms.module.user.FruitUser;
+import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;
 
@@ -183,7 +184,7 @@ public class GlobalSearchEs extends AbstractElastic {
         private final Callable extractUser = () -> {
             final LinkedList<GlobalSearch> result = Lists.newLinkedList();
             final AbstractDaoUser dao = ApplicationContextUtils.getContext().getBean(UserDaoImpl.class);
-            final List<FruitUser> users = dao.finds(FruitUser.getVo());
+            final List<FruitUserDao> users = dao.finds(FruitUser.getVo());
             users.forEach((user) -> {
                 GlobalSearch global = GlobalSearch.getInstance(FruitUser.class);
                 global.setTitle(user.getUserName());

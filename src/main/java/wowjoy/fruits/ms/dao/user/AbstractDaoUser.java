@@ -3,7 +3,9 @@ package wowjoy.fruits.ms.dao.user;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
-import wowjoy.fruits.ms.module.user.*;
+import wowjoy.fruits.ms.module.user.FruitUser;
+import wowjoy.fruits.ms.module.user.FruitUserDao;
+import wowjoy.fruits.ms.module.user.FruitUserVo;
 
 import java.util.List;
 
@@ -18,7 +20,7 @@ public abstract class AbstractDaoUser implements InterfaceDao {
 
     protected abstract void insert(FruitUser... user);
 
-    protected abstract List<FruitUser> finds(FruitUserDao dao);
+    protected abstract List<FruitUserDao> finds(FruitUserDao dao);
 
     protected abstract void clearByUserId(String... ids);
 
@@ -28,9 +30,8 @@ public abstract class AbstractDaoUser implements InterfaceDao {
      * PUBLIC 函数，公共接口 *
      ***********************/
 
-    public List<FruitUser> finds(FruitUserVo vo) {
+    public List<FruitUserDao> finds(FruitUserVo vo) {
         final FruitUserDao dao = FruitUser.getDao();
-        dao.setUserEmail(vo.getUserEmail());
         dao.setUserName(vo.getUserName());
         return this.finds(dao);
     }

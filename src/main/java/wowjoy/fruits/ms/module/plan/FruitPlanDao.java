@@ -28,8 +28,6 @@ public class FruitPlanDao extends FruitPlan {
     private Map<FruitDict.Systems, List<String>> projectRelation;
     private volatile List<FruitPlanDao> weeks;
     private String projectId;
-    private String desc;
-    private String asc;
     private List<String> parentIds;
 
     public List<String> getParentIds() {
@@ -57,22 +55,6 @@ public class FruitPlanDao extends FruitPlan {
 
     public void setTaskId(String taskId) {
         this.taskId = taskId;
-    }
-
-    public String getDesc() {
-        return desc;
-    }
-
-    public void setDesc(String desc) {
-        this.desc = desc;
-    }
-
-    public String getAsc() {
-        return asc;
-    }
-
-    public void setAsc(String asc) {
-        this.asc = asc;
     }
 
     public List<FruitPlanDao> getWeeks() {

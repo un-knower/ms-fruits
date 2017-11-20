@@ -34,7 +34,7 @@ public class TeamDaoImpl extends AbstractDaoTeam {
         if (StringUtils.isNotBlank(dao.getUuid()))
             criteria.andUuidEqualTo(dao.getUuid());
         if (StringUtils.isNotBlank(dao.getTitle()))
-            criteria.andTitleLike(MessageFormat.format("%{0}%", dao.getTitle()));
+            criteria.andTitleEqualTo(dao.getTitle());
         return mapper.selectByExample(example);
     }
 

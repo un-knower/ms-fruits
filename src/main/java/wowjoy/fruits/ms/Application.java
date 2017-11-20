@@ -23,7 +23,7 @@ public class Application {
     }
 
     @Bean
-    public RestTemplate restTemplate() {
+    public RestTemplate restaTemplate() {
         return new RestTemplate();
     }
 

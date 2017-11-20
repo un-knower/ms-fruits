@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import wowjoy.fruits.ms.exception.ExceptionSupport;
 import wowjoy.fruits.ms.util.RestResult;
 
+import java.sql.SQLException;
+
 /**
  * Created by wangziwen on 2017/9/29.
  */
@@ -33,6 +35,12 @@ public class ExceptionAspectj {
         } catch (RuntimeException e) {
             e.printStackTrace();
             return RestResult.newError("后台发生无法处理的异常，联系开发人员");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            String message = "";
+            if (ex instanceof SQLException)
+                message = ex.getMessage();
+            return RestResult.newError(message);
         } catch (Throwable throwable) {
             throwable.printStackTrace();
         }

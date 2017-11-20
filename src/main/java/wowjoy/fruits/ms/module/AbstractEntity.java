@@ -5,6 +5,7 @@ import wowjoy.fruits.ms.exception.NullException;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.util.Date;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -28,6 +29,25 @@ public abstract class AbstractEntity implements InterfaceEntity {
     private Date createDateTime;
     private String isDeleted;
     private String description;
+
+    private String desc;
+    private String asc;
+
+    public String getDesc() {
+        return desc;
+    }
+
+    public void setDesc(String desc) {
+        this.desc = desc;
+    }
+
+    public String getAsc() {
+        return asc;
+    }
+
+    public void setAsc(String asc) {
+        this.asc = asc;
+    }
 
     public void setUuid(String uuid) {
         this.uuid = uuid;

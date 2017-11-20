@@ -53,7 +53,7 @@ public class ListController {
     }
 
     @RequestMapping(value = "project", method = RequestMethod.POST)
-    public RestResult addProject(@JsonArgument(type = FruitListVo.class) FruitListVo vo) {
+    public RestResult insertProject(@JsonArgument(type = FruitListVo.class) FruitListVo vo) {
         listDao.insertProject(vo);
         return RestResult.getInstance().setData(vo);
     }

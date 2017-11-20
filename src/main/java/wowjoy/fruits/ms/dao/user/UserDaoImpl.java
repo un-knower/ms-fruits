@@ -1,6 +1,5 @@
 package wowjoy.fruits.ms.dao.user;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -10,7 +9,6 @@ import wowjoy.fruits.ms.module.user.example.FruitUserExample;
 import wowjoy.fruits.ms.module.user.mapper.FruitUserMapper;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
-import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.List;
 
@@ -29,13 +27,11 @@ public class UserDaoImpl extends AbstractDaoUser {
     }
 
     @Override
-    public List<FruitUser> finds(FruitUserDao dao) {
+    public List<FruitUserDao> finds(FruitUserDao dao) {
         final FruitUserExample example = new FruitUserExample();
         final FruitUserExample.Criteria criteria = example.createCriteria();
-        if (StringUtils.isNotBlank(dao.getUserEmail()))
-            criteria.andUserNameLike(MessageFormat.format("%{0}%", dao.getUserEmail()));
         if (StringUtils.isNotBlank(dao.getUserName()))
-            criteria.andUserNameLike(MessageFormat.format("%{0}%", dao.getUserName()));
+            criteria.andUserNameLike(dao.getUserName());
         return mapper.selectByExample(example);
     }
 

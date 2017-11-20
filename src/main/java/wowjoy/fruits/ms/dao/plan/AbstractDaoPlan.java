@@ -324,7 +324,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
      **********/
 
     private static class PlanThread {
-        private final ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);
+        private final ExecutorService service = Executors.newFixedThreadPool(processorCount);
         private List<Future> futures = Lists.newLinkedList();
 
         public PlanThread submit(Callable callable) {

@@ -319,7 +319,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
 
 
     private static class TaskThread {
-        private final ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        private final ExecutorService executorService = Executors.newFixedThreadPool(processorCount);
         private final List<Future> futures = Lists.newLinkedList();
 
         public static TaskThread getInstance() {
