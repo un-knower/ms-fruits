@@ -28,34 +28,59 @@
         <result column="ut_role" jdbcType="VARCHAR" property="teamRole"/>
     </resultMap>
     <sql id="Example_Where_Clause">
-        <where>
-            <foreach collection="oredCriteria" item="criteria" separator="or">
-                <if test="criteria.valid">
-                    <trim prefix="(" prefixOverrides="and" suffix=")">
-                        <foreach collection="criteria.criteria" item="criterion">
-                            <choose>
-                                <when test="criterion.noValue">
-                                    and ${prefix}.${criterion.condition}
-                                </when>
-                                <when test="criterion.singleValue">
-                                    and ${prefix}.${criterion.condition} #{criterion.value}
-                                </when>
-                                <when test="criterion.betweenValue">
-                                    and ${prefix}.${criterion.condition} #{criterion.value} and #{criterion.secondValue}
-                                </when>
-                                <when test="criterion.listValue">
-                                    and ${prefix}.${criterion.condition}
-                                    <foreach close=")" collection="criterion.value" item="listItem" open="("
-                                             separator=",">
-                                        #{listItem}
-                                    </foreach>
-                                </when>
-                            </choose>
-                        </foreach>
-                    </trim>
-                </if>
-            </foreach>
-        </where>
+        <foreach collection="example.oredCriteria" item="criteria" separator="or">
+            <if test="criteria.valid">
+                <trim prefix="(" prefixOverrides="and" suffix=")">
+                    <foreach collection="criteria.criteria" item="criterion">
+                        <choose>
+                            <when test="criterion.noValue">
+                                and ${prefix}.${criterion.condition}
+                            </when>
+                            <when test="criterion.singleValue">
+                                and ${prefix}.${criterion.condition} #{criterion.value}
+                            </when>
+                            <when test="criterion.betweenValue">
+                                and ${prefix}.${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                            </when>
+                            <when test="criterion.listValue">
+                                and ${prefix}.${criterion.condition}
+                                <foreach close=")" collection="criterion.value" item="listItem" open="("
+                                         separator=",">
+                                    #{listItem}
+                                </foreach>
+                            </when>
+                        </choose>
+                    </foreach>
+                </trim>
+            </if>
+        </foreach>
+    </sql>
+    <sql id="User_Where_Clause">
+        <foreach collection="exampleUser.oredCriteria" item="criteria" separator="or">
+            <if test="criteria.valid">
+                <trim prefix="(" prefixOverrides="and" suffix=")">
+                    <foreach collection="criteria.criteria" item="criterion">
+                        <choose>
+                            <when test="criterion.noValue">
+                                and ${prefix}.${criterion.condition}
+                            </when>
+                            <when test="criterion.singleValue">
+                                and ${prefix}.${criterion.condition} #{criterion.value}
+                            </when>
+                            <when test="criterion.betweenValue">
+                                and ${prefix}.${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                            </when>
+                            <when test="criterion.listValue">
+                                and ${prefix}.${criterion.condition}
+                                <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                                    #{listItem}
+                                </foreach>
+                            </when>
+                        </choose>
+                    </foreach>
+                </trim>
+            </if>
+        </foreach>
     </sql>
     <sql id="Base_Column_List">
     ${replace}.uuid,
@@ -79,29 +104,39 @@
     ${replace}.is_deleted as ${prefix}is_deleted
   </sql>
 
-    <select id="selectUserRelationByExample" resultMap="BaseResultMap">
+    <select id="selectRelationByExample" resultMap="BaseResultMap">
         SELECT
         <include refid="User_Column_List">
-            <property name="replace" value="u"/>
+            <property name="replace" value="fuser"/>
             <property name="prefix" value="user_"/>
         </include>
         ,
         <include refid="Base_Column_List">
-            <property name="replace" value="t"/>
+            <property name="replace" value="fteam"/>
         </include>
         ,
         utr.ut_role as user_ut_role
         FROM
-        fruits_team t
-        LEFT JOIN user_team_relation utr on t.uuid = utr.`team_id`
-        LEFT JOIN fruits_user u on u.user_id = utr.user_id
-        <if test="_parameter != null">
-            <include refid="Example_Where_Clause">
-                <property name="prefix" value="t"/>
-            </include>
-        </if>
-        <if test="orderByClause != null">
-            order by t.${orderByClause}
+        fruits_team fteam
+        LEFT JOIN user_team_relation utr on fteam.uuid = utr.`team_id`
+        LEFT JOIN fruits_user fuser on fuser.user_id = utr.user_id
+        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
+            <where>
+                <if test="example != null">
+                    <include refid="Example_Where_Clause">
+                        <property name="prefix" value="fteam"/>
+                    </include>
+                </if>
+                <if test="exampleUser != null">
+                    <include refid="User_Where_Clause">
+                        <property name="prefix" value="fuser"/>
+                    </include>
+                </if>
+            </where>
+        </trim>
+
+        <if test="example.orderByClause != null">
+            order by fteam.${example.orderByClause}
         </if>
     </select>
 </mapper>

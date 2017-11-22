@@ -15,6 +15,12 @@ public class FruitTeamVo extends FruitTeam {
 
     private String uuidVo;
 
+    private String userName;
+
+    public String getUserName() {
+        return userName;
+    }
+
     private Map<FruitDict.Systems, List<UserTeamRelation>> inUsers;
 
     public Map<FruitDict.Systems, List<UserTeamRelation>> getInUsers() {

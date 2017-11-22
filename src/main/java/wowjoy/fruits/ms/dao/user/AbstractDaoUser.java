@@ -25,7 +25,6 @@ public abstract class AbstractDaoUser implements InterfaceDao {
     protected abstract void clearByUserId(String... ids);
 
     protected abstract List<FruitUserDao> findByAccount(FruitUserDao dao);
-
     /***********************
      * PUBLIC 函数，公共接口 *
      ***********************/

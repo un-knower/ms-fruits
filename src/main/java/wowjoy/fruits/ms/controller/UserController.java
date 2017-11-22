@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.RestController;
 import wowjoy.fruits.ms.dao.user.AbstractDaoAccount;
 import wowjoy.fruits.ms.dao.user.AbstractDaoUser;
 import wowjoy.fruits.ms.dao.user.AccountDaoImpl;
-import wowjoy.fruits.ms.dao.user.UserDaoImpl;
 import wowjoy.fruits.ms.module.user.FruitAccountVo;
 import wowjoy.fruits.ms.module.user.FruitUserVo;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;

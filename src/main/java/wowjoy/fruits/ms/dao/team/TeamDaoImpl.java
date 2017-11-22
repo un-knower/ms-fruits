@@ -10,6 +10,8 @@ import wowjoy.fruits.ms.module.relation.entity.UserTeamRelation;
 import wowjoy.fruits.ms.module.team.FruitTeamDao;
 import wowjoy.fruits.ms.module.team.FruitTeamExample;
 import wowjoy.fruits.ms.module.team.mapper.FruitTeamMapper;
+import wowjoy.fruits.ms.module.user.FruitUserDao;
+import wowjoy.fruits.ms.module.user.example.FruitUserExample;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.text.MessageFormat;
@@ -39,14 +41,18 @@ public class TeamDaoImpl extends AbstractDaoTeam {
     }
 
     @Override
-    public List<FruitTeamDao> findRelation(FruitTeamDao dao) {
+    public List<FruitTeamDao> findRelaiton(FruitTeamDao dao, FruitUserDao userDao) {
         final FruitTeamExample example = new FruitTeamExample();
         final FruitTeamExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(dao.getUuid()))
             criteria.andUuidEqualTo(dao.getUuid());
         if (StringUtils.isNotBlank(dao.getTitle()))
             criteria.andTitleLike(MessageFormat.format("%{0}%", dao.getTitle()));
-        return mapper.selectUserRelationByExample(example);
+        FruitUserExample exampleUser = new FruitUserExample();
+        FruitUserExample.Criteria criteriaUser = exampleUser.createCriteria();
+        if (StringUtils.isNotBlank(userDao.getUserName()))
+            criteriaUser.andUserNameLike(MessageFormat.format("%{0}%", userDao.getUserName()));
+        return mapper.selectRelationByExample(example, exampleUser);
     }
 
     @Override

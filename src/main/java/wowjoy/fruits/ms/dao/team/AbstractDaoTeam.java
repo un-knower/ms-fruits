@@ -9,6 +9,8 @@ import wowjoy.fruits.ms.exception.ServiceException;
 import wowjoy.fruits.ms.module.team.FruitTeam;
 import wowjoy.fruits.ms.module.team.FruitTeamDao;
 import wowjoy.fruits.ms.module.team.FruitTeamVo;
+import wowjoy.fruits.ms.module.user.FruitUser;
+import wowjoy.fruits.ms.module.user.FruitUserDao;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -26,7 +28,7 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
 
     protected abstract List<FruitTeamDao> finds(FruitTeamDao dao);
 
-    protected abstract List<FruitTeamDao> findRelation(FruitTeamDao dao);
+    public abstract List<FruitTeamDao> findRelaiton(FruitTeamDao dao, FruitUserDao userDao);
 
     protected abstract void insert(FruitTeamDao dao);
 
@@ -49,7 +51,10 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
         FruitTeamDao dao = FruitTeam.getDao();
         dao.setTitle(vo.getTitle());
         dao.setUuid(vo.getUuidVo());
-        List<FruitTeamDao> result = this.findRelation(dao);
+        FruitUserDao user = FruitUser.getDao();
+        if (StringUtils.isNotBlank(vo.getUserName()))
+            user.setUserName(vo.getUserName());
+        List<FruitTeamDao> result = this.findRelaiton(dao, user);
         /*检索团队leader*/
         threadSearchLeader(result);
         return result;
@@ -58,7 +63,7 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
     public final FruitTeamDao find(FruitTeamVo vo) {
         FruitTeamDao dao = FruitTeam.getDao();
         dao.setUuid(vo.getUuidVo());
-        List<FruitTeamDao> result = this.findRelation(dao);
+        List<FruitTeamDao> result = this.findRelaiton(dao, FruitUser.getDao());
         if (result.isEmpty())
             return (FruitTeamDao) FruitTeam.newEmpty("未找到对应详情");
         threadSearchLeader(result);

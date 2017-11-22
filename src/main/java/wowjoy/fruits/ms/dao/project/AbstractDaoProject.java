@@ -72,7 +72,6 @@ public abstract class AbstractDaoProject implements InterfaceDao {
             final FruitProjectDao dao = FruitProject.getProjectDao();
             dao.setUuid(vo.getUuid());
             dao.setTitle(vo.getTitle());
-            dao.setProjectStatus(vo.getProjectStatus());
             dao.setPredictStartDate(vo.getPredictStartDate());
             dao.setPredictEndDate(vo.getPredictEndDate());
             dao.setDescription(vo.getDescription());
