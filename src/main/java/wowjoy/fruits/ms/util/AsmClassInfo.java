@@ -1,7 +1,7 @@
 package wowjoy.fruits.ms.util;
 
-import jdk.internal.org.objectweb.asm.*;
-import org.assertj.core.util.Lists;
+import com.google.common.collect.Lists;
+import org.objectweb.asm.*;
 import wowjoy.fruits.ms.exception.CheckException;
 
 import java.io.IOException;
@@ -75,7 +75,7 @@ public class AsmClassInfo {
         Method method = findMethod(methodName);
         if (method != null)
             return findParameterName(method);
-        return Lists.emptyList();
+        return Lists.newLinkedList();
     }
 
     public Method findMethod(String methodName) {
