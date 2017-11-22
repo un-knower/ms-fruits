@@ -127,6 +127,7 @@
                         <property name="prefix" value="fteam"/>
                     </include>
                 </if>
+                and
                 <if test="exampleUser != null">
                     <include refid="User_Where_Clause">
                         <property name="prefix" value="fuser"/>
