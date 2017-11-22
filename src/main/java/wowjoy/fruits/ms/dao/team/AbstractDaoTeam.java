@@ -55,6 +55,16 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
         return result;
     }
 
+    public final FruitTeamDao find(FruitTeamVo vo) {
+        FruitTeamDao dao = FruitTeam.getDao();
+        dao.setUuid(vo.getUuidVo());
+        List<FruitTeamDao> result = this.findRelation(dao);
+        if (result.isEmpty())
+            return (FruitTeamDao) FruitTeam.newEmpty("未找到对应详情");
+        threadSearchLeader(result);
+        return result.get(0);
+    }
+
     private void threadSearchLeader(List<FruitTeamDao> teamDaos) {
         List<Future> futures = Lists.newLinkedList();
         ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);

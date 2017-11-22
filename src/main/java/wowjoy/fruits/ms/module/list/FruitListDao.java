@@ -15,7 +15,7 @@ public class FruitListDao extends FruitList {
         setUuid(null);
     }
 
-    private Map<FruitDict.Systems, List<String>> listRelation;
+    private Map<FruitDict.Systems, List<String>> projectRelation;
 
     private List<FruitTaskDao> tasks;
 
@@ -29,11 +29,11 @@ public class FruitListDao extends FruitList {
         this.tasks = tasks;
     }
 
-    public List<String> getListRelation(FruitDict.Systems systems) {
-        return listRelation != null && listRelation.containsKey(systems) ? listRelation.get(systems) : Lists.newLinkedList();
+    public List<String> getProjectRelation(FruitDict.Systems systems) {
+        return projectRelation != null && projectRelation.containsKey(systems) ? projectRelation.get(systems) : Lists.newLinkedList();
     }
 
-    public void setListRelation(Map<FruitDict.Systems, List<String>> listRelation) {
-        this.listRelation = listRelation;
+    public void setProjectRelation(Map<FruitDict.Systems, List<String>> projectRelation) {
+        this.projectRelation = projectRelation;
     }
 }

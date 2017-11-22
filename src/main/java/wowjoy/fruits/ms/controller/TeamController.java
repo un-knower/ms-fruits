@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import wowjoy.fruits.ms.dao.team.AbstractDaoTeam;
-import wowjoy.fruits.ms.module.task.FruitTaskVo;
+import wowjoy.fruits.ms.module.team.FruitTeam;
 import wowjoy.fruits.ms.module.team.FruitTeamVo;
 import wowjoy.fruits.ms.util.JsonArgument;
 import wowjoy.fruits.ms.util.RestResult;
@@ -26,6 +26,13 @@ public class TeamController {
     @RequestMapping(value = "/relation", method = RequestMethod.GET)
     public RestResult findRelation(@JsonArgument(type = FruitTeamVo.class) FruitTeamVo vo) {
         return RestResult.getInstance().setData(teamDao.findRelation(vo));
+    }
+
+    @RequestMapping(value = "/relation/{uuid}", method = RequestMethod.GET)
+    public RestResult findRelation(@PathVariable("uuid") String uuid) {
+        FruitTeamVo vo = FruitTeam.getFruitTeamVo();
+        vo.setUuidVo(uuid);
+        return RestResult.getInstance().setData(teamDao.find(vo));
     }
 
     @RequestMapping(method = RequestMethod.GET)

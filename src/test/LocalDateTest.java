@@ -1,3 +1,5 @@
+import jdk.internal.org.objectweb.asm.ClassReader;
+import jdk.internal.org.objectweb.asm.ClassVisitor;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClients;
@@ -15,7 +17,6 @@ import java.util.Date;
 public class LocalDateTest {
     @Test
     public void project() throws Exception {
-        FruitDict.TaskDict.valueOf("111");
     }
 
     @Test

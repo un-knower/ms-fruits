@@ -85,7 +85,7 @@ public class ListDaoImpl extends AbstractDaoList {
         }
 
         public void insertProject() {
-            this.dao.getListRelation(FruitDict.Systems.ADD).forEach((i) -> {
+            this.dao.getProjectRelation(FruitDict.Systems.ADD).forEach((i) -> {
                 projectListDao.insert(ProjectListRelation.newInstance(i, dao.getUuid()));
             });
         }
