@@ -58,7 +58,7 @@
     <sql id="User_Where_Clause">
         <foreach collection="exampleUser.oredCriteria" item="criteria" separator="or">
             <if test="criteria.valid">
-                <trim prefix="(" prefixOverrides="and" suffix=")">
+                <trim prefix="and (" prefixOverrides="and" suffix=")">
                     <foreach collection="criteria.criteria" item="criterion">
                         <choose>
                             <when test="criterion.noValue">
@@ -127,7 +127,6 @@
                         <property name="prefix" value="fteam"/>
                     </include>
                 </if>
-                and
                 <if test="exampleUser != null">
                     <include refid="User_Where_Clause">
                         <property name="prefix" value="fuser"/>

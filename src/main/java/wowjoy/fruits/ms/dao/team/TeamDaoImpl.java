@@ -41,7 +41,7 @@ public class TeamDaoImpl extends AbstractDaoTeam {
     }
 
     @Override
-    public List<FruitTeamDao> findRelaiton(FruitTeamDao dao, FruitUserDao userDao) {
+    public List<FruitTeamDao> findRelation(FruitTeamDao dao, FruitUserDao userDao) {
         final FruitTeamExample example = new FruitTeamExample();
         final FruitTeamExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(dao.getUuid()))

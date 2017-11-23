@@ -28,7 +28,7 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
 
     protected abstract List<FruitTeamDao> finds(FruitTeamDao dao);
 
-    public abstract List<FruitTeamDao> findRelaiton(FruitTeamDao dao, FruitUserDao userDao);
+    public abstract List<FruitTeamDao> findRelation(FruitTeamDao dao, FruitUserDao userDao);
 
     protected abstract void insert(FruitTeamDao dao);
 
@@ -54,7 +54,7 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
         FruitUserDao user = FruitUser.getDao();
         if (StringUtils.isNotBlank(vo.getUserName()))
             user.setUserName(vo.getUserName());
-        List<FruitTeamDao> result = this.findRelaiton(dao, user);
+        List<FruitTeamDao> result = this.findRelation(dao, user);
         /*检索团队leader*/
         threadSearchLeader(result);
         return result;
@@ -63,7 +63,7 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
     public final FruitTeamDao find(FruitTeamVo vo) {
         FruitTeamDao dao = FruitTeam.getDao();
         dao.setUuid(vo.getUuidVo());
-        List<FruitTeamDao> result = this.findRelaiton(dao, FruitUser.getDao());
+        List<FruitTeamDao> result = this.findRelation(dao, FruitUser.getDao());
         if (result.isEmpty())
             return (FruitTeamDao) FruitTeam.newEmpty("未找到对应详情");
         threadSearchLeader(result);
