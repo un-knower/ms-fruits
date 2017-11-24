@@ -15,7 +15,7 @@ public abstract class AbstractEntity implements InterfaceEntity {
     protected transient final String DateTimeFormat = "yyyy-MM-dd'T'23:59:59";
 
     protected AbstractEntity() {
-        /*利大于弊，我选择保留，如果有更好的方法，可以尝试*/
+        /*利大于弊，我选 择保留，如果有更好的方法，可以尝试*/
         this.setUuid(UUID());
         this.setIsDeleted(FruitDict.Systems.N.name());
     }
