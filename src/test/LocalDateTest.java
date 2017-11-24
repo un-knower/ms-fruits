@@ -1,10 +1,7 @@
-import jdk.internal.org.objectweb.asm.ClassReader;
-import jdk.internal.org.objectweb.asm.ClassVisitor;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClients;
 import org.junit.Test;
-import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -18,11 +15,18 @@ public class LocalDateTest {
     @Test
     public void project() throws Exception {
         String data = "【{user.userName}】删除了【{vo.title}】列表";
-        String substring = data.substring(data.indexOf("{"), data.length());
-        System.out.println(substring);
+        System.out.println(recursion(data, "{"));
+    }
+
+    public String extract(String format, String replace) {
+        StringBuffer result = new StringBuffer();
+        int i = format.indexOf(replace);
+        if (i == -1) return result.toString();
+        return result.append(i).append(",").append(recursion(format.substring(i + 1, format.length()), replace)).toString();
     }
 
     @Test
+
     public void name() throws Exception {
         Date date = new Date();
         Thread.sleep(1000);
