@@ -1,4 +1,8 @@
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.junit.Test;
+import wowjoy.fruits.ms.module.user.FruitUser;
 
 import java.util.regex.Pattern;
 
@@ -8,10 +12,11 @@ import java.util.regex.Pattern;
 public class PatternTest {
     @Test
     public void test() throws Exception {
-        final boolean matches = Pattern.matches("/static/\\w{0,}", "/static/sssss");
-        System.out.println(matches);
-
-        System.out.println(Runtime.getRuntime().availableProcessors());
+        JsonElement jsonElement = new Gson().toJsonTree(null);
+        System.out.println(jsonElement.isJsonArray());
+        System.out.println(jsonElement.isJsonNull());
+        System.out.println(jsonElement.isJsonObject());
+        System.out.println(jsonElement.isJsonPrimitive());
     }
 
 

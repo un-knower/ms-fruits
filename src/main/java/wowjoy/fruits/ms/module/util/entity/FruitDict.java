@@ -48,7 +48,7 @@ public class FruitDict extends AbstractEntity {
 
         GIRLS("女"),
 
-        DELETE("删除标识"), ADD("添加标识"), SEARCH("查询"),
+        DELETE("删除标识"), ADD("添加标识"), SEARCH("查询"), UPDATE("更新"),
 
         DESC("倒序"), ASC("升序"),
 
@@ -81,6 +81,7 @@ public class FruitDict extends AbstractEntity {
         TASK("任务"),
         USER("用户"),
         TEAM("团队"),
+        List("列表"),
         PLANUSER("计划-用户"),
         TASKUSER("任务-用户"),
         MEILESTONE("里程碑"),

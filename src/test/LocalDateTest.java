@@ -17,6 +17,9 @@ import java.util.Date;
 public class LocalDateTest {
     @Test
     public void project() throws Exception {
+        String data = "【{user.userName}】删除了【{vo.title}】列表";
+        String substring = data.substring(data.indexOf("{"), data.length());
+        System.out.println(substring);
     }
 
     @Test

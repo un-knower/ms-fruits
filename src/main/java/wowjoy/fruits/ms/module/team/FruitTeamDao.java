@@ -29,7 +29,7 @@ public class FruitTeamDao extends FruitTeam {
     /**
      * 增删关联用户
      */
-    private Map<FruitDict.Systems, List<UserTeamRelation>> inUsers;
+    private Map<FruitDict.Systems, List<UserTeamRelation>> userRelation;
 
     /**
      * 检索团队leader
@@ -57,12 +57,12 @@ public class FruitTeamDao extends FruitTeam {
         this.leader = leader;
     }
 
-    public List<UserTeamRelation> getInUsers(FruitDict.Systems parents) {
-        return inUsers != null && inUsers.containsKey(parents) ? inUsers.get(parents) : Lists.newLinkedList();
+    public List<UserTeamRelation> getUserRelation(FruitDict.Systems parents) {
+        return userRelation != null && userRelation.containsKey(parents) ? userRelation.get(parents) : Lists.newLinkedList();
     }
 
-    public void setInUsers(Map<FruitDict.Systems, List<UserTeamRelation>> inUsers) {
-        this.inUsers = inUsers;
+    public void setUserRelation(Map<FruitDict.Systems, List<UserTeamRelation>> userRelation) {
+        this.userRelation = userRelation;
     }
 
     public List<FruitUserDao> getUsers() {

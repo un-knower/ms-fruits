@@ -6,10 +6,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-import wowjoy.fruits.ms.dao.list.AbstractDaoList;
 import wowjoy.fruits.ms.aspectj.LogInfo;
+import wowjoy.fruits.ms.dao.list.AbstractDaoList;
 import wowjoy.fruits.ms.module.list.FruitList;
 import wowjoy.fruits.ms.module.list.FruitListVo;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.JsonArgument;
 import wowjoy.fruits.ms.util.RestResult;
 
@@ -32,7 +33,7 @@ public class ListController {
      * @param vo
      * @return
      */
-    @LogInfo(format = "[{userName}]修改了[{vo.title}]列表")
+    @LogInfo(format = "【{user.userName}】修改了【{vo.title}】列表", uuid = "uuid", type = FruitDict.Parents.List, operateType = FruitDict.Systems.UPDATE)
     @RequestMapping(value = "{uuid}", method = RequestMethod.PUT)
     public RestResult update(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitListVo.class) FruitListVo vo) {
         vo.setUuidVo(uuid);
@@ -42,11 +43,13 @@ public class ListController {
 
     /**
      * 删除列表-物理删除
+     * 2017年11月23日17:11:54
+     * 1、修改为逻辑删除。为了支持log日志记录
      *
      * @param uuid
      * @return
      */
-    @LogInfo(format = "[{userName}]删除了[{vo.title}]列表")
+    @LogInfo(format = "【{user.userName}】删除了【{vo.title}】列表", uuid = "uuid", type = FruitDict.Parents.List, operateType = FruitDict.Systems.DELETE)
     @RequestMapping(value = "{uuid}", method = RequestMethod.DELETE)
     public RestResult delete(@PathVariable("uuid") String uuid) {
         FruitListVo vo = FruitList.getVo();
@@ -55,7 +58,7 @@ public class ListController {
         return RestResult.getInstance().setData(vo.getUuidVo());
     }
 
-    @LogInfo(format = "[{userName}]添加了[{vo.title}]列表")
+    @LogInfo(format = "【{user.userName}】添加了【{vo.title}】列表", uuid = "vo.uuid", type = FruitDict.Parents.List, operateType = FruitDict.Systems.ADD)
     @RequestMapping(value = "project", method = RequestMethod.POST)
     public RestResult insertProject(@JsonArgument(type = FruitListVo.class) FruitListVo vo) {
         listDao.insertProject(vo);

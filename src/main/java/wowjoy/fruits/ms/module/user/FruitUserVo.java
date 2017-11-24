@@ -15,14 +15,6 @@ public class FruitUserVo extends FruitUser {
 
     private String principal;
 
-    private String ids;
-
-    public List<String> getIds() {
-        if (StringUtils.isNotBlank(ids))
-            return Arrays.asList(ids.split(","));
-        return Lists.newLinkedList();
-    }
-
     public String getPrincipal() {
         return principal;
     }

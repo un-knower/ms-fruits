@@ -1,18 +1,22 @@
 package wowjoy.fruits.ms.dao.team;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.exception.ExceptionSupport;
 import wowjoy.fruits.ms.exception.ServiceException;
+import wowjoy.fruits.ms.module.relation.entity.UserTeamRelation;
 import wowjoy.fruits.ms.module.team.FruitTeam;
 import wowjoy.fruits.ms.module.team.FruitTeamDao;
 import wowjoy.fruits.ms.module.team.FruitTeamVo;
 import wowjoy.fruits.ms.module.user.FruitUser;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -94,8 +98,8 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
             dao.setUuid(vo.getUuid());
             dao.setTitle(vo.getTitle());
             dao.setDescription(vo.getDescription());
-            dao.setInUsers(vo.getInUsers());
-
+            dao.setUserRelation(vo.getUserRelation());
+            this.checkInUsers(dao);
             this.insert(dao);
         } catch (ExceptionSupport ex) {
             throw ex;
@@ -105,13 +109,27 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
         }
     }
 
+    private void checkInUsers(FruitTeamDao dao) {
+        if (dao.getUserRelation(FruitDict.Systems.ADD).isEmpty())
+            throw new CheckException("缺少关联用户");
+        Map<String, List<UserTeamRelation>> roleValue = Maps.newLinkedHashMap();
+        dao.getUserRelation(FruitDict.Systems.ADD).forEach((i) -> {
+            if (roleValue.containsKey(i.getUtRole()))
+                roleValue.get(i.getUtRole()).add(i);
+            else
+                roleValue.put(i.getUtRole(), Lists.newArrayList(i));
+        });
+        if (!roleValue.containsKey(FruitDict.UserTeamDict.LEADER.name())) throw new CheckException("团队leader不存在");
+        if (roleValue.get(FruitDict.UserTeamDict.LEADER.name()).size() > 1) throw new CheckException("只允许添加一位leader");
+    }
+
     public final void update(FruitTeamVo vo) {
         try {
             if (StringUtils.isBlank(vo.getUuidVo()))
                 throw new CheckException("Team id not is null");
             FruitTeamDao dao = FruitTeam.getDao();
             dao.setUuid(vo.getUuidVo());
-            dao.setInUsers(vo.getInUsers());
+            dao.setUserRelation(vo.getUserRelation());
             dao.setTitle(vo.getTitle());
             dao.setDescription(vo.getDescription());
             this.update(dao);

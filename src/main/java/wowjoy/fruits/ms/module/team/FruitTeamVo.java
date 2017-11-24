@@ -1,11 +1,8 @@
 package wowjoy.fruits.ms.module.team;
 
-import com.google.common.collect.Lists;
-import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.module.relation.entity.UserTeamRelation;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -24,14 +21,14 @@ public class FruitTeamVo extends FruitTeam {
         return userName;
     }
 
-    private Map<FruitDict.Systems, List<UserTeamRelation>> inUsers;
+    private Map<FruitDict.Systems, List<UserTeamRelation>> userRelation;
 
-    public Map<FruitDict.Systems, List<UserTeamRelation>> getInUsers() {
-        return inUsers;
+    public Map<FruitDict.Systems, List<UserTeamRelation>> getUserRelation() {
+        return userRelation;
     }
 
     public void setUsers(Map<FruitDict.Systems, List<UserTeamRelation>> users) {
-        this.inUsers = users;
+        this.userRelation = users;
     }
 
     public String getUuidVo() {

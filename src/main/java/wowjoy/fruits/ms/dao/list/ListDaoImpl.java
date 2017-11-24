@@ -59,9 +59,10 @@ public class ListDaoImpl extends AbstractDaoList {
     @Override
     public void delete(FruitListDao dao) {
         FruitListExample example = new FruitListExample();
+        FruitListExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(dao.getUuid()))
-            example.createCriteria().andUuidEqualTo(dao.getUuid());
-        if (example.createCriteria().getAllCriteria().isEmpty())
+            criteria.andUuidEqualTo(dao.getUuid());
+        if (criteria.getAllCriteria().isEmpty())
             throw new CheckException("缺少删除条件");
         mapper.deleteByExample(example);
     }
