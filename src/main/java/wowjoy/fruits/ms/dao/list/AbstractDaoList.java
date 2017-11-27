@@ -23,6 +23,7 @@ public abstract class AbstractDaoList implements InterfaceDao {
 
     protected abstract List<FruitListDao> finds(FruitListDao dao);
 
+    /*查询包括已删除的列表*/
     protected abstract FruitList find(FruitListDao dao);
 
     protected abstract void delete(FruitListDao dao);

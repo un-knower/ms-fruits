@@ -48,8 +48,15 @@ public class TeamDaoImpl extends AbstractDaoTeam {
             criteria.andUuidEqualTo(dao.getUuid());
         if (StringUtils.isNotBlank(dao.getTitle()))
             criteria.andTitleLike(MessageFormat.format("%{0}%", dao.getTitle()));
+        criteria.andIsDeletedEqualTo(FruitDict.Systems.Y.name());
+        String sort = dao.sortConstrue();
+        if (StringUtils.isNotBlank(sort))
+            example.setOrderByClause(sort);
+        else
+            example.setOrderByClause("create_date_time desc");
         FruitUserExample exampleUser = new FruitUserExample();
         FruitUserExample.Criteria criteriaUser = exampleUser.createCriteria();
+        criteria.andIsDeletedEqualTo(FruitDict.Systems.Y.name());
         if (StringUtils.isNotBlank(userDao.getUserName()))
             criteriaUser.andUserNameLike(MessageFormat.format("%{0}%", userDao.getUserName()));
         return mapper.selectRelationByExample(example, exampleUser);

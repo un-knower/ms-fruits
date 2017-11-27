@@ -20,9 +20,9 @@ public class ListDaoNode extends AbstractDaoChain {
 
     @Override
     public AbstractEntity find(String uuid) {
-        if (!super.type.name().equals(FruitDict.Parents.PLAN.name()))
+        if (!super.type.name().equals(FruitDict.Parents.List.name()))
             super.getNext().find(uuid);
-        if (StringUtils.isNotBlank(uuid))
+        if (StringUtils.isBlank(uuid))
             return null;
         FruitListDao dao = FruitList.getDao();
         dao.setUuid(uuid);

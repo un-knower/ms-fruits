@@ -22,12 +22,8 @@ import wowjoy.fruits.ms.module.relation.entity.PlanProjectRelation;
 import wowjoy.fruits.ms.module.relation.entity.PlanUserRelation;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
-import java.text.MessageFormat;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Created by wangziwen on 2017/8/25.
@@ -105,41 +101,13 @@ public class PlanDaoImpl extends AbstractDaoPlan {
             criteria.andEstimatedEndDateBetween(dao.getStartDateDao(), dao.getEndDateDao());
         if (StringUtils.isNotBlank(dao.getPlanStatus()))
             criteria.andPlanStatusEqualTo(dao.getPlanStatus());
-        String sort = sortConstrue(dao);
+        String sort = dao.sortConstrue();
         if (StringUtils.isNotBlank(sort))
             example.setOrderByClause(sort);
         else
             example.setOrderByClause("create_date_time desc");
         criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
         return example;
-    }
-
-    private String sortConstrue(FruitPlanDao dao) {
-        LinkedList<String> sorts = Lists.newLinkedList();
-        if (StringUtils.isNotBlank(dao.getDesc())) {
-            for (String desc : dao.getDesc().split(","))
-                sorts.add(MessageFormat.format("{0} desc", toMysqlField(desc)));
-        }
-        if (StringUtils.isNotBlank(dao.getAsc())) {
-            for (String asc : dao.getAsc().split(","))
-                sorts.add(MessageFormat.format("{0} asc", toMysqlField(asc)));
-        }
-        if (sorts.isEmpty()) return null;
-        return StringUtils.join(sorts, ",");
-    }
-
-    private String toMysqlField(String field) {
-        String replace = "\\.*[A-Z]";
-        Pattern compile = Pattern.compile(replace);
-        Matcher matcher = compile.matcher(field);
-        StringBuffer result = new StringBuffer();
-        Integer lastEnd = 0;
-        while (matcher.find()) {
-            result.append(field.substring(result.length() > 0 ? result.length() - 1 : 0, matcher.start()) + "_").append(field.substring(matcher.start(), matcher.end()));
-            lastEnd = matcher.end();
-        }
-        result.append(field.substring(lastEnd, field.length()));
-        return result.toString();
     }
 
     @Override

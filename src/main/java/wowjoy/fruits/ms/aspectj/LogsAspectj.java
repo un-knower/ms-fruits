@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import wowjoy.fruits.ms.dao.AbstractDaoChain;
 import wowjoy.fruits.ms.dao.logs.AbstractDaoLogs;
 import wowjoy.fruits.ms.exception.CheckException;
+import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.logs.FruitLogs;
 import wowjoy.fruits.ms.module.logs.FruitLogsVo;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;
@@ -63,11 +64,13 @@ public class LogsAspectj {
         Map<String, Placeholder> placeValues = Maps.newLinkedHashMap();
         /*从当前方法【参数-数据列表】中获取对应的数据*/
         placeholders.forEach((i) -> placeValues.put(i.getKeyPrefix(), setPlaceholder(i, methodParamValue)));
-
-        /*当数据不存在时去对应的dao层调用对应的查询接口*/
+        /*根据uuid查询数据库中保存数据*/
         AbstractDaoChain daoChain = AbstractDaoChain.newInstance(logInfo.type());
-        daoChain.find(placeValues.get(logInfo.uuid()).getValue());
-
+        AbstractEntity DBData = daoChain.find(placeValues.get(logInfo.uuid()).getValue());
+        placeValues.forEach((k, v) -> {
+            if (v.getPrefix() != null && v.getValue() == null)
+                v.setValue(toString(fieldValue(DBData).get(v.getKey())));
+        });
         FruitLogsVo vo = FruitLogs.getVo();
         /*获取对应的uuid*/
         vo.setFruitUuid(placeValues.get(logInfo.uuid()).getValue());
@@ -115,13 +118,42 @@ public class LogsAspectj {
         return placeholder;
     }
 
+    @Deprecated
+    public Object fieldValueByField(Map<String, Object> fieldValue, String key) {
+        if (StringUtils.isBlank(key))
+            throw new CheckException("key 不能为空");
+        String[] keys = key.split("\\.");
+        for (String i : keys)
+            if (StringUtils.isBlank(i))
+                throw new CheckException("字段路径错误");
+        Object data = fieldValue.get(keys[0]);
+        if (keys.length == 1) return data;
+        JsonElement element = null;
+        int i = 0;
+        while (true) {
+            element = new Gson().toJsonTree(data);
+            if (element.isJsonObject() && data instanceof Map)
+                data = ((Map) data).get(keys[i]);
+            else
+                return data;
+            i++;
+            if (i >= keys.length || data == null)
+                return data;
+        }
+    }
+
     /*获取字段名称-数据*/
     private Map<String, Object> fieldValue(Object obj) {
         Map<String, Object> fieldValue = Maps.newLinkedHashMap();
         for (Field field : findFields(obj.getClass())) {
             try {
                 field.setAccessible(true);
-                fieldValue.put(field.getName(), field.get(obj));
+                Object data = field.get(obj);
+                if (new Gson().toJsonTree(data).isJsonObject()) {
+                    fieldValue.put(field.getName(), data == null ? null : fieldValue(data));
+                } else {
+                    fieldValue.put(field.getName(), data);
+                }
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
                 throw new CheckException("日志记录获取参数错误");
@@ -184,8 +216,14 @@ public class LogsAspectj {
         public static Placeholder newComma(String value) {
             if (StringUtils.isBlank(value))
                 throw new CheckException("无效字段");
-            String[] split = value.split("\\.");
-            return newInstance(split[0], split[1]);
+            int index = value.indexOf(".");
+            String prefix = null;
+            String key = value;
+            if (index != -1) {
+                prefix = value.substring(0, index);
+                key = value.substring(index + 1, value.length());
+            }
+            return newInstance(prefix, key);
         }
 
         public String getPrefix() {
@@ -203,7 +241,7 @@ public class LogsAspectj {
         }
 
         public String getValue() {
-            return value == null ? "等待数据查询操作" : value;
+            return value;
         }
 
         public void setValue(String value) {

@@ -16,7 +16,7 @@ public class LocalDateTest {
     public void project() throws Exception {
         String test = "etet,";
         System.out.println(test.split(",")[0]);
-        System.out.println();
+        System.out.println(test.split(",")[1]);
         System.out.println(test.split(",").length);
     }
 

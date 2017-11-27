@@ -1,12 +1,19 @@
 package wowjoy.fruits.ms.module;
 
+import com.google.common.collect.Lists;
+import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.exception.NullException;
+import wowjoy.fruits.ms.module.plan.FruitPlanDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
+import java.text.MessageFormat;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 实体类基类
@@ -95,5 +102,30 @@ public abstract class AbstractEntity implements InterfaceEntity {
         public NullEntityException(String message) {
             super("【Entity exception】：" + message);
         }
+    }
+
+    /**/
+    public String sortConstrue() {
+        LinkedList<String> sorts = Lists.newLinkedList();
+        if (StringUtils.isNotBlank(this.getDesc())) for (String desc : this.getDesc().split(","))
+            sorts.add(MessageFormat.format("{0} desc", toMysqlField(desc)));
+        if (StringUtils.isNotBlank(this.getAsc())) for (String asc : this.getAsc().split(","))
+            sorts.add(MessageFormat.format("{0} asc", toMysqlField(asc)));
+        if (sorts.isEmpty()) return null;
+        return StringUtils.join(sorts, ",");
+    }
+
+    private String toMysqlField(String field) {
+        String replace = "\\.*[A-Z]";
+        Pattern compile = Pattern.compile(replace);
+        Matcher matcher = compile.matcher(field);
+        StringBuffer result = new StringBuffer();
+        Integer lastEnd = 0;
+        while (matcher.find()) {
+            result.append(field.substring(result.length() > 0 ? result.length() - 1 : 0, matcher.start()) + "_").append(field.substring(matcher.start(), matcher.end()));
+            lastEnd = matcher.end();
+        }
+        result.append(field.substring(lastEnd, field.length()));
+        return result.toString();
     }
 }

@@ -22,7 +22,7 @@ public class PlanDaoNode extends AbstractDaoChain {
     public AbstractEntity find(String uuid) {
         if (!super.type.name().equals(FruitDict.Parents.PLAN.name()))
             return super.getNext().find(uuid);
-        if (StringUtils.isNotBlank(uuid))
+        if (StringUtils.isBlank(uuid))
             return null;
         FruitPlanDao dao = FruitPlan.getDao();
         dao.setUuid(uuid);

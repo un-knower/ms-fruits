@@ -54,6 +54,7 @@ public class ListDaoImpl extends AbstractDaoList {
             criteria.andLTypeEqualTo(dao.getlType());
         if (StringUtils.isNotBlank(dao.getTitle()))
             criteria.andTitleEqualTo(dao.getTitle());
+        criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
         return mapper.selectByExample(example);
     }
 
@@ -77,7 +78,10 @@ public class ListDaoImpl extends AbstractDaoList {
             criteria.andUuidEqualTo(dao.getUuid());
         if (criteria.getAllCriteria().isEmpty())
             throw new CheckException("缺少删除条件");
-        mapper.deleteByExample(example);
+        FruitListDao delete = FruitList.getDao();
+        delete.setUuid(dao.getUuid());
+        delete.setIsDeleted(FruitDict.Systems.Y.name());
+        mapper.updateByExampleSelective(delete, example);
     }
 
     public List<FruitListDao> findByProjectId(List<String> projectIds) {
