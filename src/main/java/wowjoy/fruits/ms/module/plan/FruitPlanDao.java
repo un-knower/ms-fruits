@@ -103,6 +103,7 @@ public class FruitPlanDao extends FruitPlan {
     public FruitPlanDao computeDays() {
         if (this.getEstimatedEndDate() == null) {
             this.setDays(999999999);
+            return this;
         }
         LocalDateTime predictEndTime = LocalDateTime.parse(new SimpleDateFormat(DateTimeFormat).format(this.getEstimatedEndDate()));
         LocalDateTime currentTime = LocalDateTime.parse(new SimpleDateFormat(DateTimeFormat).format(new Date()));

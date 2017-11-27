@@ -4,12 +4,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import org.apache.commons.lang.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import wowjoy.fruits.ms.dao.AbstractDaoChain;
 import wowjoy.fruits.ms.dao.logs.AbstractDaoLogs;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.logs.FruitLogs;
@@ -18,10 +20,8 @@ import wowjoy.fruits.ms.util.ApplicationContextUtils;
 import wowjoy.fruits.ms.util.AsmClassInfo;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.MessageFormat;
+import java.util.*;
 
 /**
  * Created by wangziwen on 2017/11/16.
@@ -33,6 +33,9 @@ public class LogsAspectj {
 
     @Autowired
     private AbstractDaoLogs logsDao;
+
+    private final String prefix = "{";
+    private final String suffix = "}";
 
     @Pointcut("@annotation(wowjoy.fruits.ms.aspectj.LogInfo)")
     public void myAnnotation() {
@@ -50,40 +53,69 @@ public class LogsAspectj {
         return null;
     }
 
+    /*记录日志*/
     public void record(ProceedingJoinPoint joinPoint, LogInfo logInfo) {
+        /*获取当前操作方法对应的：参数-数据列表*/
         Map<String, Object> methodParamValue = methodParamValue(joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName(), joinPoint.getArgs());
-        String uuid = replaceFormat(logInfo.uuid(), methodParamValue);
-        if (uuid.equals(logInfo.uuid()))
-            uuid = "日志记录异常，检查当前方法使用方式是否正确";
-        String logMsg = replaceObject(ApplicationContextUtils.getCurrentUser(), replaceFormat(logInfo.format(), methodParamValue), "user");
+        /*提取占位符关键字*/
+        LinkedList<Placeholder> placeholders = extract(logInfo.format(), prefix, suffix);
+        placeholders.add(Placeholder.newComma(logInfo.uuid()));
+        Map<String, Placeholder> placeValues = Maps.newLinkedHashMap();
+        /*从当前方法【参数-数据列表】中获取对应的数据*/
+        placeholders.forEach((i) -> placeValues.put(i.getKeyPrefix(), setPlaceholder(i, methodParamValue)));
+
+        /*当数据不存在时去对应的dao层调用对应的查询接口*/
+        AbstractDaoChain daoChain = AbstractDaoChain.newInstance(logInfo.type());
+        daoChain.find(placeValues.get(logInfo.uuid()).getValue());
+
         FruitLogsVo vo = FruitLogs.getVo();
-        vo.setFruitUuid(uuid);
+        /*获取对应的uuid*/
+        vo.setFruitUuid(placeValues.get(logInfo.uuid()).getValue());
         vo.setFruitType(logInfo.type());
         vo.setOperateType(logInfo.operateType());
-        vo.setContent(logMsg);
+        /*遍历【placeholders】将字符串中占位符部分替换为对应字符串数据*/
+        vo.setContent(replace(logInfo.format(), placeholders));
         vo.setUserId(ApplicationContextUtils.getCurrentUser().getUserId());
+        /*记录日志*/
         logsDao.insert(vo);
     }
 
-    private String replaceFormat(String format, Map<String, Object> methodParamValue) {
+    /*替换字符串中占位符部分*/
+    private String replace(String format, List<Placeholder> placeholders) {
         String result = format;
-        for (Map.Entry<String, Object> arg : methodParamValue.entrySet()) {
-                /*判断是不是对象*/
-            if (new Gson().toJsonTree(arg.getValue()).isJsonObject())
-                result = replaceObject(arg.getValue(), format, arg.getKey());
-            else
-                result = result.replace(arg.getKey(), toString(arg.getValue()));
+        for (Placeholder placeholder : placeholders) {
+            result = result.replace(MessageFormat.format("{0}{1}{2}", prefix, placeholder.getKeyPrefix(), suffix), placeholder.getValue());
         }
         return result;
     }
 
-    private String replaceObject(Object obj, String format, String prefix) {
-        String result = format;
-        for (Map.Entry<String, Object> field : fieldValue(obj).entrySet())
-            result = result.replace(prefix + "." + field.getKey(), toString(field.getValue()));
+    /*提取字符串中占位符部分，返回一组PlaceHolder列表*/
+    private LinkedList<Placeholder> extract(String format, String prefix, String suffix) {
+        LinkedList<Placeholder> result = Lists.newLinkedList();
+        int begin = format.indexOf(prefix);
+        int end = format.indexOf(suffix);
+        if (begin == -1 && end == -1)
+            return result;
+        result.add(Placeholder.newComma(format.substring(begin + 1, end)));
+        result.addAll(extract(format.substring(end + 1, format.length()), prefix, suffix));
         return result;
     }
 
+    /*根据占位符查询对应参数数据，并设置placeHolder的value属性，*/
+    private Placeholder setPlaceholder(Placeholder placeholder, Map<String, Object> methodParamValue) {
+        /*绑定默认值，如果没有满足任何条件就是数据未正确绑定*/
+        if (methodParamValue.containsKey(placeholder.getKeyPrefix())) {
+            /*若能进来说明肯定不是对象，是基本数据类型或String*/
+            placeholder.setValue(toString(methodParamValue.get(placeholder.getKey())));
+        } else if (methodParamValue.containsKey(placeholder.getPrefix()) && new Gson().toJsonTree(methodParamValue.get(placeholder.getPrefix())).isJsonObject()) {
+            Map<String, Object> fieldValue = fieldValue(methodParamValue.get(placeholder.getPrefix()));
+            if (fieldValue.containsKey(placeholder.getKey()))
+                placeholder.setValue(toString(fieldValue.get(placeholder.getKey())));
+        }
+        return placeholder;
+    }
+
+    /*获取字段名称-数据*/
     private Map<String, Object> fieldValue(Object obj) {
         Map<String, Object> fieldValue = Maps.newLinkedHashMap();
         for (Field field : findFields(obj.getClass())) {
@@ -98,16 +130,18 @@ public class LogsAspectj {
         return fieldValue;
     }
 
-    /*参数名-数据*/
+    /*根据指定类的指定方法获取对应的【参数名-数据】列表*/
     private Map<String, Object> methodParamValue(String className, String methodName, Object[] args) {
         HashMap<String, Object> result = Maps.newHashMap();
         List<String> parameterName = AsmClassInfo.newInstance(className).findParameterName(methodName);
         for (int i = 0; i < parameterName.size(); i++) {
             result.put(parameterName.get(i), args[i]);
         }
+        result.put("user", ApplicationContextUtils.getCurrentUser());
         return result;
     }
 
+    /*根据指定类，通过递归获取所有集成的父类字段 and 当前字段的集合,返回【总字段集合】*/
     private List<Field> findFields(Class<?> aclass) {
         List<Field> fields = Lists.newLinkedList();
         fields.addAll(Arrays.asList(aclass.getDeclaredFields()));
@@ -116,6 +150,7 @@ public class LogsAspectj {
         return fields;
     }
 
+    /*将所有对象全部转换为 string 类型字符串*/
     private String toString(Object obj) {
         JsonElement arg = new Gson().toJsonTree(obj);
         String result = null;
@@ -128,9 +163,52 @@ public class LogsAspectj {
         return result;
     }
 
-//    private String parserFormat(final String format) {
-//        String data = format;
-//        data.substring(data.indexOf("{"), data.length());
-//    }
+    /*占位符对象，包含占位符对应的数据*/
+    private static class Placeholder {
+        /*占位符前缀，若没有可用null代替*/
+        private final String prefix;
+        /*占位符key*/
+        private final String key;
+        /*占位符对应的数据*/
+        private String value;
+
+        private Placeholder(String prefix, String key) {
+            this.prefix = prefix;
+            this.key = key;
+        }
+
+        public static Placeholder newInstance(String prefix, String key) {
+            return new Placeholder(prefix, key);
+        }
+
+        public static Placeholder newComma(String value) {
+            if (StringUtils.isBlank(value))
+                throw new CheckException("无效字段");
+            String[] split = value.split("\\.");
+            return newInstance(split[0], split[1]);
+        }
+
+        public String getPrefix() {
+            return prefix;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        public String getKeyPrefix() {
+            if (StringUtils.isNotBlank(this.prefix))
+                return this.prefix + "." + this.getKey();
+            return key;
+        }
+
+        public String getValue() {
+            return value == null ? "等待数据查询操作" : value;
+        }
+
+        public void setValue(String value) {
+            this.value = value;
+        }
+    }
 
 }

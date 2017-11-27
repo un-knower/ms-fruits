@@ -33,6 +33,8 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
 
     protected abstract List<FruitPlanDao> find(FruitPlanDao dao, Integer pageNum, Integer pageSize);
 
+    protected abstract FruitPlan find(FruitPlanDao dao);
+
     protected abstract FruitPlan findByUUID(String uuid);
 
     protected abstract void insert(FruitPlanDao dao);

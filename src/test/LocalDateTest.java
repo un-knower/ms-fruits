@@ -14,15 +14,10 @@ import java.util.Date;
 public class LocalDateTest {
     @Test
     public void project() throws Exception {
-        String data = "【{user.userName}】删除了【{vo.title}】列表";
-        System.out.println(extract(data, "{"));
-    }
-
-    public String extract(String format, String replace) {
-        StringBuffer result = new StringBuffer();
-        int i = format.indexOf(replace);
-        if (i == -1) return result.toString();
-        return result.append(i).append(",").append(extract(format.substring(i + 1, format.length()), replace)).toString();
+        String test = "etet,";
+        System.out.println(test.split(",")[0]);
+        System.out.println();
+        System.out.println(test.split(",").length);
     }
 
     @Test

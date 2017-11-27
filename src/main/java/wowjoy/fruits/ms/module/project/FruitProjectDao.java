@@ -125,6 +125,7 @@ public class FruitProjectDao extends FruitProject {
     public FruitProjectDao computeDays() {
         if (this.getPredictEndDate() == null) {
             this.setDays(999999999);
+            return this;
         }
         LocalDateTime predictEndTime = LocalDateTime.parse(new SimpleDateFormat(DateTimeFormat).format(this.getPredictEndDate()));
         LocalDateTime currentTime = LocalDateTime.parse(new SimpleDateFormat(DateTimeFormat).format(new Date()));

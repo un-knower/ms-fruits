@@ -23,6 +23,8 @@ public abstract class AbstractDaoList implements InterfaceDao {
 
     protected abstract List<FruitListDao> finds(FruitListDao dao);
 
+    protected abstract FruitList find(FruitListDao dao);
+
     protected abstract void delete(FruitListDao dao);
 
     protected abstract List<FruitListDao> findByProjectId(List<String> projectIds);

@@ -80,6 +80,18 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         return mapper.selectByExampleWithBLOBs(example);
     }
 
+    @Override
+    protected FruitPlan find(FruitPlanDao dao) {
+        FruitPlanExample example = new FruitPlanExample();
+        FruitPlanExample.Criteria criteria = example.createCriteria();
+        if (StringUtils.isNotBlank(dao.getUuid()))
+            criteria.andUuidEqualTo(dao.getUuid());
+        List<FruitPlanDao> datas = mapper.selectByExampleWithBLOBs(example);
+        if (datas.isEmpty())
+            return FruitPlan.newEmpty("查询计划不存在");
+        return datas.get(0);
+    }
+
     private FruitPlanExample findTemplate(FruitPlanDao dao) {
         final FruitPlanExample example = new FruitPlanExample();
         final FruitPlanExample.Criteria criteria = example.createCriteria();

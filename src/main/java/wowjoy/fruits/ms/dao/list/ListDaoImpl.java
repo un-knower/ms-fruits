@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wowjoy.fruits.ms.dao.relation.impl.ProjectListDaoImpl;
 import wowjoy.fruits.ms.exception.CheckException;
+import wowjoy.fruits.ms.module.list.FruitList;
 import wowjoy.fruits.ms.module.list.FruitListDao;
 import wowjoy.fruits.ms.module.list.FruitListExample;
 import wowjoy.fruits.ms.module.list.mapper.FruitListMapper;
@@ -54,6 +55,18 @@ public class ListDaoImpl extends AbstractDaoList {
         if (StringUtils.isNotBlank(dao.getTitle()))
             criteria.andTitleEqualTo(dao.getTitle());
         return mapper.selectByExample(example);
+    }
+
+    @Override
+    protected FruitList find(FruitListDao dao) {
+        FruitListExample example = new FruitListExample();
+        FruitListExample.Criteria criteria = example.createCriteria();
+        if (StringUtils.isNotBlank(dao.getUuid()))
+            criteria.andUuidEqualTo(dao.getUuid());
+        List<FruitListDao> datas = mapper.selectByExample(example);
+        if (datas.isEmpty())
+            return FruitList.getEmpty();
+        return datas.get(0);
     }
 
     @Override
