@@ -3,7 +3,6 @@ package wowjoy.fruits.ms.dao.user;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import wowjoy.fruits.ms.module.team.FruitTeamExample;
 import wowjoy.fruits.ms.module.user.FruitUser;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.user.example.FruitUserExample;
@@ -34,6 +33,7 @@ public class UserDaoImpl extends AbstractDaoUser {
         final FruitUserExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(dao.getUserName()))
             criteria.andUserNameLike(MessageFormat.format("%{0}%", dao.getUserName()));
+        criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
         return mapper.selectByExample(example);
     }
 

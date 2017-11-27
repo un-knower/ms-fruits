@@ -138,9 +138,12 @@ public class FruitProjectDao extends FruitProject {
      * 查找负责人
      */
     public void seekPrincipal() {
-        this.getUsers().forEach((user) -> {
-            if (FruitDict.UserProjectDict.PRINCIPAL.name().equals(user.getProjectRole()))
+        for (FruitUserDao user : this.getUsers()) {
+            if (FruitDict.UserProjectDict.PRINCIPAL.name().equals(user.getProjectRole())) {
                 this.setPrincipal(user);
-        });
+                this.getUsers().remove(user);
+                return;
+            }
+        }
     }
 }

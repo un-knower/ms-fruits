@@ -56,7 +56,8 @@ public class TeamDaoImpl extends AbstractDaoTeam {
             example.setOrderByClause("create_date_time desc");
         FruitUserExample exampleUser = new FruitUserExample();
         FruitUserExample.Criteria criteriaUser = exampleUser.createCriteria();
-        criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
+        criteriaUser.andIsDeletedEqualTo(FruitDict.Systems.N.name());
+        criteriaUser.andUserIdIsNotNull();
         if (StringUtils.isNotBlank(userDao.getUserName()))
             criteriaUser.andUserNameLike(MessageFormat.format("%{0}%", userDao.getUserName()));
         return mapper.selectRelationByExample(example, exampleUser);

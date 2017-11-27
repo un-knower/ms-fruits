@@ -67,7 +67,7 @@ public class LogsAspectj {
         /*根据uuid查询数据库中保存数据*/
         AbstractDaoChain daoChain = AbstractDaoChain.newInstance(logInfo.type());
         AbstractEntity DBData = daoChain.find(placeValues.get(logInfo.uuid()).getValue());
-        placeValues.forEach((k, v) -> {
+        if (DBData != null) placeValues.forEach((k, v) -> {
             if (v.getPrefix() != null && v.getValue() == null)
                 v.setValue(toString(fieldValue(DBData).get(v.getKey())));
         });
@@ -87,7 +87,7 @@ public class LogsAspectj {
     private String replace(String format, List<Placeholder> placeholders) {
         String result = format;
         for (Placeholder placeholder : placeholders) {
-            result = result.replace(MessageFormat.format("{0}{1}{2}", prefix, placeholder.getKeyPrefix(), suffix), placeholder.getValue());
+            result = result.replace(MessageFormat.format("{0}{1}{2}", prefix, placeholder.getKeyPrefix(), suffix), placeholder.getValue() == null ? "" : placeholder.getValue());
         }
         return result;
     }
