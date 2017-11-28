@@ -56,4 +56,8 @@ public class ProjectTeamDaoImpl<T extends ProjectTeamRelation> extends AbstractD
         return mapper.selectByExample(example);
     }
 
+    @Override
+    public void deleted(T relation) {
+
+    }
 }

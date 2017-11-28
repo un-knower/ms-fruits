@@ -42,4 +42,9 @@ public class PlanUserDaoImpl<T extends PlanUserRelation> extends AbstractDaoRela
             throw new CheckRelationException("【PlanUserDaoImpl.remove】缺少删除条件");
         mapper.deleteByExample(example);
     }
+
+    @Override
+    public void deleted(T relation) {
+
+    }
 }

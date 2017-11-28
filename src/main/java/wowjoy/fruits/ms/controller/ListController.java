@@ -27,11 +27,9 @@ public class ListController {
     private AbstractDaoList listDao;
 
     /**
-     * 修改列表
-     *
-     * @param uuid
-     * @param vo
-     * @return
+     * @api {put} /v1/list/{uuid} 修改任务列表
+     * @apiVersion 0.1.0
+     * @apiGroup list
      */
     @LogInfo(format = "【{user.userName}】修改了【{vo.title}】列表", uuid = "uuid", type = FruitDict.Parents.List, operateType = FruitDict.Systems.UPDATE)
     @RequestMapping(value = "{uuid}", method = RequestMethod.PUT)
@@ -42,12 +40,9 @@ public class ListController {
     }
 
     /**
-     * 删除列表-物理删除
-     * 2017年11月23日17:11:54
-     * 1、修改为逻辑删除。为了支持log日志记录
-     *
-     * @param uuid
-     * @return
+     * @api {delete} /v1/list/{uuid} 删除列表
+     * @apiVersion 0.1.0
+     * @apiGroup list
      */
     @LogInfo(format = "【{user.userName}】删除了【{vo.title}】列表", uuid = "uuid", type = FruitDict.Parents.List, operateType = FruitDict.Systems.DELETE)
     @RequestMapping(value = "{uuid}", method = RequestMethod.DELETE)

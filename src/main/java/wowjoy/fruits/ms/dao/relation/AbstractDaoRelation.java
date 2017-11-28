@@ -17,13 +17,18 @@ public abstract class AbstractDaoRelation<T> implements InterfaceDao {
     public abstract void insert(T relation);
 
     /**
-     * 采用物理删除 或者 物理删除
-     * <p>
-     * 基本采用物理删除，有特殊需求采用逻辑删除
+     * 采用物理删除
      *
      * @param relation
      */
     public abstract void remove(T relation);
+
+    /**
+     * 采用逻辑删除
+     *
+     * @param relation
+     */
+    public abstract void deleted(T relation);
 
     /**
      * 仅用于实现类。内部类尽量采用static，非静态类不利于垃圾回收。

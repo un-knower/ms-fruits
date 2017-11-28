@@ -52,4 +52,8 @@ public class TaskProjectDaoImpl<T extends TaskProjectRelation> extends AbstractD
         return mapper.selectByExample(example);
     }
 
+    @Override
+    public void deleted(T relation) {
+
+    }
 }

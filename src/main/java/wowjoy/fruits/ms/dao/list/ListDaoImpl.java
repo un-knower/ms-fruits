@@ -79,9 +79,9 @@ public class ListDaoImpl extends AbstractDaoList {
         if (criteria.getAllCriteria().isEmpty())
             throw new CheckException("缺少删除条件");
         FruitListDao delete = FruitList.getDao();
-        delete.setUuid(dao.getUuid());
         delete.setIsDeleted(FruitDict.Systems.Y.name());
         mapper.updateByExampleSelective(delete, example);
+        Relation.newProject(listDao,dao).removeProjects();
     }
 
     public List<FruitListDao> findByProjectId(List<String> projectIds) {
@@ -106,6 +106,11 @@ public class ListDaoImpl extends AbstractDaoList {
             this.dao.getProjectRelation(FruitDict.Systems.ADD).forEach((i) -> {
                 projectListDao.insert(ProjectListRelation.newInstance(i, dao.getUuid()));
             });
+        }
+
+        /*删除所有项目关联信息*/
+        public void removeProjects() {
+            projectListDao.deleted(ProjectListRelation.newInstance(null, dao.getUuid()));
         }
     }
 

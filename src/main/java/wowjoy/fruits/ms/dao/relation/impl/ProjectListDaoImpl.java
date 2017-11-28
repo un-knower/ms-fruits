@@ -9,6 +9,7 @@ import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.relation.entity.ProjectListRelation;
 import wowjoy.fruits.ms.module.relation.example.ProjectListRelationExample;
 import wowjoy.fruits.ms.module.relation.mapper.ProjectListRelationMapper;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.text.MessageFormat;
 import java.util.List;
@@ -31,15 +32,7 @@ public class ProjectListDaoImpl<T extends ProjectListRelation> extends AbstractD
 
     @Override
     public void remove(ProjectListRelation relation) {
-        final ProjectListRelationExample example = new ProjectListRelationExample();
-        final ProjectListRelationExample.Criteria criteria = example.createCriteria();
-        if (StringUtils.isNotBlank(relation.getProjectId()))
-            criteria.andProjectIdEqualTo(relation.getProjectId());
-        if (StringUtils.isNotBlank(relation.getListId()))
-            criteria.andListIdEqualTo(relation.getListId());
-        if (criteria.getAllCriteria().isEmpty())
-            throw new CheckRelationException("【ProjectListDaoImpl.remove】缺少删除条件");
-        mapper.deleteByExample(example);
+        mapper.deleteByExample(removeTemplate(relation));
     }
 
     public List<ProjectListRelation> finds(ProjectListRelation relation) {
@@ -52,4 +45,22 @@ public class ProjectListDaoImpl<T extends ProjectListRelation> extends AbstractD
         return mapper.selectByExample(example);
     }
 
+    @Override
+    public void deleted(T relation) {
+        ProjectListRelation deleted = ProjectListRelation.getInstance();
+        deleted.setIsDeleted(FruitDict.Systems.Y.name());
+        mapper.updateByExampleSelective(deleted, removeTemplate(relation));
+    }
+
+    private ProjectListRelationExample removeTemplate(ProjectListRelation relation) {
+        final ProjectListRelationExample example = new ProjectListRelationExample();
+        final ProjectListRelationExample.Criteria criteria = example.createCriteria();
+        if (StringUtils.isNotBlank(relation.getProjectId()))
+            criteria.andProjectIdEqualTo(relation.getProjectId());
+        if (StringUtils.isNotBlank(relation.getListId()))
+            criteria.andListIdEqualTo(relation.getListId());
+        if (criteria.getAllCriteria().isEmpty())
+            throw new CheckRelationException("【ProjectListDaoImpl.remove】缺少删除条件");
+        return example;
+    }
 }

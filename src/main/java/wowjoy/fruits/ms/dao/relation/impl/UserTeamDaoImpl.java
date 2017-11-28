@@ -56,4 +56,8 @@ public class UserTeamDaoImpl<T extends UserTeamRelation> extends AbstractDaoRela
         return mapper.selectByExample(example);
     }
 
+    @Override
+    public void deleted(T relation) {
+
+    }
 }

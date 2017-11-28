@@ -53,4 +53,8 @@ public class TaskPlanDaoImpl<T extends TaskPlanRelation> extends AbstractDaoRela
     }
 
 
+    @Override
+    public void deleted(T relation) {
+
+    }
 }

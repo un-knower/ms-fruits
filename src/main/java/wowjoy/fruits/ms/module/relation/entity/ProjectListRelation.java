@@ -30,4 +30,8 @@ public class ProjectListRelation extends AbstractEntity {
         result.setListId(listId);
         return result;
     }
+
+    public static ProjectListRelation getInstance() {
+        return new ProjectListRelation();
+    }
 }

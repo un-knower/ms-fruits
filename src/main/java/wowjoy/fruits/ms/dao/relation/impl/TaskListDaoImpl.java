@@ -52,4 +52,8 @@ public class TaskListDaoImpl<T extends TaskListRelation> extends AbstractDaoRela
         return mapper.selectByExample(example);
     }
 
+    @Override
+    public void deleted(T relation) {
+
+    }
 }

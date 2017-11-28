@@ -56,4 +56,8 @@ public class UserProjectDaoImpl<T extends UserProjectRelation> extends AbstractD
         return mapper.selectByExample(example);
     }
 
+    @Override
+    public void deleted(T relation) {
+
+    }
 }

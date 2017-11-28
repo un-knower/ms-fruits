@@ -51,4 +51,9 @@ public class PlanProjectDaoImpl<T extends PlanProjectRelation> extends AbstractD
             criteria.andPlanIdEqualTo(relation.getPlanId());
         return mapper.selectByExample(example);
     }
+
+    @Override
+    public void deleted(T relation) {
+
+    }
 }

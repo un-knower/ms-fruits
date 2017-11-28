@@ -85,6 +85,8 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
             planThread.submit(() -> {
                 FruitPlanVo childVo = FruitPlan.getVo();
                 childVo.setParentId(plan.getUuid());
+                childVo.setDesc(plan.getDesc());
+                childVo.setAsc(plan.getAsc());
                 plan.getWeeks().addAll(this.findMonthWeek(childVo, false));
                 return true;
             });

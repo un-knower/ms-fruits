@@ -56,4 +56,8 @@ public class TaskUserDaoImpl<T extends TaskUserRelation> extends AbstractDaoRela
         return mapper.selectByExample(example);
     }
 
+    @Override
+    public void deleted(T relation) {
+
+    }
 }
