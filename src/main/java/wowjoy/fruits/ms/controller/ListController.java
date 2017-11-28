@@ -27,7 +27,7 @@ public class ListController {
     private AbstractDaoList listDao;
 
     /**
-     * @api {put} /v1/list/{uuid} 修改任务列表
+     * @api {put} /v1/list/{uuid} 修改列表
      * @apiVersion 0.1.0
      * @apiGroup list
      */
@@ -53,6 +53,11 @@ public class ListController {
         return RestResult.getInstance().setData(vo.getUuidVo());
     }
 
+    /**
+     * @api {delete} /v1/list/{uuid} 添加【项目】列表
+     * @apiVersion 0.1.0
+     * @apiGroup list
+     */
     @LogInfo(format = "【{user.userName}】添加了【{vo.title}】列表", uuid = "vo.uuid", type = FruitDict.Parents.List, operateType = FruitDict.Systems.ADD)
     @RequestMapping(value = "project", method = RequestMethod.POST)
     public RestResult insertProject(@JsonArgument(type = FruitListVo.class) FruitListVo vo) {

@@ -68,11 +68,17 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         if (planDaoList.isEmpty()) return Lists.newLinkedList();
         PlanThread planThread = PlanThread.newInstance();
         List<String> ids = toIds(planDaoList);
+        /*查询用户信息*/
         planThread.submit(() -> {
             List<FruitPlanDao> users = this.findUserByPlanIds(ids);
             LinkedHashMap<String, List<FruitUserDao>> userMaps = Maps.newLinkedHashMap();
             users.forEach((i) -> userMaps.put(i.getUuid(), i.getUsers()));
             planDaoList.forEach((i) -> i.setUsers(userMaps.get(i.getUuid())));
+            return true;
+        });
+        /*计算过期时间*/
+        planThread.submit(() -> {
+            planDaoList.forEach((i) -> i.computeDays());
             return true;
         });
         /*只递归两层，相当于月、周*/
