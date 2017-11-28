@@ -9,6 +9,7 @@ import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.relation.entity.UserProjectRelation;
 import wowjoy.fruits.ms.module.relation.example.UserProjectRelationExample;
 import wowjoy.fruits.ms.module.relation.mapper.UserProjectRelationMapper;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.text.MessageFormat;
 import java.util.List;
@@ -31,6 +32,10 @@ public class UserProjectDaoImpl<T extends UserProjectRelation> extends AbstractD
 
     @Override
     public void remove(UserProjectRelation relation) {
+        mapper.deleteByExample(removeTemplate(relation));
+    }
+
+    private UserProjectRelationExample removeTemplate(UserProjectRelation relation) {
         final UserProjectRelationExample example = new UserProjectRelationExample();
         final UserProjectRelationExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(relation.getProjectId()))
@@ -41,7 +46,7 @@ public class UserProjectDaoImpl<T extends UserProjectRelation> extends AbstractD
             criteria.andUpRoleEqualTo(relation.getUpRole());
         if (criteria.getAllCriteria().isEmpty())
             throw new CheckRelationException("【UserProjectDaoImpl.remove】缺少关联条件");
-        mapper.deleteByExample(example);
+        return example;
     }
 
     public List<UserProjectRelation> finds(UserProjectRelation relation) {
@@ -58,6 +63,8 @@ public class UserProjectDaoImpl<T extends UserProjectRelation> extends AbstractD
 
     @Override
     public void deleted(T relation) {
-
+        UserProjectRelation delete = UserProjectRelation.getInstance();
+        delete.setIsDeleted(FruitDict.Systems.Y.name());
+        mapper.updateByExampleSelective(delete, removeTemplate(relation));
     }
 }

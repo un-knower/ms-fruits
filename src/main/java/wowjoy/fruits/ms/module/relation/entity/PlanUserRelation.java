@@ -47,4 +47,8 @@ public class PlanUserRelation extends AbstractEntity {
         result.setPuRole(role != null ? role.name() : null);
         return result;
     }
+
+    public static PlanUserRelation getInstance() {
+        return new PlanUserRelation();
+    }
 }

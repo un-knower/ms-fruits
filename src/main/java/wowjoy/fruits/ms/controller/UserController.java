@@ -40,4 +40,5 @@ public class UserController {
     public RestResult finds(@JsonArgument(type = FruitUserVo.class) FruitUserVo vo) {
         return RestResult.getInstance().setData(userDao.finds(vo));
     }
+
 }

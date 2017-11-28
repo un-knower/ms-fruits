@@ -34,4 +34,8 @@ public class PlanProjectRelation extends AbstractEntity {
         result.setProjectId(projectId);
         return result;
     }
+
+    public static PlanProjectRelation getInstance() {
+        return new PlanProjectRelation();
+    }
 }

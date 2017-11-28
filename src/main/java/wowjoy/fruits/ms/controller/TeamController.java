@@ -23,29 +23,44 @@ public class TeamController {
     @Autowired
     private AbstractDaoTeam teamDao;
 
+    /**
+     * @api {get} /v1/team/relation 团队信息查询
+     * @apiVersion 0.1.0
+     * @apiGroup team
+     */
     @RequestMapping(value = "/relation", method = RequestMethod.GET)
     public RestResult findRelation(@JsonArgument(type = FruitTeamVo.class) FruitTeamVo vo) {
         return RestResult.getInstance().setData(teamDao.findRelation(vo));
     }
 
-    @RequestMapping(value = "/relation/{uuid}", method = RequestMethod.GET)
+    /**
+     * @api {get} /v1/team/{uuid} 团队详情查询
+     * @apiVersion 0.1.0
+     * @apiGroup team
+     */
+    @RequestMapping(value = "/{uuid}", method = RequestMethod.GET)
     public RestResult findRelation(@PathVariable("uuid") String uuid) {
         FruitTeamVo vo = FruitTeam.getFruitTeamVo();
         vo.setUuidVo(uuid);
         return RestResult.getInstance().setData(teamDao.find(vo));
     }
 
-    @RequestMapping(method = RequestMethod.GET)
-    public RestResult finds(@JsonArgument(type = FruitTeamVo.class) FruitTeamVo vo) {
-        return RestResult.getInstance().setData(teamDao.finds(vo));
-    }
-
+    /**
+     * @api {post} /v1/team 团队添加
+     * @apiVersion 0.1.0
+     * @apiGroup team
+     */
     @RequestMapping(method = RequestMethod.POST)
     public RestResult insert(@JsonArgument(type = FruitTeamVo.class) FruitTeamVo vo) {
         teamDao.insert(vo);
         return RestResult.getInstance().setData(vo.getUuid());
     }
 
+    /**
+     * @api {put} /v1/team/{uuid} 团队修改
+     * @apiVersion 0.1.0
+     * @apiGroup team
+     */
     @RequestMapping(value = "{uuid}", method = RequestMethod.PUT)
     public RestResult update(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTeamVo.class) FruitTeamVo vo) {
         vo.setUuidVo(uuid);
@@ -53,6 +68,11 @@ public class TeamController {
         return RestResult.getInstance().setData(uuid);
     }
 
+    /**
+     * @api {delete} /v1/team/{uuid} 团队删除
+     * @apiVersion 0.1.0
+     * @apiGroup team
+     */
     @RequestMapping(value = "{uuid}", method = RequestMethod.DELETE)
     public RestResult delete(@PathVariable("uuid") String uuid) {
         teamDao.delete(uuid);

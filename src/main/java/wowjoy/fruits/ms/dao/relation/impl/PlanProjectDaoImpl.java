@@ -9,6 +9,7 @@ import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.relation.entity.PlanProjectRelation;
 import wowjoy.fruits.ms.module.relation.example.PlanProjectRelationExample;
 import wowjoy.fruits.ms.module.relation.mapper.PlanProjectRelationMapper;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.text.MessageFormat;
 import java.util.List;
@@ -31,6 +32,10 @@ public class PlanProjectDaoImpl<T extends PlanProjectRelation> extends AbstractD
 
     @Override
     public void remove(PlanProjectRelation relation) {
+        mapper.deleteByExample(removeTemplate(relation));
+    }
+
+    private PlanProjectRelationExample removeTemplate(PlanProjectRelation relation) {
         final PlanProjectRelationExample example = new PlanProjectRelationExample();
         final PlanProjectRelationExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(relation.getPlanId()))
@@ -39,7 +44,7 @@ public class PlanProjectDaoImpl<T extends PlanProjectRelation> extends AbstractD
             criteria.andProjectIdEqualTo(relation.getProjectId());
         if (criteria.getAllCriteria().isEmpty())
             throw new CheckRelationException("【PlanProjectDaoImpl.remove】缺少删除条件");
-        mapper.deleteByExample(example);
+        return example;
     }
 
     public List<PlanProjectRelation> finds(PlanProjectRelation relation) {
@@ -54,6 +59,8 @@ public class PlanProjectDaoImpl<T extends PlanProjectRelation> extends AbstractD
 
     @Override
     public void deleted(T relation) {
-
+        PlanProjectRelation delete = PlanProjectRelation.getInstance();
+        delete.setIsDeleted(FruitDict.Systems.Y.name());
+        mapper.updateByExampleSelective(delete, removeTemplate(relation));
     }
 }

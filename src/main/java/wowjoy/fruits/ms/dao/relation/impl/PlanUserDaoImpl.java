@@ -9,6 +9,7 @@ import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.relation.entity.PlanUserRelation;
 import wowjoy.fruits.ms.module.relation.example.PlanUserRelationExample;
 import wowjoy.fruits.ms.module.relation.mapper.PlanUserRelationMapper;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.text.MessageFormat;
 
@@ -30,6 +31,10 @@ public class PlanUserDaoImpl<T extends PlanUserRelation> extends AbstractDaoRela
 
     @Override
     public void remove(PlanUserRelation relation) {
+        mapper.deleteByExample(removeTemplate(relation));
+    }
+
+    private PlanUserRelationExample removeTemplate(PlanUserRelation relation) {
         final PlanUserRelationExample example = new PlanUserRelationExample();
         final PlanUserRelationExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(relation.getPlanId()))
@@ -40,11 +45,13 @@ public class PlanUserDaoImpl<T extends PlanUserRelation> extends AbstractDaoRela
             criteria.andPuRoleEqualTo(relation.getPuRole());
         if (criteria.getAllCriteria().isEmpty())
             throw new CheckRelationException("【PlanUserDaoImpl.remove】缺少删除条件");
-        mapper.deleteByExample(example);
+        return example;
     }
 
     @Override
     public void deleted(T relation) {
-
+        PlanUserRelation delete = PlanUserRelation.getInstance();
+        delete.setIsDeleted(FruitDict.Systems.Y.name());
+        mapper.updateByExampleSelective(delete, removeTemplate(relation));
     }
 }

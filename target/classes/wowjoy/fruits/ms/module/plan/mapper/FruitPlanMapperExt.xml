@@ -111,6 +111,7 @@
                 </include>
                 <if test="projectId != null">
                     and ppr.project_id = #{projectId}
+                    and ppr.is_deleted = 'N'
                 </if>
             </where>
         </if>
@@ -139,6 +140,9 @@
                     <foreach collection="planIds" item="id" close=")" open="(" separator=",">
                         #{id}
                     </foreach>
+                    and plan.is_deleted = 'N'
+                    and userRelation.is_deleted = 'N'
+                    and fruitUser.is_deleted = 'N'
                 </if>
             </where>
         </trim>

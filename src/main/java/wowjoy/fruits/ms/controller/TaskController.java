@@ -23,13 +23,9 @@ public class TaskController {
     private AbstractDaoTask daoTask;
 
     /**
-     * 添加任务
-     * 实现自动筛选符合条件的数据
-     * 1、筛选项目关联
-     * 2、筛选任务关联
-     *
-     * @param vo
-     * @return
+     * @api {post} /v1/task 添加任务
+     * @apiVersion 0.1.0
+     * @apiGroup task
      */
     @RequestMapping(method = RequestMethod.POST)
     public RestResult insert(@JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
@@ -38,14 +34,9 @@ public class TaskController {
     }
 
     /**
-     * 修改任务-任务关联项目
-     * 2017年10月12日13:37:23
-     * 1、实现修改任务
-     * 2、实现修改关联项目
-     * 3、实现添加 and 修改执行人
-     *
-     * @param vo
-     * @return
+     * @api {put} /v1/task/{uuid} 修改任务
+     * @apiVersion 0.1.0
+     * @apiGroup task
      */
     @RequestMapping(value = "/{uuid}", method = RequestMethod.PUT)
     public RestResult modify(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
@@ -55,13 +46,9 @@ public class TaskController {
     }
 
     /**
-     * 修改任务-改变任务状态为已结束
-     * 2017年10月12日16:00:12
-     * 1、完成修改任务状态至已结束
-     *
-     * @param uuid
-     * @param vo
-     * @return
+     * @api {put} /v1/task/end/{uuid} 变更任务状态【结束】
+     * @apiVersion 0.1.0
+     * @apiGroup task
      */
     @RequestMapping(value = "/end/{uuid}", method = RequestMethod.PUT)
     public RestResult changeStatusToEnd(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
@@ -71,13 +58,9 @@ public class TaskController {
     }
 
     /**
-     * 修改任务-改变任务状态为开始
-     * 2017年10月12日17:32:05
-     * 1、完成修改任务状态至已开始
-     *
-     * @param uuid
-     * @param vo
-     * @return
+     * @api {put} /v1/task/start/{uuid} 变更任务状态【开始】
+     * @apiVersion 0.1.0
+     * @apiGroup task
      */
     @RequestMapping(value = "/start/{uuid}", method = RequestMethod.PUT)
     public RestResult changeStatusToStart(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
@@ -87,11 +70,9 @@ public class TaskController {
     }
 
     /**
-     * 修改任务-改变任务所在列表
-     *
-     * @param uuid
-     * @param vo
-     * @return
+     * @api {put} /v1/task/list/{uuid} 改变当前任务所在列表
+     * @apiVersion 0.1.0
+     * @apiGroup task
      */
     @RequestMapping(value = "/list/{uuid}", method = RequestMethod.PUT)
     public RestResult changeList(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
@@ -101,15 +82,13 @@ public class TaskController {
     }
 
     /**
-     * 删除任务
-     * 2017年10月12日15:58:49
-     * 1、完成删除任务
+     * @api {delete} /v1/task/{uuid} 删除任务
+     * @apiVersion 0.1.0
+     * @apiGroup task
+     * @apiDescription 1、完成删除任务
      * 2、完成删除关联用户
      * 3、完成删除关联计划
      * 4、完成删除关联项目
-     *
-     * @param uuid
-     * @return
      */
     @RequestMapping(value = "{uuid}", method = RequestMethod.DELETE)
     public RestResult delete(@PathVariable("uuid") String uuid) {
@@ -121,12 +100,9 @@ public class TaskController {
 
 
     /**
-     * 查询属于项目的任务列表
-     * 1、用户列表提供简单的日期排序
-     * 2、提供简单的延期计算功能
-     * 2017年10月16日16:19:46-汪梓文：测试通过
-     *
-     * @return
+     * @api {get} /v1/task/project/{uuid} 根据指定项目id查询对应的任务列表
+     * @apiVersion 0.1.0
+     * @apiGroup task
      */
     @RequestMapping(value = "/project/{uuid}", method = RequestMethod.GET)
     public RestResult findJoinProject(@PathVariable("uuid") String uuid) {
@@ -136,12 +112,9 @@ public class TaskController {
     }
 
     /**
-     * 查询属于项目的任务列表
-     * 1、用户列表提供简单的日期排序
-     * 2、提供简单的延期计算功能
-     * 2017年10月16日16:19:46-汪梓文：测试通过
-     *
-     * @return
+     * @api {get} /v1/task/list/{uuid} 根据指定列表id，查询对应的任务列表下所有任务
+     * @apiVersion 0.1.0
+     * @apiGroup task
      */
     @RequestMapping(value = "/list/{uuid}", method = RequestMethod.GET)
     public RestResult findByListId(@PathVariable("uuid") String uuid) {
@@ -150,6 +123,11 @@ public class TaskController {
         return RestResult.getInstance().setData(daoTask.findByListId(vo));
     }
 
+    /**
+     * @api {get} /v1/task/plan/{uuid} 根据指定的计划id，查询计划对应的任务
+     * @apiVersion 0.1.0
+     * @apiGroup task
+     */
     @RequestMapping(value = "/plan/{uuid}", method = RequestMethod.GET)
     public RestResult findByPlan(@PathVariable("uuid") String uuid) {
         FruitTaskVo vo = FruitTask.getVo();
@@ -160,6 +138,12 @@ public class TaskController {
     /************************************************************************************************
      *                                       个人中心专供                                            *
      ************************************************************************************************/
+
+    /**
+     * @api {get} /v1/task/user 查询当前登录用户的所有任务列表
+     * @apiVersion 0.1.0
+     * @apiGroup task
+     */
     @RequestMapping(value = "/user", method = RequestMethod.GET)
     public RestResult userFinds(@JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
         return RestResult.getInstance().setData(daoTask.userFindByVo(vo));

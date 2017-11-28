@@ -25,11 +25,9 @@ public class ProjectController {
     private AbstractDaoProject projectDaoImpl;
 
     /**
-     * 查询项目 and 关联信息
-     * 2017年10月10日09:23:53-汪梓文：测试通过
-     *
-     * @param vo
-     * @return
+     * @api {get} /v1/project/relation 项目查询【列表】
+     * @apiVersion 0.1.0
+     * @apiGroup project
      */
     @RequestMapping(value = "/relation", method = RequestMethod.GET)
     public RestResult findRelation(@JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
@@ -37,24 +35,19 @@ public class ProjectController {
     }
 
     /**
-     * 查询项目信息
-     * 2017年10月10日09:25:02-汪梓文：测试通过
-     *
-     * @param vo
-     * @return
+     * @api {get} /v1/project/user/{uuid} 根据项目id，查询用户信息
+     * @apiVersion 0.1.0
+     * @apiGroup project
      */
-    @RequestMapping(method = RequestMethod.GET)
-    public RestResult finds(@JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
-        return RestResult.getInstance().setData(projectDaoImpl.finds(vo));
+    @RequestMapping(value = "/user/{uuid}", method = RequestMethod.GET)
+    public RestResult findRelation(@PathVariable("uuid") String uuid) {
+        return RestResult.getInstance().setData(projectDaoImpl.findUserByProjectId(uuid));
     }
 
     /**
-     * 查询项目详情
-     * 2017年10月10日09:25:44-汪梓文：缺少leader信息
-     * 2017年10月10日09:57:55-汪梓文：⤴️错误已修改
-     *
-     * @param uuid
-     * @return
+     * @api {get} /v1/project/{uuid} 项目查询【详情】
+     * @apiVersion 0.1.0
+     * @apiGroup project
      */
     @RequestMapping(value = "{uuid}", method = RequestMethod.GET)
     public RestResult findByUUID(@PathVariable("uuid") String uuid) {
@@ -64,15 +57,9 @@ public class ProjectController {
     }
 
     /**
-     * 添加项目
-     * 2017年10月10日09:29:30-汪梓文：
-     * 测试通过。
-     * 待改进：遇到一个问题当传入的参数不包含在枚举中时，会出现"null"key的问题，包括大小写。
-     * 2017年10月13日16:59:30-汪梓文：第二次改版【测试通过】
-     * 1、增加业务逻辑
-     *
-     * @param vo
-     * @return
+     * @api {post} /v1/project 项目添加
+     * @apiVersion 0.1.0
+     * @apiGroup project
      */
     @RequestMapping(method = RequestMethod.POST)
     public RestResult insert(@JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
@@ -81,17 +68,9 @@ public class ProjectController {
     }
 
     /**
-     * 修改项目、关联信息
-     * 2017年10月10日09:46:50-汪梓文：
-     * 测试通过。
-     * 待改进：需要防止关联重复的信息。
-     * 2017年10月13日17:24:21-汪梓文：第二次改版【测试通过】
-     * 1、增加添加负责人 or 负责团队自动覆盖旧值
-     * 2、拒绝添加多个负责人 or 负责团队
-     *
-     * @param uuid
-     * @param vo
-     * @return
+     * @api {put} /v1/project/{uuid} 项目修改
+     * @apiVersion 0.1.0
+     * @apiGroup project
      */
     @RequestMapping(value = "{uuid}", method = RequestMethod.PUT)
     public RestResult update(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
@@ -101,12 +80,9 @@ public class ProjectController {
     }
 
     /**
-     * 修改项目状态至已完成
-     * 2017年10月10日09:50:29-汪梓文：测试通过
-     *
-     * @param uuid
-     * @param vo
-     * @return
+     * @api {put} /v1/project/complete/{uuid} 项目状态【完成】
+     * @apiVersion 0.1.0
+     * @apiGroup project
      */
     @RequestMapping(value = "/complete/{uuid}", method = RequestMethod.PUT)
     public RestResult updateStatus(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
@@ -116,11 +92,9 @@ public class ProjectController {
     }
 
     /**
-     * 删除项目、关联信息
-     * 2017年10月10日09:52:43-汪梓文：测试通过
-     *
-     * @param uuid
-     * @return
+     * @api {delete} /v1/project/{uuid} 删除项目
+     * @apiVersion 0.1.0
+     * @apiGroup project
      */
     @RequestMapping(value = "{uuid}", method = RequestMethod.DELETE)
     public RestResult delete(@PathVariable("uuid") String uuid) {

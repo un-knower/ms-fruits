@@ -29,12 +29,9 @@ public class PlanController {
     private AbstractDaoPlan dataPlanDao;
 
     /**
-     * 查询某年的星期位置
-     * 2017年10月10日10:04:01：
-     * 测试通过
-     *
-     * @param year
-     * @return
+     * @api {get} /v1/plan/{year} 查询某年的年周对照表
+     * @apiVersion 0.1.0
+     * @apiGroup plan
      */
     @RequestMapping(value = "/year/{year}", method = RequestMethod.GET)
     public RestResult regular(@PathVariable("year") String year) {
@@ -42,8 +39,9 @@ public class PlanController {
     }
 
     /**
-     * 计划详情
-     * 2017年10月10日10:04:30：测试通过
+     * @api {get} /v1/plan/{uuid} 查询计划详情
+     * @apiVersion 0.1.0
+     * @apiGroup plan
      */
     @RequestMapping(value = "{uuid}", method = RequestMethod.GET)
     public RestResult findByUUID(@PathVariable("uuid") String uuid) {
@@ -53,9 +51,9 @@ public class PlanController {
     }
 
     /**
-     * 月计划列表
-     * 分页
-     * 2017年10月10日10:07:01：测试通过。查询速度230ms左右
+     * @api {get} /v1/plan/project/{uuid} 计划综合查询【项目查询】
+     * @apiVersion 0.1.0
+     * @apiGroup plan
      */
     @RequestMapping(value = "/project", method = RequestMethod.GET)
     public RestResult findMonthWeek(@JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlanVo) {
@@ -63,61 +61,20 @@ public class PlanController {
     }
 
     /**
-     * 月计划列表
-     * 分页
-     * 2017年10月10日10:07:01：测试通过。查询速度230ms左右
-     */
-    @RequestMapping(value = "/project/month", method = RequestMethod.GET)
-    public RestResult findRelationMonth(@JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlanVo) {
-        return RestResult.getInstance().setData(dataPlanDao.findProject(fruitPlanVo));
-    }
-
-    /**
-     * 周计划列表
-     * 分页
-     * 2017年10月10日10:07:41：测试通过。查询速度380ms左右
-     */
-    @RequestMapping(value = "/project/week", method = RequestMethod.GET)
-    public RestResult findRelationWeek(@JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlanVo) {
-        return RestResult.getInstance().setData(dataPlanDao.findWeekProject(fruitPlanVo));
-    }
-
-    /**
-     * 月计划列表
-     * 分页
-     * 2017年10月10日11:49:18：测试通过。查询速度100ms左右
-     */
-    @RequestMapping(value = "/month", method = RequestMethod.GET)
-    public RestResult findMonth(@JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlanVo) {
-        return RestResult.getInstance().setData(dataPlanDao.find(fruitPlanVo));
-    }
-
-    /**
-     * 周计划列表
-     * 分页
-     * 2017年10月10日11:51:28：修改查询条件，只查询parentid不为空的字段
-     * 2017年10月10日11:52:09：测试通过。查询速度100ms左右
-     */
-    @RequestMapping(value = "/week", method = RequestMethod.GET)
-    public RestResult findWeek(@JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlanVo) {
-        return RestResult.getInstance().setData(dataPlanDao.findWeek(fruitPlanVo));
-    }
-
-    /**
-     * 添加
-     * 2017年10月10日11:58:32：测试通过。
+     * @api {post} /v1/plan/project/{uuid} 【项目】计划添加
+     * @apiVersion 0.1.0
+     * @apiGroup plan
      */
     @RequestMapping(method = RequestMethod.POST)
-    public RestResult insert(@JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlan) {
-        dataPlanDao.add(fruitPlan);
+    public RestResult addJoinProject(@JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlan) {
+        dataPlanDao.addJoinProject(fruitPlan);
         return RestResult.getInstance().setData(fruitPlan.getUuid());
     }
 
     /**
-     * 修改
-     * 贴士：
-     * 1、修改接口不包含状态变更，需要变更状态直接调用修改状态接口
-     * 2017年10月10日11:58:46：测试通过。
+     * @api {put} /v1/plan/{uuid} 计划修改接口
+     * @apiVersion 0.1.0
+     * @apiGroup plan
      */
     @RequestMapping(value = "{uuid}", method = RequestMethod.PUT)
     public RestResult update(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlan) {
@@ -127,12 +84,9 @@ public class PlanController {
     }
 
     /**
-     * 修改状态-完成计划
-     * 2017年10月10日12:01:56：测试通过。已终止或已完成的计划不能修改
-     *
-     * @param uuid
-     * @param vo
-     * @return
+     * @api {put} /v1/plan/complete/{uuid} 修改状态【完成】
+     * @apiVersion 0.1.0
+     * @apiGroup plan
      */
     @RequestMapping(value = "/complete/{uuid}", method = RequestMethod.PUT)
     public RestResult complete(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
@@ -142,12 +96,9 @@ public class PlanController {
     }
 
     /**
-     * 修改状态-终止计划
-     * 2017年10月10日11:59:00：测试通过
-     *
-     * @param uuid
-     * @param vo
-     * @return
+     * @api {put} /v1/plan/end/{uuid} 修改状态【终止】
+     * @apiVersion 0.1.0
+     * @apiGroup plan
      */
     @RequestMapping(value = "/end/{uuid}", method = RequestMethod.PUT)
     public RestResult end(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
@@ -157,10 +108,9 @@ public class PlanController {
     }
 
     /**
-     * 删除计划
-     * 2017年10月10日13:52:32：测试通过
-     *
-     * @param uuid
+     * @api {put} /v1/plan/{uuid} 删除计划
+     * @apiVersion 0.1.0
+     * @apiGroup plan
      */
     @RequestMapping(value = "{uuid}", method = RequestMethod.DELETE)
     public RestResult delete(@PathVariable("uuid") String uuid) {
@@ -171,12 +121,9 @@ public class PlanController {
     }
 
     /**
-     * 添加进度小结
-     * <p>
-     * 2017年10月10日14:01:41：添加进度小结
-     *
-     * @param vo
-     * @return
+     * @api {put} /v1/plan/summary/{uuid} 添加进度小结
+     * @apiVersion 0.1.0
+     * @apiGroup plan
      */
     @RequestMapping(value = "/summary/{uuid}", method = RequestMethod.POST)
     public RestResult insertSummary(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanSummaryVo.class) FruitPlanSummaryVo vo) {

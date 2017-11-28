@@ -28,18 +28,6 @@ public class TeamDaoImpl extends AbstractDaoTeam {
     private FruitTeamMapper mapper;
     @Autowired
     private UserTeamDaoImpl dao;
-
-    @Override
-    public List<FruitTeamDao> finds(FruitTeamDao dao) {
-        final FruitTeamExample example = new FruitTeamExample();
-        final FruitTeamExample.Criteria criteria = example.createCriteria();
-        if (StringUtils.isNotBlank(dao.getUuid()))
-            criteria.andUuidEqualTo(dao.getUuid());
-        if (StringUtils.isNotBlank(dao.getTitle()))
-            criteria.andTitleEqualTo(dao.getTitle());
-        return mapper.selectByExample(example);
-    }
-
     @Override
     public List<FruitTeamDao> findRelation(FruitTeamDao dao, FruitUserDao userDao) {
         final FruitTeamExample example = new FruitTeamExample();

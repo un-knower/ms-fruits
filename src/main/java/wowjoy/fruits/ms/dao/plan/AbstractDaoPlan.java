@@ -31,8 +31,6 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
 
     protected abstract List<FruitPlanDao> findUserByPlanIds(List<String> planIds);
 
-    protected abstract List<FruitPlanDao> find(FruitPlanDao dao, Integer pageNum, Integer pageSize);
-
     protected abstract FruitPlan find(FruitPlanDao dao);
 
     protected abstract FruitPlan findByUUID(String uuid);
@@ -130,79 +128,16 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         return result;
     }
 
-    /**
-     * 月计划
-     *
-     * @param vo
-     * @return
-     */
-    public final List<FruitPlanDao> findProject(FruitPlanVo vo) {
-        final FruitPlanDao dao = FruitPlan.getDao();
-        dao.setTitle(vo.getTitle());
-        dao.setPlanStatus(vo.getPlanStatus());
-        dao.setStartDateDao(vo.getStartDateVo());
-        dao.setEndDateDao(vo.getEndDateVo());
-        dao.setProjectId(vo.getProjectId());
-        return this.findProject(dao, vo.getPageNum(), vo.getPageSize(), false);
-    }
-
-    /**
-     * 周计划
-     *
-     * @param vo
-     * @return
-     */
-    public final List<FruitPlanDao> findWeekProject(FruitPlanVo vo) {
-        if (StringUtils.isNotBlank(vo.getParentId()))
-            throw new CheckException("必须填写父id");
-        FruitPlanDao dao = FruitPlan.getDao();
-        dao.setTitle(vo.getTitle());
-        dao.setParentId(vo.getParentId());
-        dao.setPlanStatus(vo.getPlanStatus());
-        dao.setStartDateDao(vo.getStartDateVo());
-        dao.setEndDateDao(vo.getEndDateVo());
-        dao.setProjectId(vo.getProjectId());
-        return this.findProject(dao, vo.getPageNum(), vo.getPageSize(), false);
-    }
-
-    /**
-     * 月计划
-     *
-     * @param vo
-     * @return
-     */
-    public final List<FruitPlanDao> find(FruitPlanVo vo) {
-        final FruitPlanDao dao = FruitPlan.getDao();
-        dao.setTitle(vo.getTitle());
-        dao.setPlanStatus(vo.getPlanStatus());
-        dao.setStartDateDao(vo.getStartDateVo());
-        dao.setEndDateDao(vo.getEndDateVo());
-        return this.find(dao, vo.getPageNum(), vo.getPageSize());
-    }
-
-    /**
-     * 周计划
-     *
-     * @param vo
-     * @return
-     */
-    public final List<FruitPlanDao> findWeek(FruitPlanVo vo) {
-        if (StringUtils.isNotBlank(vo.getParentId()))
-            throw new CheckException("必须填写父id");
-        FruitPlanDao dao = FruitPlan.getDao();
-        dao.setTitle(vo.getTitle());
-        dao.setParentId(vo.getParentId());
-        dao.setPlanStatus(vo.getPlanStatus());
-        dao.setStartDateDao(vo.getStartDateVo());
-        dao.setEndDateDao(vo.getEndDateVo());
-        return this.find(dao, vo.getPageNum(), vo.getPageSize());
-    }
-
     public final FruitPlan findByUUID(FruitPlanVo vo) {
         return this.findByUUID(vo.getUuidVo());
     }
 
-    public final void add(FruitPlanVo vo) {
+    /**
+     * 添加【项目】计划
+     *
+     * @param vo
+     */
+    public final void addJoinProject(FruitPlanVo vo) {
         try {
             FruitPlanDao dao = FruitPlan.getDao();
             dao.setUuid(vo.getUuid());
@@ -224,6 +159,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         }
     }
 
+    /*添加【项目】计划前检查参数是否合法*/
     private final void addCheckJoinProject(FruitPlanDao dao) {
         if (dao.getProjectRelation(FruitDict.Systems.ADD).isEmpty() || dao.getProjectRelation(FruitDict.Systems.ADD).size() != 1)
             throw new CheckException("限制添加计划只能关联一个项目");
@@ -233,6 +169,11 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
             throw new CheckException("必须填写预计结束时间");
     }
 
+    /**
+     * 修改计划
+     *
+     * @param vo
+     */
     public final void modify(FruitPlanVo vo) {
         try {
             if (!this.findByUUID(vo.getUuidVo()).isNotEmpty()) throw new CheckException("计划不存在，修改失败");
@@ -244,8 +185,6 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
             dao.setEstimatedEndDate(vo.getEstimatedEndDate());
             dao.setPercent(vo.getPercent());
             dao.setUserRelation(vo.getUserRelation());
-            dao.setProjectRelation(vo.getProjectRelation());
-            this.modifyCheckJoinProject(dao);
             this.update(dao);
         } catch (ExceptionSupport ex) {
             throw ex;
@@ -255,12 +194,11 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         }
     }
 
-    private final void modifyCheckJoinProject(FruitPlanDao dao) {
-        if (dao.getProjectRelation(FruitDict.Systems.ADD).isEmpty()) return;
-        if (StringUtils.isBlank(dao.getProjectRelation(FruitDict.Systems.ADD).get(0))) return;
-        dao.setProjectRelation(FruitDict.Systems.DELETE, Lists.newArrayList(""));
-    }
-
+    /**
+     * 添加计划关联摘要
+     *
+     * @param vo
+     */
     public final void insertSummary(FruitPlanSummaryVo vo) {
         try {
             if (!this.findByUUID(vo.getPlanId()).isNotEmpty()) throw new CheckException("计划不存在，修改失败");

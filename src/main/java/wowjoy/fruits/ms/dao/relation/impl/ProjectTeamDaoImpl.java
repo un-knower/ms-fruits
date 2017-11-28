@@ -9,6 +9,7 @@ import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.relation.entity.ProjectTeamRelation;
 import wowjoy.fruits.ms.module.relation.example.ProjectTeamRelationExample;
 import wowjoy.fruits.ms.module.relation.mapper.ProjectTeamRelationMapper;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.text.MessageFormat;
 import java.util.List;
@@ -31,6 +32,10 @@ public class ProjectTeamDaoImpl<T extends ProjectTeamRelation> extends AbstractD
 
     @Override
     public void remove(ProjectTeamRelation relation) {
+        mapper.deleteByExample(removeTemplate(relation));
+    }
+
+    private ProjectTeamRelationExample removeTemplate(ProjectTeamRelation relation) {
         final ProjectTeamRelationExample example = new ProjectTeamRelationExample();
         final ProjectTeamRelationExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(relation.getProjectId()))
@@ -41,7 +46,7 @@ public class ProjectTeamDaoImpl<T extends ProjectTeamRelation> extends AbstractD
             criteria.andTpRoleEqualTo(relation.getTpRole());
         if (criteria.getAllCriteria().isEmpty())
             throw new CheckRelationException("【ProjectTeamDaoImpl.remove】缺少删除条件");
-        mapper.deleteByExample(example);
+        return example;
     }
 
     public List<ProjectTeamRelation> finds(ProjectTeamRelation relation) {
@@ -57,7 +62,9 @@ public class ProjectTeamDaoImpl<T extends ProjectTeamRelation> extends AbstractD
     }
 
     @Override
-    public void deleted(T relation) {
-
+    public void deleted(ProjectTeamRelation relation) {
+        ProjectTeamRelation delete = ProjectTeamRelation.getInstance();
+        delete.setIsDeleted(FruitDict.Systems.Y.name());
+        mapper.updateByExampleSelective(delete, removeTemplate(relation));
     }
 }

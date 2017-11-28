@@ -39,6 +39,10 @@ public class UserProjectRelation extends AbstractEntity {
         }
     }
 
+    public static UserProjectRelation getInstance() {
+        return new UserProjectRelation();
+    }
+
     public static UserProjectRelation newInstance(String projectId, String userId) {
         final UserProjectRelation result = new UserProjectRelation();
         result.setProjectId(projectId);

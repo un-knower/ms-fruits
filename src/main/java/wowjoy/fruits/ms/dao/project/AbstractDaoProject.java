@@ -1,15 +1,16 @@
 package wowjoy.fruits.ms.dao.project;
 
+import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.exception.ExceptionSupport;
 import wowjoy.fruits.ms.exception.ServiceException;
-import wowjoy.fruits.ms.module.list.FruitListVo;
 import wowjoy.fruits.ms.module.project.FruitProject;
 import wowjoy.fruits.ms.module.project.FruitProjectDao;
 import wowjoy.fruits.ms.module.project.FruitProjectVo;
 import wowjoy.fruits.ms.module.relation.entity.ProjectTeamRelation;
 import wowjoy.fruits.ms.module.relation.entity.UserProjectRelation;
+import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.time.LocalDateTime;
@@ -37,8 +38,6 @@ public abstract class AbstractDaoProject implements InterfaceDao {
      */
     protected abstract List<FruitProjectDao> findRelation(FruitProjectDao dao);
 
-    protected abstract List<FruitProjectDao> finds(FruitProjectDao dao);
-
     protected abstract FruitProjectDao findByUUID(String uuid);
 
     protected abstract void update(FruitProjectDao dao);
@@ -48,6 +47,8 @@ public abstract class AbstractDaoProject implements InterfaceDao {
     protected abstract List<UserProjectRelation> findJoin(UserProjectRelation relation);
 
     protected abstract List<ProjectTeamRelation> findJoin(ProjectTeamRelation relation);
+
+    protected abstract List<FruitUserDao> findUserByProjectId(FruitProjectDao dao);
 
     /*******************************
      * PUBLIC 函数，公共接口         *
@@ -69,7 +70,7 @@ public abstract class AbstractDaoProject implements InterfaceDao {
 
     public final void add(FruitProjectVo vo) {
         try {
-            final FruitProjectDao dao = FruitProject.getProjectDao();
+            final FruitProjectDao dao = FruitProject.getDao();
             dao.setUuid(vo.getUuid());
             dao.setTitle(vo.getTitle());
             dao.setPredictStartDate(vo.getPredictStartDate());
@@ -128,7 +129,7 @@ public abstract class AbstractDaoProject implements InterfaceDao {
     }
 
     public final List<FruitProjectDao> findRelation(FruitProjectVo vo) {
-        final FruitProjectDao dao = FruitProject.getProjectDao();
+        final FruitProjectDao dao = FruitProject.getDao();
         dao.setUuid(vo.getUuidVo());
         dao.setTitle(vo.getTitle());
         dao.setProjectStatus(vo.getProjectStatus());
@@ -138,14 +139,6 @@ public abstract class AbstractDaoProject implements InterfaceDao {
             project.seekPrincipal();
         });
         return result;
-    }
-
-    public final List<FruitProjectDao> finds(FruitProjectVo vo) {
-        final FruitProjectDao dao = FruitProject.getProjectDao();
-        dao.setUuid(vo.getUuidVo());
-        dao.setTitle(vo.getTitle());
-        dao.setProjectStatus(vo.getProjectStatus());
-        return this.finds(dao);
     }
 
     public final FruitProjectDao findByUUID(FruitProjectVo vo) {
@@ -166,7 +159,7 @@ public abstract class AbstractDaoProject implements InterfaceDao {
             FruitProjectDao project = this.findByUUID(vo);
             if (!project.isNotEmpty())
                 throw new CheckException("项目不存在");
-            final FruitProjectDao dao = FruitProject.getProjectDao();
+            final FruitProjectDao dao = FruitProject.getDao();
             dao.setUuid(vo.getUuidVo());
             dao.setTitle(vo.getTitle());
             dao.setDescription(vo.getDescription());
@@ -247,7 +240,7 @@ public abstract class AbstractDaoProject implements InterfaceDao {
                 throw new CheckException("项目不存在");
             if (FruitDict.ProjectDict.COMPLETE.name().equals(project.getProjectStatus()))
                 throw new CheckException("项目已完成，错误的操作");
-            final FruitProjectDao data = FruitProject.getProjectDao();
+            final FruitProjectDao data = FruitProject.getDao();
             data.setUuid(vo.getUuidVo());
         /*使用系统默认时间*/
             data.setEndDate(LocalDateTime.now());
@@ -262,8 +255,12 @@ public abstract class AbstractDaoProject implements InterfaceDao {
         }
     }
 
-    public final void insertList(FruitListVo vo) {
-
+    public List<FruitUserDao> findUserByProjectId(String projectId) {
+        if (StringUtils.isBlank(projectId))
+            throw new CheckException("项目id不存在");
+        FruitProjectDao dao = FruitProject.getDao();
+        dao.setUuid(projectId);
+        return findUserByProjectId(dao);
     }
 
 }

@@ -19,6 +19,10 @@ public class ProjectTeamRelation extends AbstractEntity {
         return result;
     }
 
+    public static ProjectTeamRelation getInstance() {
+        return new ProjectTeamRelation();
+    }
+
     private String projectId;
 
     private String teamId;

@@ -64,24 +64,12 @@ public class PlanDaoImpl extends AbstractDaoPlan {
     }
 
     @Override
-    protected List<FruitPlanDao> find(FruitPlanDao dao, Integer pageNum, Integer pageSize) {
-        final FruitPlanExample example = this.findTemplate(dao);
-        /*查询所有月计划*/
-        if (StringUtils.isNotBlank(dao.getParentId()))
-            example.getOredCriteria().get(0).andParentIdIsNotNull();
-        else
-            example.getOredCriteria().get(0).andParentIdIsNull();
-        PageHelper.startPage(pageNum, pageSize);
-        example.setOrderByClause("create_date_time desc");
-        return mapper.selectByExampleWithBLOBs(example);
-    }
-
-    @Override
     protected FruitPlan find(FruitPlanDao dao) {
         FruitPlanExample example = new FruitPlanExample();
         FruitPlanExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(dao.getUuid()))
             criteria.andUuidEqualTo(dao.getUuid());
+        criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
         List<FruitPlanDao> datas = mapper.selectByExampleWithBLOBs(example);
         if (datas.isEmpty())
             return FruitPlan.newEmpty("查询计划不存在");
@@ -115,7 +103,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         if (StringUtils.isBlank(uuid))
             throw new CheckException("【计划】uuId不能为空");
         FruitPlanExample example = new FruitPlanExample();
-        example.createCriteria().andUuidEqualTo(uuid);
+        example.createCriteria().andUuidEqualTo(uuid).andIsDeletedEqualTo(FruitDict.Systems.N.name());
         List<FruitPlanDao> data = mapper.selectByProjectId(example, null);
         if (data.isEmpty())
             return FruitPlan.newEmpty("计划不存在");
@@ -150,7 +138,9 @@ public class PlanDaoImpl extends AbstractDaoPlan {
     public void delete(String uuid) {
         FruitPlanExample example = new FruitPlanExample();
         example.createCriteria().andUuidEqualTo(uuid);
-        mapper.deleteByExample(example);
+        FruitPlanDao delete = FruitPlan.getDao();
+        delete.setIsDeleted(FruitDict.Systems.Y.name());
+        mapper.updateByExampleSelective(delete, example);
         FruitPlanDao plan = FruitPlan.getDao();
         plan.setUuid(uuid);
         Relation.getInstance(userRelation, projectDao, plan).removesProject().removesUser();
@@ -173,7 +163,9 @@ public class PlanDaoImpl extends AbstractDaoPlan {
             criteria.andUuidEqualTo(dao.getUuid());
         if (criteria.getAllCriteria().isEmpty())
             throw new CheckException("【删除进度小结】没有可用的删除条件");
-        summaryMapper.deleteByExample(example);
+        FruitPlanSummaryDao delete = FruitPlanSummary.getDao();
+        delete.setIsDeleted(FruitDict.Systems.Y.name());
+        summaryMapper.updateByExampleSelective(delete, example);
     }
 
     private static class Relation {
@@ -201,13 +193,13 @@ public class PlanDaoImpl extends AbstractDaoPlan {
 
         public Relation removeUser() {
             planDao.getUserRelation(FruitDict.Systems.DELETE).forEach((i) ->
-                    userDao.remove(PlanUserRelation.getInstance(planDao.getUuid(), i, null))
+                    userDao.deleted(PlanUserRelation.getInstance(planDao.getUuid(), i, null))
             );
             return this;
         }
 
         public void removesUser() {
-            userDao.remove(PlanUserRelation.getInstance(planDao.getUuid()));
+            userDao.deleted(PlanUserRelation.getInstance(planDao.getUuid()));
         }
 
         public void insertProject() {
@@ -218,13 +210,13 @@ public class PlanDaoImpl extends AbstractDaoPlan {
 
         public Relation removeProject() {
             planDao.getProjectRelation(FruitDict.Systems.DELETE).forEach((i) ->
-                    projectdao.remove(PlanProjectRelation.newInstance(planDao.getUuid(), StringUtils.isBlank(i) ? null : i))
+                    projectdao.deleted(PlanProjectRelation.newInstance(planDao.getUuid(), StringUtils.isBlank(i) ? null : i))
             );
             return this;
         }
 
         public Relation removesProject() {
-            projectdao.remove(PlanProjectRelation.newInstance(planDao.getUuid()));
+            projectdao.deleted(PlanProjectRelation.newInstance(planDao.getUuid()));
             return this;
         }
 

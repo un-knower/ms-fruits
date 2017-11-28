@@ -54,7 +54,7 @@ public class ListController {
     }
 
     /**
-     * @api {delete} /v1/list/{uuid} 添加【项目】列表
+     * @api {post} /v1/list/{uuid} 添加【项目】列表
      * @apiVersion 0.1.0
      * @apiGroup list
      */

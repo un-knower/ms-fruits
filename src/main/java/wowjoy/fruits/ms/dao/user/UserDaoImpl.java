@@ -3,6 +3,7 @@ package wowjoy.fruits.ms.dao.user;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.user.FruitUser;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.user.example.FruitUserExample;
@@ -54,4 +55,9 @@ public class UserDaoImpl extends AbstractDaoUser {
         return mapper.selectByAccount(example, dao.getPrincipal());
     }
 
+    public List<FruitUserDao> findByProjectId(String projectId) {
+        if (StringUtils.isBlank(projectId))
+            throw new CheckException("项目id不存在");
+        return mapper.selectByProjectId(projectId);
+    }
 }
