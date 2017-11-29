@@ -61,7 +61,7 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
         dao.setUuid(vo.getUuidVo());
         List<FruitTeamDao> result = this.findRelation(dao, FruitUser.getDao());
         if (result.isEmpty())
-            return (FruitTeamDao) FruitTeam.newEmpty("未找到对应详情");
+            throw new CheckException("未找到指定团队");
         threadSearchLeader(result);
         return result.get(0);
     }
