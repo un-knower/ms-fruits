@@ -33,6 +33,10 @@ public class TaskListRelation extends AbstractEntity {
         return new TaskListRelationEmpty();
     }
 
+    public static TaskListRelation getInstance() {
+        return new TaskListRelation();
+    }
+
     public static class TaskListRelationEmpty extends TaskListRelation {
         @Override
         public boolean isNotEmpty() {

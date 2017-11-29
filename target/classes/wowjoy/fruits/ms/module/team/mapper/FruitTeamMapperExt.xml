@@ -132,6 +132,7 @@
                         <property name="prefix" value="fuser"/>
                     </include>
                 </if>
+                and utr.is_deleted = 'N'
             </where>
         </trim>
 

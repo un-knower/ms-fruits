@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import wowjoy.fruits.ms.dao.relation.impl.UserTeamDaoImpl;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.relation.entity.UserTeamRelation;
+import wowjoy.fruits.ms.module.team.FruitTeam;
 import wowjoy.fruits.ms.module.team.FruitTeamDao;
 import wowjoy.fruits.ms.module.team.FruitTeamExample;
 import wowjoy.fruits.ms.module.team.mapper.FruitTeamMapper;
@@ -28,6 +29,7 @@ public class TeamDaoImpl extends AbstractDaoTeam {
     private FruitTeamMapper mapper;
     @Autowired
     private UserTeamDaoImpl dao;
+
     @Override
     public List<FruitTeamDao> findRelation(FruitTeamDao dao, FruitUserDao userDao) {
         final FruitTeamExample example = new FruitTeamExample();
@@ -73,8 +75,10 @@ public class TeamDaoImpl extends AbstractDaoTeam {
             throw new CheckException("Team id not is null");
         FruitTeamExample example = new FruitTeamExample();
         example.createCriteria().andUuidEqualTo(data.getUuid());
-        mapper.deleteByExample(example);
-        Relation.getInstance(data, dao).deleteUsers();
+        FruitTeamDao delete = FruitTeam.getDao();
+        delete.setIsDeleted(FruitDict.Systems.Y.name());
+        mapper.updateByExampleSelective(delete, example);
+        Relation.getInstance(data, this.dao).deleteUsers();
     }
 
     private static class Relation {
@@ -98,12 +102,12 @@ public class TeamDaoImpl extends AbstractDaoTeam {
         }
 
         public Relation deleteUser() {
-            data.getUserRelation(FruitDict.Systems.DELETE).forEach((i) -> dao.remove(UserTeamRelation.newInstance(i.getUserId(), data.getUuid())));
+            data.getUserRelation(FruitDict.Systems.DELETE).forEach((i) -> dao.deleted(UserTeamRelation.newInstance(i.getUserId(), data.getUuid())));
             return this;
         }
 
         public void deleteUsers() {
-            dao.remove(UserTeamRelation.newInstance(data.getUuid()));
+            dao.deleted(UserTeamRelation.newInstance(data.getUuid()));
         }
 
     }

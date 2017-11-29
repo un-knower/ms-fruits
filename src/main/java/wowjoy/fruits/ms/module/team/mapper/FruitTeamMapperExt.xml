@@ -83,26 +83,26 @@
         </foreach>
     </sql>
     <sql id="Base_Column_List">
-    ${replace}.uuid,
-    ${replace}.title,
-    ${replace}.description,
-    ${replace}.modify_date_time,
-    ${replace}.create_date_time,
-    ${replace}.is_deleted
-  </sql>
+        ${replace}.uuid,
+        ${replace}.title,
+        ${replace}.description,
+        ${replace}.modify_date_time,
+        ${replace}.create_date_time,
+        ${replace}.is_deleted
+      </sql>
     <sql id="User_Column_List">
-    ${replace}.uuid as ${prefix}uuid,
-    ${replace}.user_id as ${prefix}user_id,
-    ${replace}.user_name as ${prefix}user_name,
-    ${replace}.birthday as ${prefix}birthday,
-    ${replace}.user_email as ${prefix}user_email,
-    ${replace}.user_sex as ${prefix}user_sex,
-    ${replace}.job_title as ${prefix}job_title,
-    ${replace}.description as ${prefix}description,
-    ${replace}.modify_date_time as ${prefix}modify_date_time,
-    ${replace}.create_date_time as ${prefix}create_date_time,
-    ${replace}.is_deleted as ${prefix}is_deleted
-  </sql>
+        ${replace}.uuid as ${prefix}uuid,
+        ${replace}.user_id as ${prefix}user_id,
+        ${replace}.user_name as ${prefix}user_name,
+        ${replace}.birthday as ${prefix}birthday,
+        ${replace}.user_email as ${prefix}user_email,
+        ${replace}.user_sex as ${prefix}user_sex,
+        ${replace}.job_title as ${prefix}job_title,
+        ${replace}.description as ${prefix}description,
+        ${replace}.modify_date_time as ${prefix}modify_date_time,
+        ${replace}.create_date_time as ${prefix}create_date_time,
+        ${replace}.is_deleted as ${prefix}is_deleted
+    </sql>
 
     <select id="selectRelationByExample" resultMap="BaseResultMap">
         SELECT
@@ -132,6 +132,7 @@
                         <property name="prefix" value="fuser"/>
                     </include>
                 </if>
+                and utr.is_deleted = 'N'
             </where>
         </trim>
 

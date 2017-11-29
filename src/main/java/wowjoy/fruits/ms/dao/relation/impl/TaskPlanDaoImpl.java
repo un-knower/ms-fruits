@@ -9,6 +9,7 @@ import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.relation.entity.TaskPlanRelation;
 import wowjoy.fruits.ms.module.relation.example.TaskPlanRelationExample;
 import wowjoy.fruits.ms.module.relation.mapper.TaskPlanRelationMapper;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.text.MessageFormat;
 import java.util.List;
@@ -25,12 +26,16 @@ public class TaskPlanDaoImpl<T extends TaskPlanRelation> extends AbstractDaoRela
     @Override
     public void insert(TaskPlanRelation relation) {
         if (StringUtils.isBlank(relation.getPlanId()) || StringUtils.isBlank(relation.getTaskId()))
-            throw new CheckException(MessageFormat.format(checkMsg,"任务-计划"));
+            throw new CheckException(MessageFormat.format(checkMsg, "任务-计划"));
         mapper.insertSelective(relation);
     }
 
     @Override
     public void remove(TaskPlanRelation relation) {
+        mapper.deleteByExample(removeTemplate(relation));
+    }
+
+    private TaskPlanRelationExample removeTemplate(TaskPlanRelation relation) {
         final TaskPlanRelationExample example = new TaskPlanRelationExample();
         final TaskPlanRelationExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(relation.getTaskId()))
@@ -39,7 +44,7 @@ public class TaskPlanDaoImpl<T extends TaskPlanRelation> extends AbstractDaoRela
             criteria.andPlanIdEqualTo(relation.getPlanId());
         if (criteria.getAllCriteria().isEmpty())
             throw new CheckRelationException("【TaskPlanDaoImpl.remove】缺少删除条件");
-        mapper.deleteByExample(example);
+        return example;
     }
 
     public List<TaskPlanRelation> finds(TaskPlanRelation relation) {
@@ -54,7 +59,9 @@ public class TaskPlanDaoImpl<T extends TaskPlanRelation> extends AbstractDaoRela
 
 
     @Override
-    public void deleted(T relation) {
-
+    public void deleted(TaskPlanRelation relation) {
+        TaskPlanRelation delete = TaskPlanRelation.getInstance();
+        delete.setIsDeleted(FruitDict.Systems.Y.name());
+        mapper.updateByExampleSelective(delete, removeTemplate(relation));
     }
 }

@@ -113,6 +113,8 @@
             <include refid="Example_Where_Clause">
                 <property name="replace" value="p"/>
             </include>
+            and upr.is_deleted = 'N'
+            and u.is_deleted = 'N'
         </if>
         <if test="orderByClause != null">
             order by p.${orderByClause}

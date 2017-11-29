@@ -9,6 +9,7 @@ import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.relation.entity.UserTeamRelation;
 import wowjoy.fruits.ms.module.relation.example.UserTeamRelationExample;
 import wowjoy.fruits.ms.module.relation.mapper.UserTeamRelationMapper;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.text.MessageFormat;
 import java.util.List;
@@ -31,6 +32,10 @@ public class UserTeamDaoImpl<T extends UserTeamRelation> extends AbstractDaoRela
 
     @Override
     public void remove(UserTeamRelation relation) {
+        mapper.deleteByExample(removeTemplate(relation));
+    }
+
+    private UserTeamRelationExample removeTemplate(UserTeamRelation relation) {
         final UserTeamRelationExample example = new UserTeamRelationExample();
         final UserTeamRelationExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(relation.getTeamId()))
@@ -41,7 +46,7 @@ public class UserTeamDaoImpl<T extends UserTeamRelation> extends AbstractDaoRela
             criteria.andUtRoleEqualTo(relation.getUtRole());
         if (criteria.getAllCriteria().isEmpty())
             throw new CheckRelationException("【UserTeamDaoImpl.remove】缺少关联条件");
-        mapper.deleteByExample(example);
+        return example;
     }
 
     public List<UserTeamRelation> finds(UserTeamRelation relation) {
@@ -57,7 +62,9 @@ public class UserTeamDaoImpl<T extends UserTeamRelation> extends AbstractDaoRela
     }
 
     @Override
-    public void deleted(T relation) {
-
+    public void deleted(UserTeamRelation relation) {
+        UserTeamRelation delete = UserTeamRelation.getInstance();
+        delete.setIsDeleted(FruitDict.Systems.Y.name());
+        mapper.updateByExampleSelective(delete, removeTemplate(relation));
     }
 }

@@ -81,11 +81,13 @@ public class ListDaoImpl extends AbstractDaoList {
         FruitListDao delete = FruitList.getDao();
         delete.setIsDeleted(FruitDict.Systems.Y.name());
         mapper.updateByExampleSelective(delete, example);
-        Relation.newProject(listDao,dao).removeProjects();
+        Relation.newProject(listDao, dao).removeProjects();
     }
 
     public List<FruitListDao> findByProjectId(List<String> projectIds) {
-        return mapper.selectByProjectId(new FruitListExample(), projectIds);
+        FruitListExample example = new FruitListExample();
+        example.createCriteria().andIsDeletedEqualTo(FruitDict.Systems.N.name());
+        return mapper.selectByProjectId(example, projectIds);
     }
 
     private static class Relation {

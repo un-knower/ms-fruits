@@ -155,7 +155,9 @@
             <where>
                 <if test="id != null">
                     AND listRelation.list_id = #{id}
+                    AND listRelation.is_deleted = 'N'
                 </if>
+                AND task.is_deleted = 'N'
             </where>
         </trim>
         order by task.create_date_time desc
@@ -172,7 +174,9 @@
             <where>
                 <if test="id != null">
                     AND planRelation.plan_id = #{id}
+                    AND planRelation.is_deleted = 'N'
                 </if>
+                AND task.is_deleted = 'N'
             </where>
         </trim>
         order by task.create_date_time desc
@@ -198,6 +202,10 @@
                 <include refid="Base_Example_Where_Clause">
                     <property name="replace" value="task"/>
                 </include>
+                and userRelation.is_deleted = 'N'
+                and fuser.is_deleted = 'N'
+                and planRelation.is_deleted = 'N'
+                and plan.is_deleted = 'N'
             </where>
         </trim>
     </select>
@@ -220,6 +228,8 @@
                 <include refid="Base_Example_Where_Clause">
                     <property name="replace" value="task"/>
                 </include>
+                and planRelation.is_deleted = 'N'
+                and plan.is_deleted = 'N'
             </where>
         </trim>
     </select>
@@ -240,6 +250,7 @@
         <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
             <where>
                 userRelation.user_id = #{userId}
+                and userRelation.is_deleted = 'N'
                 <include refid="Base_Example_Where_Clause">
                     <property name="replace" value="task"/>
                 </include>

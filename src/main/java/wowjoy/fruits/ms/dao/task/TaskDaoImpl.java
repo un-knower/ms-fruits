@@ -12,11 +12,13 @@ import wowjoy.fruits.ms.dao.relation.impl.TaskListDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.TaskPlanDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.TaskProjectDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.TaskUserDaoImpl;
+import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.list.FruitListDao;
 import wowjoy.fruits.ms.module.relation.entity.TaskListRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskPlanRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskProjectRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskUserRelation;
+import wowjoy.fruits.ms.module.task.FruitTask;
 import wowjoy.fruits.ms.module.task.FruitTaskDao;
 import wowjoy.fruits.ms.module.task.FruitTaskExample;
 import wowjoy.fruits.ms.module.task.mapper.FruitTaskMapper;
@@ -87,13 +89,17 @@ public class TaskDaoImpl extends AbstractDaoTask {
 
     @Override
     public void delete(FruitTaskDao dao) {
+        if (StringUtils.isNotBlank(dao.getUuid()))
+            throw new CheckException("缺少任务id");
         FruitTaskExample example = new FruitTaskExample();
         FruitTaskExample.Criteria criteria = example.createCriteria();
-        if (StringUtils.isNotBlank(dao.getUuid()))
-            criteria.andUuidEqualTo(dao.getUuid());
-        taskMapper.deleteByExample(example);
+        criteria.andUuidEqualTo(dao.getUuid());
+        FruitTaskDao delete = FruitTask.getDao();
+        delete.setIsDeleted(FruitDict.Systems.Y.name());
+        taskMapper.updateByExampleSelective(delete, example);
         /*删除项目、计划、用户关联信息*/
-        Relation.getInstance(dao, taskPlanDao, taskProjectDao, taskUserDao, taskListDao).removeLists().removePlans().removeProjects().removeUsers();
+        Relation.getInstance(dao, taskPlanDao, taskProjectDao, taskUserDao, taskListDao)
+                .removeLists().removePlans().removeProjects().removeUsers();
     }
 
     @Override
@@ -122,7 +128,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
         if (taskIds == null || taskIds.isEmpty())
             return Lists.newLinkedList();
         FruitTaskExample example = new FruitTaskExample();
-        example.createCriteria().andUuidIn(taskIds);
+        example.createCriteria().andUuidIn(taskIds).andIsDeletedEqualTo(FruitDict.Systems.N.name());
         long start = System.currentTimeMillis();
         List<FruitTaskDao> data = taskMapper.selectUserByTask(example);
         long end = System.currentTimeMillis();
@@ -135,7 +141,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
         if (taskIds == null || taskIds.isEmpty())
             return Lists.newLinkedList();
         FruitTaskExample example = new FruitTaskExample();
-        example.createCriteria().andUuidIn(taskIds);
+        example.createCriteria().andUuidIn(taskIds).andIsDeletedEqualTo(FruitDict.Systems.N.name());
         long start = System.currentTimeMillis();
         List<FruitTaskDao> data = taskMapper.selectPlanByTask(example);
         long end = System.currentTimeMillis();
@@ -200,43 +206,43 @@ public class TaskDaoImpl extends AbstractDaoTask {
         }
 
         public Relation removeProjects() {
-            projectDao.remove(TaskProjectRelation.newInstance(dao.getUuid(), null));
+            projectDao.deleted(TaskProjectRelation.newInstance(dao.getUuid(), null));
             return this;
         }
 
         public Relation removeProject() {
-            dao.getTaskProjectRelation(FruitDict.Systems.DELETE).forEach((i) -> projectDao.remove(TaskProjectRelation.newInstance(dao.getUuid(), i.getProjectId())));
+            dao.getTaskProjectRelation(FruitDict.Systems.DELETE).forEach((i) -> projectDao.deleted(TaskProjectRelation.newInstance(dao.getUuid(), i.getProjectId())));
             return this;
         }
 
         public Relation removePlans() {
-            planDao.remove(TaskPlanRelation.newInstance(dao.getUuid(), null));
+            planDao.deleted(TaskPlanRelation.newInstance(dao.getUuid(), null));
             return this;
         }
 
         public Relation removePlan() {
-            dao.getTaskPlanRelation(FruitDict.Systems.DELETE).forEach((i) -> planDao.remove(TaskPlanRelation.newInstance(dao.getUuid(), i.getPlanId())));
+            dao.getTaskPlanRelation(FruitDict.Systems.DELETE).forEach((i) -> planDao.deleted(TaskPlanRelation.newInstance(dao.getUuid(), i.getPlanId())));
             return this;
         }
 
         public Relation removeUsers() {
-            userDao.remove(TaskUserRelation.newInstance(dao.getUuid(), null));
+            userDao.deleted(TaskUserRelation.newInstance(dao.getUuid(), null));
             return this;
         }
 
         public Relation removeUser() {
-            dao.getTaskUserRelation(FruitDict.Systems.DELETE).forEach((i) -> userDao.remove(TaskUserRelation.newInstance(dao.getUuid(), i.getUserId())));
+            dao.getTaskUserRelation(FruitDict.Systems.DELETE).forEach((i) -> userDao.deleted(TaskUserRelation.newInstance(dao.getUuid(), i.getUserId())));
             return this;
         }
 
         public Relation removeLists() {
-            listDao.remove(TaskListRelation.newInstance(dao.getUuid(), null));
+            listDao.deleted(TaskListRelation.newInstance(dao.getUuid(), null));
             return this;
         }
 
         public Relation removeList() {
             if (dao.getTaskListRelation(FruitDict.Systems.DELETE).isEmpty()) return this;
-            dao.getTaskListRelation(FruitDict.Systems.DELETE).forEach((i) -> listDao.remove(TaskListRelation.newInstance(dao.getUuid(), i.getListId())));
+            dao.getTaskListRelation(FruitDict.Systems.DELETE).forEach((i) -> listDao.deleted(TaskListRelation.newInstance(dao.getUuid(), i.getListId())));
             return this;
         }
 
@@ -254,6 +260,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
             criteria.andTitleLike(MessageFormat.format("%{0}%", dao.getTitle()));
         if (StringUtils.isNotBlank(dao.getTaskStatus()))
             criteria.andTaskStatusEqualTo(dao.getTaskStatus());
+        criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
         PageHelper.startPage(dao.getPageNum(), dao.getPageSize());
         return taskMapper.userSelectByExample(example, ApplicationContextUtils.getCurrentUser().getUserId());
     }

@@ -44,4 +44,8 @@ public class UserTeamRelation extends AbstractEntity{
     public static UserTeamRelation newInstance(final String teamId) {
         return newInstance(null,teamId);
     }
+
+    public static UserTeamRelation getInstance() {
+        return new UserTeamRelation();
+    }
 }

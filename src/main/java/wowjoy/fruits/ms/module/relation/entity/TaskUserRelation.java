@@ -59,4 +59,8 @@ public class TaskUserRelation extends AbstractEntity {
         return result;
     }
 
+    public static TaskUserRelation getInstance() {
+        return new TaskUserRelation();
+    }
+
 }

@@ -265,21 +265,19 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         List<FruitListDao> lists = this.findProjectList(dao.getProjectIds());
         TaskThread taskThread = TaskThread.getInstance();
 
-        lists.forEach((list) -> {
-            taskThread.execute(() -> {
-                FruitTaskDao taskDao = FruitTask.getDao();
-                taskDao.setListId(list.getUuid());
-                List<FruitTaskDao> tasks = this.findByListId(taskDao);
-                List<String> ids = toIds(tasks);
-                TaskThread.getInstance()
-                        .execute(this.plugPlan(ids, tasks))
-                        .execute(this.plugUser(ids, tasks))
-                        .execute(this.plugUtil(tasks))
-                        .get();
-                list.setTasks(tasks);
-                return true;
-            });
-        });
+        lists.forEach((list) -> taskThread.execute(() -> {
+            FruitTaskDao taskDao = FruitTask.getDao();
+            taskDao.setListId(list.getUuid());
+            List<FruitTaskDao> tasks = this.findByListId(taskDao);
+            List<String> ids = toIds(tasks);
+            TaskThread.getInstance()
+                    .execute(this.plugPlan(ids, tasks))
+                    .execute(this.plugUser(ids, tasks))
+                    .execute(this.plugUtil(tasks))
+                    .get();
+            list.setTasks(tasks);
+            return true;
+        }));
 
         taskThread.get();
         return lists;
@@ -302,7 +300,6 @@ public abstract class AbstractDaoTask implements InterfaceDao {
 
     private Callable plugUser(List<String> taskIds, List<FruitTaskDao> tasks) {
         return () -> {
-            TaskThread thread = TaskThread.getInstance();
             Map<String, List<FruitUserDao>> userDaoMap = Maps.newLinkedHashMap();
             this.findUserByTaskIds(taskIds).forEach((i) -> userDaoMap.put(i.getUuid(), i.getUsers()));
             tasks.forEach((task) -> task.setUsers(userDaoMap.get(task.getUuid())));
@@ -508,7 +505,11 @@ public abstract class AbstractDaoTask implements InterfaceDao {
      ************************************************************************************************/
     public List<FruitTaskDao> userFindByVo(FruitTaskVo vo) {
         List<FruitTaskDao> tasks = this.userFindByDao(TaskTemplate.newInstance(vo).findTemplate());
-        tasks.forEach((i) -> i.computeDays());
+        try {
+            this.plugUtil(tasks).call();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return tasks;
     }
 

@@ -66,6 +66,7 @@
                     <foreach collection="projectIds" item="id" open="(" close=")" separator=",">
                         #{id}
                     </foreach>
+                    and listRelation.is_deleted = 'N'
                 </if>
             </where>
         </trim>

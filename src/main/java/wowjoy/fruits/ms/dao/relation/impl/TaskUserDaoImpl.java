@@ -9,6 +9,7 @@ import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.relation.entity.TaskUserRelation;
 import wowjoy.fruits.ms.module.relation.example.TaskUserRelationExample;
 import wowjoy.fruits.ms.module.relation.mapper.TaskUserRelationMapper;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.text.MessageFormat;
 import java.util.List;
@@ -31,6 +32,10 @@ public class TaskUserDaoImpl<T extends TaskUserRelation> extends AbstractDaoRela
 
     @Override
     public void remove(TaskUserRelation relation) {
+        mapper.deleteByExample(removeTemplate(relation));
+    }
+
+    private TaskUserRelationExample removeTemplate(TaskUserRelation relation) {
         final TaskUserRelationExample example = new TaskUserRelationExample();
         final TaskUserRelationExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(relation.getTaskId()))
@@ -41,7 +46,7 @@ public class TaskUserDaoImpl<T extends TaskUserRelation> extends AbstractDaoRela
             criteria.andUserRoleEqualTo(relation.getUserRole());
         if (criteria.getAllCriteria().isEmpty())
             throw new CheckRelationException("【TaskUserDaoImpl.remove】缺少删除条件");
-        mapper.deleteByExample(example);
+        return example;
     }
 
     public List<TaskUserRelation> finds(TaskUserRelation relation) {
@@ -57,7 +62,9 @@ public class TaskUserDaoImpl<T extends TaskUserRelation> extends AbstractDaoRela
     }
 
     @Override
-    public void deleted(T relation) {
-
+    public void deleted(TaskUserRelation relation) {
+        TaskUserRelation delete = TaskUserRelation.getInstance();
+        delete.setIsDeleted(FruitDict.Systems.Y.name());
+        mapper.updateByExampleSelective(delete, removeTemplate(relation));
     }
 }
