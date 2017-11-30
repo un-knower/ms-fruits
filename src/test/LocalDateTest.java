@@ -5,7 +5,9 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Date;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
  * Created by wangziwen on 2017/8/24.
@@ -14,10 +16,45 @@ import java.util.Date;
 public class LocalDateTest {
     @Test
     public void project() throws Exception {
-        String test = "etet,";
-        System.out.println(test.split(",")[0]);
-        System.out.println(test.split(",")[1]);
-        System.out.println(test.split(",").length);
+        ConcurrentSkipListMap<Integer, Object> skipMap = new ConcurrentSkipListMap();
+        long start = System.currentTimeMillis();
+        for (Integer i = 0; i < 10000; i++)
+            skipMap.put(i, i);
+        long end = System.currentTimeMillis();
+        System.out.println(end - start);
+        ConcurrentHashMap hashMap = new ConcurrentHashMap();
+        start = System.currentTimeMillis();
+        for (Integer i = 0; i < 10000; i++)
+            hashMap.put(i, i);
+        end = System.currentTimeMillis();
+        System.out.println(end - start);
+
+        LinkedHashMap<Integer, Object> linkedHashMap = new LinkedHashMap<>();
+        start = System.currentTimeMillis();
+        for (Integer i = 0; i < 10000; i++)
+            linkedHashMap.put(i, i);
+        end = System.currentTimeMillis();
+        System.out.println(end - start);
+
+        SortedMap<String, Object> sortedMap = Collections.synchronizedSortedMap(new TreeMap<>());
+
+        start = System.nanoTime();
+        for (Integer i = 0; i < 10000; i++)
+            skipMap.get(i);
+        end = System.nanoTime();
+        System.out.println(end - start);
+
+        start = System.nanoTime();
+        for (Integer i = 0; i < 10000; i++)
+            hashMap.get(i);
+        end = System.nanoTime();
+        System.out.println(end - start);
+
+        start = System.nanoTime();
+        for (Integer i = 0; i < 10000; i++)
+            linkedHashMap.get(i);
+        end = System.nanoTime();
+        System.out.println(end - start);
     }
 
     @Test

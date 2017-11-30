@@ -30,7 +30,7 @@ public class ApplicationContextUtils implements ApplicationContextAware {
 
     public static FruitUser getCurrentUser() {
         FruitUserVo vo = FruitUser.getVo();
-        vo.setUserId("8401e45249434eafb7654447e02397a2");
+        vo.setUserId("7c2f2f5c86d84f42bf771709393ccc14");
         vo.setUserName("严老板");
         return vo;
     }

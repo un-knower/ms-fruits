@@ -123,12 +123,22 @@ public class FruitProjectDao extends FruitProject {
      * 延期天数
      */
     public FruitProjectDao computeDays() {
-        if (this.getPredictEndDate() == null) {
+        Date startDate;
+        Date endDate;
+        if (this.getPredictEndDate() != null) {
+            if (this.getEndDate() != null && FruitDict.ProjectDict.COMPLETE.equals(this.getProjectStatus())) {
+                startDate = this.getPredictEndDate();
+                endDate = this.getEndDate();
+            } else {
+                startDate = this.getPredictEndDate();
+                endDate = new Date();
+            }
+        } else {
             this.setDays(999999999);
             return this;
         }
-        LocalDateTime predictEndTime = LocalDateTime.parse(new SimpleDateFormat(DateTimeFormat).format(this.getPredictEndDate()));
-        LocalDateTime currentTime = LocalDateTime.parse(new SimpleDateFormat(DateTimeFormat).format(new Date()));
+        LocalDateTime predictEndTime = LocalDateTime.parse(new SimpleDateFormat(DateTimeFormat).format(startDate));
+        LocalDateTime currentTime = LocalDateTime.parse(new SimpleDateFormat(DateTimeFormat).format(endDate));
         Duration between = Duration.between(currentTime, predictEndTime);
         this.setDays((int) between.toDays());
         return this;

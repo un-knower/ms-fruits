@@ -69,6 +69,8 @@ public class ProjectDaoImpl extends AbstractDaoProject {
         FruitProjectExample example = new FruitProjectExample();
         example.createCriteria().andUuidEqualTo(uuid).andIsDeletedEqualTo(FruitDict.Systems.N.name());
         List<FruitProjectDao> data = projectMapper.selectUserRelationByExample(example);
+        if (data.isEmpty())
+            throw new CheckException("不存在！再查自杀");
         return data.get(0);
     }
 

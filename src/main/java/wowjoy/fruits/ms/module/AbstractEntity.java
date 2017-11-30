@@ -88,23 +88,6 @@ public abstract class AbstractEntity implements InterfaceEntity {
         return isDeleted;
     }
 
-    /****************
-     * 实体类异常内部类 *
-     ****************/
-
-    protected static class CheckEntityException extends CheckException {
-        public CheckEntityException(String message) {
-            super("【Entity exception】：" + message);
-        }
-    }
-
-    protected static class NullEntityException extends NullException {
-        public NullEntityException(String message) {
-            super("【Entity exception】：" + message);
-        }
-    }
-
-    /**/
     public String sortConstrue() {
         LinkedList<String> sorts = Lists.newLinkedList();
         if (StringUtils.isNotBlank(this.getDesc())) for (String desc : this.getDesc().split(","))

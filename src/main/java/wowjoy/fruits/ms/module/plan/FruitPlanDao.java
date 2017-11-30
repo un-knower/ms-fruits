@@ -1,7 +1,6 @@
 package wowjoy.fruits.ms.module.plan;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
@@ -32,14 +31,6 @@ public class FruitPlanDao extends FruitPlan {
 
     public List<String> getParentIds() {
         return parentIds;
-    }
-
-    public void setParentIds(List<String> parentIds) {
-        this.parentIds = parentIds;
-    }
-
-    public Integer getDays() {
-        return days;
     }
 
     public void setDays(Integer days) {
@@ -89,29 +80,6 @@ public class FruitPlanDao extends FruitPlan {
         this.projectRelation = projectRelation;
     }
 
-    public void setProjectRelation(FruitDict.Systems parents, List<String> value) {
-        if (projectRelation == null)
-            projectRelation = Maps.newHashMap();
-
-        projectRelation.put(parents, value);
-    }
-
-    /**
-     * 是否延期
-     * 延期天数
-     */
-    public FruitPlanDao computeDays() {
-        if (this.getEstimatedEndDate() == null) {
-            this.setDays(999999999);
-            return this;
-        }
-        LocalDateTime predictEndTime = LocalDateTime.parse(new SimpleDateFormat(DateTimeFormat).format(this.getEstimatedEndDate()));
-        LocalDateTime currentTime = LocalDateTime.parse(new SimpleDateFormat(DateTimeFormat).format(new Date()));
-        Duration between = Duration.between(currentTime, predictEndTime);
-        this.setDays((int) between.toDays());
-        return this;
-    }
-
     public List<FruitUserDao> getUsers() {
         return users;
     }
@@ -135,4 +103,31 @@ public class FruitPlanDao extends FruitPlan {
     public void setEndDateDao(Date endDateDao) {
         this.endDateDao = endDateDao;
     }
+
+    /**
+     * 是否延期
+     * 延期天数
+     */
+    public FruitPlanDao computeDays() {
+        Date startDate;
+        Date endDate;
+        if (this.getEstimatedEndDate() != null) {
+            if (this.getEndDate() != null && !FruitDict.PlanDict.PENDING.name().equals(this.getPlanStatus())) {
+                startDate = this.getEstimatedEndDate();
+                endDate = this.getEndDate();
+            } else {
+                startDate = this.getEstimatedEndDate();
+                endDate = new Date();
+            }
+        } else {
+            this.setDays(999999999);
+            return this;
+        }
+        LocalDateTime predictEndTime = LocalDateTime.parse(new SimpleDateFormat(DateTimeFormat).format(startDate));
+        LocalDateTime currentTime = LocalDateTime.parse(new SimpleDateFormat(DateTimeFormat).format(endDate));
+        Duration between = Duration.between(currentTime, predictEndTime);
+        this.setDays((int) between.toDays());
+        return this;
+    }
+
 }

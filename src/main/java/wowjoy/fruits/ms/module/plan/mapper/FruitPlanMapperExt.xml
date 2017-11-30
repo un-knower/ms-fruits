@@ -146,5 +146,6 @@
                 </if>
             </where>
         </trim>
+        order by fruitUser.user_id = #{userId} desc
     </select>
 </mapper>

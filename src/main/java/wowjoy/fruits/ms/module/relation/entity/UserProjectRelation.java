@@ -1,5 +1,6 @@
 package wowjoy.fruits.ms.module.relation.entity;
 
+import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
@@ -33,7 +34,8 @@ public class UserProjectRelation extends AbstractEntity {
 
     public void setUpRole(String upRole) {
         try {
-            this.upRole = FruitDict.UserProjectDict.valueOf(upRole).name();
+            if (StringUtils.isNotBlank(upRole))
+                this.upRole = FruitDict.UserProjectDict.valueOf(upRole).name();
         } catch (Exception ex) {
             throw new CheckException("用户关联团队的角色不存在");
         }
