@@ -21,7 +21,7 @@ import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
 
 /**
  * Created by wangziwen on 2017/8/30.
@@ -217,7 +217,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         dao.setPlanId(vo.getPlanId());
         List<FruitTaskDao> tasks = this.findByPlanId(dao);
         List<String> ids = toIds(tasks);
-        TaskThread.getInstance()
+        DaoThread.getInstance()
                 .execute(this.plugUser(ids, tasks))
                 .execute(this.plugUtil(tasks))
                 .get();
@@ -237,7 +237,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         dao.setListId(vo.getListId());
         List<FruitTaskDao> tasks = this.findByListId(dao);
         List<String> ids = toIds(tasks);
-        TaskThread.getInstance()
+        DaoThread.getInstance()
                 .execute(this.plugPlan(ids, tasks))
                 .execute(this.plugUser(ids, tasks))
                 .execute(this.plugUtil(tasks))
@@ -263,14 +263,14 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         FruitTaskDao dao = TaskTemplate.newInstance(vo).findTemplate();
         dao.setProjectIds(vo.getProjectIds());
         List<FruitListDao> lists = this.findProjectList(dao.getProjectIds());
-        TaskThread taskThread = TaskThread.getInstance();
+        DaoThread taskThread = DaoThread.getInstance();
 
         lists.forEach((list) -> taskThread.execute(() -> {
             FruitTaskDao taskDao = FruitTask.getDao();
             taskDao.setListId(list.getUuid());
             List<FruitTaskDao> tasks = this.findByListId(taskDao);
             List<String> ids = toIds(tasks);
-            TaskThread.getInstance()
+            DaoThread.getInstance()
                     .execute(this.plugPlan(ids, tasks))
                     .execute(this.plugUser(ids, tasks))
                     .execute(this.plugUtil(tasks))
@@ -312,34 +312,6 @@ public abstract class AbstractDaoTask implements InterfaceDao {
             tasks.forEach((i) -> i.computeDays());
             return true;
         };
-    }
-
-
-    private static class TaskThread {
-        private final ExecutorService executorService = Executors.newFixedThreadPool(processorCount);
-        private final List<Future> futures = Lists.newLinkedList();
-
-        public static TaskThread getInstance() {
-            return new TaskThread();
-        }
-
-        public TaskThread execute(Callable callable) {
-            futures.add(executorService.submit(callable));
-            return this;
-        }
-
-        public void get() {
-            try {
-                for (Future future : futures) future.get();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                futures.forEach((i) -> i.cancel(true));
-                throw new CheckException("中断线程");
-            } catch (ExecutionException e) {
-                throw new CheckException("获取线程数据异常，线程已终止");
-            }
-        }
-
     }
 
     /**

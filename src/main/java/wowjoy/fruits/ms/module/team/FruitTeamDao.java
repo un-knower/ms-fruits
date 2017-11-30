@@ -31,6 +31,8 @@ public class FruitTeamDao extends FruitTeam {
      */
     private Map<FruitDict.Systems, List<UserTeamRelation>> userRelation;
 
+    private String projectRole;
+
     /**
      * 检索团队leader
      *
@@ -47,6 +49,14 @@ public class FruitTeamDao extends FruitTeam {
             }
         }
         return false;
+    }
+
+    public String getProjectRole() {
+        return projectRole;
+    }
+
+    public void setProjectRole(String projectRole) {
+        this.projectRole = projectRole;
     }
 
     public FruitUserDao getLeader() {

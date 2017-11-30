@@ -17,7 +17,6 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.concurrent.*;
 
 /**
  * Created by wangziwen on 2017/8/25.
@@ -64,10 +63,10 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
     public final List<FruitPlanDao> findMonthWeek(FruitPlanVo vo, boolean isPage) {
         List<FruitPlanDao> planDaoList = findProject(this.findMonthWeekTemplate(vo), vo.getPageNum(), vo.getPageSize(), isPage);
         if (planDaoList.isEmpty()) return Lists.newLinkedList();
-        PlanThread planThread = PlanThread.newInstance();
+        DaoThread planThread = DaoThread.getInstance();
         List<String> ids = toIds(planDaoList);
         /*查询用户信息*/
-        planThread.submit(() -> {
+        planThread.execute(() -> {
             List<FruitPlanDao> users = this.findUserByPlanIds(ids);
             LinkedHashMap<String, List<FruitUserDao>> userMaps = Maps.newLinkedHashMap();
             users.forEach((i) -> userMaps.put(i.getUuid(), i.getUsers()));
@@ -75,7 +74,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
             return true;
         });
         /*计算过期时间*/
-        planThread.submit(() -> {
+        planThread.execute(() -> {
             planDaoList.forEach((i) -> i.computeDays());
             return true;
         });
@@ -86,7 +85,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         }
         planDaoList.forEach((plan) -> {
             plan.setWeeks(Lists.newLinkedList());
-            planThread.submit(() -> {
+            planThread.execute(() -> {
                 FruitPlanVo childVo = FruitPlan.getVo();
                 childVo.setParentId(plan.getUuid());
                 childVo.setDesc(plan.getDesc());
@@ -271,36 +270,36 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
      * 内部类  *
      **********/
 
-    private static class PlanThread {
-        private final ExecutorService service = Executors.newFixedThreadPool(processorCount);
-        private List<Future> futures = Lists.newLinkedList();
-
-        public PlanThread submit(Callable callable) {
-            futures.add(service.submit(callable));
-            return this;
-        }
-
-        public List<Future> get() {
-            try {
-                for (Future week : futures) week.get(1, TimeUnit.MINUTES);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new CheckException("主线程中断");
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-                throw new CheckException("线程异常中断");
-            } catch (TimeoutException e) {
-                throw new CheckException("线程超时");
-            } finally {
-                service.shutdownNow();
-            }
-            return futures;
-        }
-
-        public static PlanThread newInstance() {
-            return new PlanThread();
-        }
-
-    }
+//    private static class PlanThread {
+//        private final ExecutorService service = Executors.newFixedThreadPool(processorCount);
+//        private List<Future> futures = Lists.newLinkedList();
+//
+//        public PlanThread submit(Callable callable) {
+//            futures.add(service.submit(callable));
+//            return this;
+//        }
+//
+//        public List<Future> get() {
+//            try {
+//                for (Future week : futures) week.get(1, TimeUnit.MINUTES);
+//            } catch (InterruptedException e) {
+//                Thread.currentThread().interrupt();
+//                throw new CheckException("主线程中断");
+//            } catch (ExecutionException e) {
+//                e.printStackTrace();
+//                throw new CheckException("线程异常中断");
+//            } catch (TimeoutException e) {
+//                throw new CheckException("线程超时");
+//            } finally {
+//                service.shutdownNow();
+//            }
+//            return futures;
+//        }
+//
+//        public static PlanThread newInstance() {
+//            return new PlanThread();
+//        }
+//
+//    }
 
 }

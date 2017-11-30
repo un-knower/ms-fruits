@@ -6,6 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import wowjoy.fruits.ms.module.relation.entity.ProjectListRelation;
 import wowjoy.fruits.ms.module.relation.entity.ProjectTeamRelation;
 import wowjoy.fruits.ms.module.relation.entity.UserProjectRelation;
+import wowjoy.fruits.ms.module.team.FruitTeamDao;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
@@ -31,9 +32,35 @@ public class FruitProjectDao extends FruitProject {
     private Map<FruitDict.Systems, List<ProjectListRelation>> listRelation;
 
     private List<FruitUserDao> users;
-    private FruitUserDao principal;
+    private List<FruitTeamDao> teams;
+    private FruitTeamDao principalTeam;
+    private FruitUserDao principalUser;
 
     private Integer days;
+
+    public FruitTeamDao getPrincipalTeam() {
+        return principalTeam;
+    }
+
+    public void setPrincipalTeam(FruitTeamDao principalTeam) {
+        this.principalTeam = principalTeam;
+    }
+
+    public List<FruitTeamDao> getTeams() {
+        return teams;
+    }
+
+    public void setTeams(List<FruitTeamDao> teams) {
+        this.teams = teams;
+    }
+
+    public FruitUserDao getPrincipalUser() {
+        return principalUser;
+    }
+
+    public void setPrincipalUser(FruitUserDao principalUser) {
+        this.principalUser = principalUser;
+    }
 
     public List<ProjectTeamRelation> getTeamRelation(FruitDict.Systems type) {
         return teamRelation != null && teamRelation.containsKey(type) ? teamRelation.get(type) : Lists.newLinkedList();
@@ -106,14 +133,6 @@ public class FruitProjectDao extends FruitProject {
             this.setEndDate(java.sql.Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
     }
 
-    public FruitUserDao getPrincipal() {
-        return principal;
-    }
-
-    public void setPrincipal(FruitUserDao principal) {
-        this.principal = principal;
-    }
-
     /***************
      * 项目工具函数  *
      ***************/
@@ -147,13 +166,29 @@ public class FruitProjectDao extends FruitProject {
     /**
      * 查找负责人
      */
-    public void seekPrincipal() {
+    public FruitProjectDao seekPrincipalUser() {
         for (FruitUserDao user : this.getUsers()) {
             if (FruitDict.UserProjectDict.PRINCIPAL.name().equals(user.getProjectRole())) {
-                this.setPrincipal(user);
+                this.setPrincipalUser(user);
                 this.getUsers().remove(user);
-                return;
+                return this;
             }
         }
+        return this;
     }
+
+    /**
+     * 查找负责团队
+     */
+    public FruitProjectDao seekPrincipalTeam() {
+        for (FruitTeamDao teamDao : this.getTeams()) {
+            if (FruitDict.ProjectTeamDict.PRINCIPAL.name().equals(teamDao.getProjectRole())) {
+                this.setPrincipalTeam(teamDao);
+                this.getTeams().remove(teamDao);
+                return this;
+            }
+        }
+        return this;
+    }
+
 }

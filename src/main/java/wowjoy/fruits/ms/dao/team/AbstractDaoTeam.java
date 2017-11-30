@@ -17,10 +17,6 @@ import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 /**
  * Created by wangziwen on 2017/9/6.
@@ -52,7 +48,7 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
             user.setUserName(vo.getUserName());
         List<FruitTeamDao> result = this.findRelation(dao, user);
         /*检索团队leader*/
-        threadSearchLeader(result);
+        result.forEach((i) -> i.searchLeader());
         return result;
     }
 
@@ -62,26 +58,8 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
         List<FruitTeamDao> result = this.findRelation(dao, FruitUser.getDao());
         if (result.isEmpty())
             throw new CheckException("未找到指定团队");
-        threadSearchLeader(result);
+        result.forEach((i) -> i.searchLeader());
         return result.get(0);
-    }
-
-    private void threadSearchLeader(List<FruitTeamDao> teamDaos) {
-        List<Future> futures = Lists.newLinkedList();
-        ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);
-        teamDaos.forEach((i) -> futures.add(service.submit(() -> i.searchLeader())));
-
-        try {
-            for (Future future : futures) future.get();
-        } catch (InterruptedException e) {
-            /*重新设置当前线程的中断状态*/
-            Thread.currentThread().interrupt();
-            /*取消当前所有操作*/
-            futures.forEach((i) -> i.cancel(true));
-        } catch (ExecutionException e) {
-            throw new CheckException("获取leader发生异常");
-        }
-
     }
 
     public final void insert(FruitTeamVo vo) {

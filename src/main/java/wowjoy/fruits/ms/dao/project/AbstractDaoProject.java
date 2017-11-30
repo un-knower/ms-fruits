@@ -136,14 +136,14 @@ public abstract class AbstractDaoProject implements InterfaceDao {
         List<FruitProjectDao> result = this.findRelation(dao);
         result.forEach((project) -> {
             project.computeDays();
-            project.seekPrincipal();
+            project.seekPrincipalUser().seekPrincipalTeam();
         });
         return result;
     }
 
     public final FruitProjectDao findByUUID(FruitProjectVo vo) {
         FruitProjectDao result = this.findByUUID(vo.getUuidVo());
-        result.computeDays().seekPrincipal();
+        result.computeDays().seekPrincipalUser().seekPrincipalTeam();
         return result;
     }
 
