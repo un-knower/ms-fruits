@@ -1,5 +1,7 @@
 package wowjoy.fruits.ms.dao.project;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
@@ -10,10 +12,12 @@ import wowjoy.fruits.ms.module.project.FruitProjectDao;
 import wowjoy.fruits.ms.module.project.FruitProjectVo;
 import wowjoy.fruits.ms.module.relation.entity.ProjectTeamRelation;
 import wowjoy.fruits.ms.module.relation.entity.UserProjectRelation;
+import wowjoy.fruits.ms.module.team.FruitTeamDao;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 /**
@@ -31,6 +35,12 @@ public abstract class AbstractDaoProject implements InterfaceDao {
      */
     protected abstract void insert(FruitProjectDao dao);
 
+    protected abstract List<FruitProjectDao> finds(FruitProjectDao dao);
+
+    public abstract List<FruitProjectDao> findUserByProjectIds(String... ids);
+
+    public abstract List<FruitProjectDao> findTeamByProjectIds(String... ids);
+
     /**
      * 查询项目信息，支持查询条件：
      * 1、根据标题查询
@@ -47,8 +57,6 @@ public abstract class AbstractDaoProject implements InterfaceDao {
     protected abstract List<UserProjectRelation> findJoin(UserProjectRelation relation);
 
     protected abstract List<ProjectTeamRelation> findJoin(ProjectTeamRelation relation);
-
-    protected abstract List<FruitUserDao> findUserByProjectId(FruitProjectDao dao);
 
     /*******************************
      * PUBLIC 函数，公共接口         *
@@ -128,6 +136,7 @@ public abstract class AbstractDaoProject implements InterfaceDao {
             throw new CheckException("只能尝试绑定一个负责人");
     }
 
+    @Deprecated
     public final List<FruitProjectDao> findRelation(FruitProjectVo vo) {
         final FruitProjectDao dao = FruitProject.getDao();
         dao.setUuid(vo.getUuidVo());
@@ -144,6 +153,39 @@ public abstract class AbstractDaoProject implements InterfaceDao {
     public final FruitProjectDao findByUUID(FruitProjectVo vo) {
         FruitProjectDao result = this.findByUUID(vo.getUuidVo());
         result.computeDays().seekPrincipalUser().seekPrincipalTeam();
+        return result;
+    }
+
+    public final List<FruitProjectDao> finds(FruitProjectVo vo) {
+        FruitProjectDao dao = FruitProject.getDao();
+        dao.setTitle(vo.getTitle());
+        dao.setUuid(vo.getUuidVo());
+        dao.setProjectStatus(vo.getProjectStatus());
+        List<FruitProjectDao> result = this.finds(dao);
+        List<String> ids = Lists.newLinkedList();
+        result.forEach((i) -> ids.add(i.getUuid()));
+        DaoThread thread = DaoThread.getInstance();
+        thread.execute(() -> {
+            LinkedHashMap<String, List<FruitUserDao>> users = Maps.newLinkedHashMap();
+            this.findUserByProjectIds(ids.toArray(new String[ids.size()])).forEach((i) -> users.put(i.getUuid(), i.getUsers()));
+            result.forEach((i) -> {
+                if (!users.containsKey(i.getUuid())) return;
+                i.setUsers(users.get(i.getUuid()));
+                i.seekPrincipalUser();
+            });
+            return true;
+        });
+        thread.execute(() -> {
+            LinkedHashMap<String, List<FruitTeamDao>> teams = Maps.newLinkedHashMap();
+            this.findTeamByProjectIds(ids.toArray(new String[ids.size()])).forEach((i) -> teams.put(i.getUuid(), i.getTeams()));
+            result.forEach((i) -> {
+                if (!teams.containsKey(i.getUuid())) return;
+                i.setTeams(teams.get(i.getUuid()));
+                i.seekPrincipalTeam();
+            });
+            return true;
+        });
+        thread.get();
         return result;
     }
 
@@ -258,9 +300,10 @@ public abstract class AbstractDaoProject implements InterfaceDao {
     public List<FruitUserDao> findUserByProjectId(String projectId) {
         if (StringUtils.isBlank(projectId))
             throw new CheckException("项目id不存在");
-        FruitProjectDao dao = FruitProject.getDao();
-        dao.setUuid(projectId);
-        return findUserByProjectId(dao);
+        List<FruitProjectDao> result = findUserByProjectIds(projectId);
+        if (result.isEmpty())
+            throw new CheckException("项目不存在");
+        return result.get(0).getUsers();
     }
 
 }

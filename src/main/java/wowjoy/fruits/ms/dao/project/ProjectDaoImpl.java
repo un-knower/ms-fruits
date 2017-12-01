@@ -1,6 +1,7 @@
 package wowjoy.fruits.ms.dao.project;
 
 import org.apache.commons.lang.StringUtils;
+import org.assertj.core.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -45,6 +46,37 @@ public class ProjectDaoImpl extends AbstractDaoProject {
     public void insert(FruitProjectDao dao) {
         projectMapper.insertSelective(dao);
         Relation.getInstance(teamRelationDao, userRelationDao, dao).insertTeamRelation().insertUserRelation();
+    }
+
+    @Override
+    public List<FruitProjectDao> finds(FruitProjectDao dao) {
+        final FruitProjectExample example = new FruitProjectExample();
+        final FruitProjectExample.Criteria criteria = example.createCriteria();
+        if (StringUtils.isNotBlank(dao.getTitle()))
+            criteria.andTitleLike(MessageFormat.format("%{0}%", dao.getTitle()));
+        if (StringUtils.isNotBlank(dao.getProjectStatus()))
+            criteria.andProjectStatusEqualTo(dao.getProjectStatus());
+        if (StringUtils.isNotBlank(dao.getUuid()))
+            criteria.andUuidEqualTo(dao.getUuid());
+        criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
+        String order = dao.sortConstrue();
+        if (StringUtils.isNotBlank(order))
+            example.setOrderByClause(order);
+        return projectMapper.selectByExample(example);
+    }
+
+    @Override
+    public List<FruitProjectDao> findUserByProjectIds(String... ids) {
+        if (Arrays.isNullOrEmpty(ids))
+            throw new CheckException("查询关联用户时，必须提供项目id");
+        return projectMapper.selectUserByProjectId(ids);
+    }
+
+    @Override
+    public List<FruitProjectDao> findTeamByProjectIds(String... ids) {
+        if (Arrays.isNullOrEmpty(ids))
+            throw new CheckException("查询关联团队时，必须提供项目id");
+        return projectMapper.selectUserByProjectId(ids);
     }
 
     @Override
@@ -110,11 +142,6 @@ public class ProjectDaoImpl extends AbstractDaoProject {
     @Override
     public List<ProjectTeamRelation> findJoin(ProjectTeamRelation relation) {
         return teamRelationDao.finds(relation);
-    }
-
-    @Override
-    public List<FruitUserDao> findUserByProjectId(FruitProjectDao dao) {
-        return userDao.findByProjectId(dao.getUuid());
     }
 
     /**

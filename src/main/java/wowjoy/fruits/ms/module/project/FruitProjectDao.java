@@ -167,6 +167,7 @@ public class FruitProjectDao extends FruitProject {
      * 查找负责人
      */
     public FruitProjectDao seekPrincipalUser() {
+        if (this.getUsers().isEmpty()) return this;
         for (FruitUserDao user : this.getUsers()) {
             if (FruitDict.UserProjectDict.PRINCIPAL.name().equals(user.getProjectRole())) {
                 this.setPrincipalUser(user);
@@ -181,6 +182,7 @@ public class FruitProjectDao extends FruitProject {
      * 查找负责团队
      */
     public FruitProjectDao seekPrincipalTeam() {
+        if (this.getTeams().isEmpty()) return this;
         for (FruitTeamDao teamDao : this.getTeams()) {
             if (FruitDict.ProjectTeamDict.PRINCIPAL.name().equals(teamDao.getProjectRole())) {
                 this.setPrincipalTeam(teamDao);

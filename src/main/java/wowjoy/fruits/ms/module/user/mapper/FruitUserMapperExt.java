@@ -14,6 +14,4 @@ public interface FruitUserMapperExt {
 
     List<FruitUserDao> selectByAccount(@Param("example") FruitUserExample example, @Param("principal") String principal);
 
-    List<FruitUserDao> selectByProjectId(@Param("projectId") String projectId);
-
 }

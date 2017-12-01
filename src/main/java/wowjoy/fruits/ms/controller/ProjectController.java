@@ -31,7 +31,7 @@ public class ProjectController {
      */
     @RequestMapping(value = "/relation", method = RequestMethod.GET)
     public RestResult findRelation(@JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
-        return RestResult.getInstance().setData(projectDaoImpl.findRelation(vo));
+        return RestResult.getInstance().setData(projectDaoImpl.finds(vo));
     }
 
     /**

@@ -55,9 +55,4 @@ public class UserDaoImpl extends AbstractDaoUser {
         return mapper.selectByAccount(example, dao.getPrincipal());
     }
 
-    public List<FruitUserDao> findByProjectId(String projectId) {
-        if (StringUtils.isBlank(projectId))
-            throw new CheckException("项目id不存在");
-        return mapper.selectByProjectId(projectId);
-    }
 }

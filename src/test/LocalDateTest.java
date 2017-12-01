@@ -1,3 +1,4 @@
+import com.google.common.collect.Lists;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClients;
@@ -5,7 +6,9 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.*;
+import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
@@ -36,8 +39,6 @@ public class LocalDateTest {
         end = System.currentTimeMillis();
         System.out.println(end - start);
 
-        SortedMap<String, Object> sortedMap = Collections.synchronizedSortedMap(new TreeMap<>());
-
         start = System.nanoTime();
         for (Integer i = 0; i < 10000; i++)
             skipMap.get(i);
@@ -58,13 +59,18 @@ public class LocalDateTest {
     }
 
     @Test
-
     public void name() throws Exception {
         Date date = new Date();
         Thread.sleep(1000);
         Date date1 = new Date();
 
         System.out.println(date1.toInstant().compareTo(date.toInstant()));
+    }
+
+    @Test
+    public void test1() {
+        LinkedList<Object> test = Lists.newLinkedList();
+        System.out.println(test.toArray());
     }
 
     private InputStreamReader urlClient() throws IOException {

@@ -151,4 +151,54 @@
         </if>
     </select>
 
+    <select id="selectUserByProjectId" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List">
+            <property name="replace" value="fproject"/>
+        </include>
+        ,
+        <include refid="User_Column_List">
+            <property name="replace" value="fuser"/>
+            <property name="prefix" value="user_"/>
+        </include>
+        ,
+        upr.up_role as user_up_role
+        from fruits_project fproject
+        left join user_project_relation upr on upr.project_id = fproject.uuid
+        left join fruits_user fuser on fuser.user_id = upr.user_id
+        <where>
+            and fproject.uuid in
+            <foreach collection="projectIds" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+            and fproject.is_deleted = 'N'
+            and upr.is_deleted = 'N'
+            and fuser.is_deleted = 'N'
+        </where>
+    </select>
+    <select id="selectTeamByProjectId" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List">
+            <property name="replace" value="fproject"/>
+        </include>
+        ,
+        <include refid="team_Column_List">
+            <property name="replace" value="fteam"/>
+            <property name="prefix" value="team_"/>
+        </include>
+        ,
+        fteam.tp_role as team_tp_role
+        from fruits_project fproject
+        left join project_team_relation ptr on ptr.project_id = fproject.uuid
+        left join fruits_team fteam on fteam.uuid = ptr.team_id
+        <where>
+            and fproject.uuid in
+            <foreach collection="projectIds" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+            and fproject.is_deleted = 'N'
+            and ptr.is_deleted = 'N'
+            and fteam.is_deleted = 'N'
+        </where>
+    </select>
 </mapper>

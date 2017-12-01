@@ -115,20 +115,4 @@
         </foreach>
     </sql>
 
-    <select id="selectByProjectId" resultMap="BaseResultMap">
-        select
-        <include refid="Base_Column_List">
-            <property name="replace" value="fuser"/>
-        </include>
-        from fruits_user fuser
-        left join user_project_relation upr on upr.user_id = fuser.user_id
-        <where>
-            <if test="projectId != null">
-                and upr.project_id = #{projectId}
-                and upr.is_deleted = 'N'
-                and fuser.is_deleted = 'N'
-            </if>
-        </where>
-    </select>
-
 </mapper>
