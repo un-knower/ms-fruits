@@ -31,7 +31,7 @@ public class ProjectController {
      */
     @RequestMapping(value = "/relation", method = RequestMethod.GET)
     public RestResult findRelation(@JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
-        return RestResult.getInstance().setData(projectDaoImpl.finds(vo));
+        return RestResult.getInstance().setData(projectDaoImpl.finds(vo, true));
     }
 
     /**
@@ -53,7 +53,7 @@ public class ProjectController {
     public RestResult findByUUID(@PathVariable("uuid") String uuid) {
         FruitProjectVo projectVo = FruitProject.getProjectVo();
         projectVo.setUuidVo(uuid);
-        return RestResult.getInstance().setData(projectDaoImpl.findByUUID(projectVo));
+        return RestResult.getInstance().setData(projectDaoImpl.findByUUID(projectVo, true));
     }
 
     /**

@@ -41,15 +41,6 @@ public abstract class AbstractDaoProject implements InterfaceDao {
 
     public abstract List<FruitProjectDao> findTeamByProjectIds(String... ids);
 
-    /**
-     * 查询项目信息，支持查询条件：
-     * 1、根据标题查询
-     * 2、根据项目状态查询
-     */
-    protected abstract List<FruitProjectDao> findRelation(FruitProjectDao dao);
-
-    protected abstract FruitProjectDao findByUUID(String uuid);
-
     protected abstract void update(FruitProjectDao dao);
 
     protected abstract void delete(String uuid);
@@ -65,8 +56,7 @@ public abstract class AbstractDaoProject implements InterfaceDao {
 
     public final void delete(FruitProjectVo vo) {
         try {
-            if (!this.findByUUID(vo).isNotEmpty())
-                throw new CheckException("项目不存在");
+            this.findByUUID(vo, false).isNotEmpty();
             delete(vo.getUuidVo());
         } catch (ExceptionSupport ex) {
             throw ex;
@@ -138,30 +128,23 @@ public abstract class AbstractDaoProject implements InterfaceDao {
 
     @Deprecated
     public final List<FruitProjectDao> findRelation(FruitProjectVo vo) {
-        final FruitProjectDao dao = FruitProject.getDao();
-        dao.setUuid(vo.getUuidVo());
-        dao.setTitle(vo.getTitle());
-        dao.setProjectStatus(vo.getProjectStatus());
-        List<FruitProjectDao> result = this.findRelation(dao);
-        result.forEach((project) -> {
-            project.computeDays();
-            project.seekPrincipalUser().seekPrincipalTeam();
-        });
-        return result;
+        return this.finds(vo, true);
     }
 
-    public final FruitProjectDao findByUUID(FruitProjectVo vo) {
-        FruitProjectDao result = this.findByUUID(vo.getUuidVo());
-        result.computeDays().seekPrincipalUser().seekPrincipalTeam();
-        return result;
+    public final FruitProjectDao findByUUID(FruitProjectVo vo, boolean isJoin) {
+        List<FruitProjectDao> finds = this.finds(vo, isJoin);
+        if (finds.isEmpty())
+            throw new CheckException("项目不存在");
+        return finds.get(0);
     }
 
-    public final List<FruitProjectDao> finds(FruitProjectVo vo) {
+    public final List<FruitProjectDao> finds(FruitProjectVo vo, boolean isJoin) {
         FruitProjectDao dao = FruitProject.getDao();
         dao.setTitle(vo.getTitle());
         dao.setUuid(vo.getUuidVo());
         dao.setProjectStatus(vo.getProjectStatus());
         List<FruitProjectDao> result = this.finds(dao);
+        if (!isJoin) return result;
         List<String> ids = Lists.newLinkedList();
         result.forEach((i) -> ids.add(i.getUuid()));
         DaoThread thread = DaoThread.getInstance();
@@ -198,9 +181,7 @@ public abstract class AbstractDaoProject implements InterfaceDao {
      */
     public final void modify(FruitProjectVo vo) {
         try {
-            FruitProjectDao project = this.findByUUID(vo);
-            if (!project.isNotEmpty())
-                throw new CheckException("项目不存在");
+            this.findByUUID(vo, false);
             final FruitProjectDao dao = FruitProject.getDao();
             dao.setUuid(vo.getUuidVo());
             dao.setTitle(vo.getTitle());
@@ -277,9 +258,7 @@ public abstract class AbstractDaoProject implements InterfaceDao {
 
     public final void complete(FruitProjectVo vo) {
         try {
-            FruitProjectDao project = this.findByUUID(vo);
-            if (!project.isNotEmpty())
-                throw new CheckException("项目不存在");
+            FruitProjectDao project = this.findByUUID(vo, false);
             if (FruitDict.ProjectDict.COMPLETE.name().equals(project.getProjectStatus()))
                 throw new CheckException("项目已完成，错误的操作");
             final FruitProjectDao data = FruitProject.getDao();

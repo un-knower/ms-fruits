@@ -61,6 +61,8 @@ public class ProjectDaoImpl extends AbstractDaoProject {
         String order = dao.sortConstrue();
         if (StringUtils.isNotBlank(order))
             example.setOrderByClause(order);
+        else
+            example.setOrderByClause("create_date_time desc");
         return projectMapper.selectByExample(example);
     }
 
@@ -77,34 +79,6 @@ public class ProjectDaoImpl extends AbstractDaoProject {
             throw new CheckException("查询关联团队时，必须提供项目id");
         return projectMapper.selectTeamByProjectId(ids);
     }
-
-    @Override
-    public List<FruitProjectDao> findRelation(FruitProjectDao dao) {
-        FruitProjectExample example = new FruitProjectExample();
-        final FruitProjectExample.Criteria criteria = example.createCriteria();
-        if (StringUtils.isNotBlank(dao.getTitle()))
-            criteria.andTitleLike(MessageFormat.format("%{0}%", dao.getTitle()));
-        if (StringUtils.isNotBlank(dao.getProjectStatus()))
-            criteria.andProjectStatusEqualTo(dao.getProjectStatus());
-        if (StringUtils.isNotBlank(dao.getUuid()))
-            criteria.andUuidEqualTo(dao.getUuid());
-        criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
-        example.setOrderByClause("create_date_time desc");
-        return projectMapper.selectUserRelationByExample(example);
-    }
-
-    @Override
-    public FruitProjectDao findByUUID(String uuid) {
-        if (StringUtils.isBlank(uuid))
-            throw new CheckException("【项目】uuId不能为空");
-        FruitProjectExample example = new FruitProjectExample();
-        example.createCriteria().andUuidEqualTo(uuid).andIsDeletedEqualTo(FruitDict.Systems.N.name());
-        List<FruitProjectDao> data = projectMapper.selectUserRelationByExample(example);
-        if (data.isEmpty())
-            throw new CheckException("不存在！再查自杀");
-        return data.get(0);
-    }
-
 
     @Override
     public void update(FruitProjectDao dao) {
