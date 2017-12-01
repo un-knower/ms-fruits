@@ -187,7 +187,7 @@
             <property name="prefix" value="team_"/>
         </include>
         ,
-        fteam.tp_role as team_tp_role
+        ptr.tp_role as team_tp_role
         from fruits_project fproject
         left join project_team_relation ptr on ptr.project_id = fproject.uuid
         left join fruits_team fteam on fteam.uuid = ptr.team_id
