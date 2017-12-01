@@ -51,7 +51,7 @@ public class ProjectController {
      */
     @RequestMapping(value = "{uuid}", method = RequestMethod.GET)
     public RestResult findByUUID(@PathVariable("uuid") String uuid) {
-        FruitProjectVo projectVo = FruitProject.getProjectVo();
+        FruitProjectVo projectVo = FruitProject.getVo();
         projectVo.setUuidVo(uuid);
         return RestResult.getInstance().setData(projectDaoImpl.findByUUID(projectVo, true));
     }
@@ -98,7 +98,7 @@ public class ProjectController {
      */
     @RequestMapping(value = "{uuid}", method = RequestMethod.DELETE)
     public RestResult delete(@PathVariable("uuid") String uuid) {
-        FruitProjectVo vo = FruitProject.getProjectVo();
+        FruitProjectVo vo = FruitProject.getVo();
         vo.setUuidVo(uuid);
         projectDaoImpl.delete(vo);
         return RestResult.getInstance().setData(uuid);

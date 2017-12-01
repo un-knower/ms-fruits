@@ -81,7 +81,7 @@ public class FruitProject extends AbstractEntity {
         return new FruitProjectDao();
     }
 
-    public static FruitProjectVo getProjectVo() {
+    public static FruitProjectVo getVo() {
         return new FruitProjectVo();
     }
 

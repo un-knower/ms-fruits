@@ -151,7 +151,7 @@ public class GlobalSearchEs extends AbstractElastic {
         private final Callable extractProjects = () -> {
             final LinkedList<GlobalSearch> result = Lists.newLinkedList();
             final AbstractDaoProject dao = ApplicationContextUtils.getContext().getBean(ProjectDaoImpl.class);
-            final List<FruitProjectDao> projects = dao.findRelation(FruitProject.getProjectVo());
+            final List<FruitProjectDao> projects = dao.findRelation(FruitProject.getVo());
             projects.forEach((projectDao) -> {
                 GlobalSearch global = GlobalSearch.getInstance(FruitProjectDao.class);
                 global.setTitle(projectDao.getTitle());
