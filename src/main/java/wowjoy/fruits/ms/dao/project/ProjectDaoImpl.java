@@ -16,7 +16,6 @@ import wowjoy.fruits.ms.module.project.FruitProjectExample;
 import wowjoy.fruits.ms.module.project.mapper.FruitProjectMapper;
 import wowjoy.fruits.ms.module.relation.entity.ProjectTeamRelation;
 import wowjoy.fruits.ms.module.relation.entity.UserProjectRelation;
-import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.text.MessageFormat;
@@ -76,7 +75,7 @@ public class ProjectDaoImpl extends AbstractDaoProject {
     public List<FruitProjectDao> findTeamByProjectIds(String... ids) {
         if (Arrays.isNullOrEmpty(ids))
             throw new CheckException("查询关联团队时，必须提供项目id");
-        return projectMapper.selectUserByProjectId(ids);
+        return projectMapper.selectTeamByProjectId(ids);
     }
 
     @Override
