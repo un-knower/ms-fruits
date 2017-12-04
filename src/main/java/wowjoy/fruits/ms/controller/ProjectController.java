@@ -6,9 +6,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import wowjoy.fruits.ms.aspectj.LogInfo;
 import wowjoy.fruits.ms.dao.project.AbstractDaoProject;
 import wowjoy.fruits.ms.module.project.FruitProject;
 import wowjoy.fruits.ms.module.project.FruitProjectVo;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.JsonArgument;
 import wowjoy.fruits.ms.util.RestResult;
 
@@ -61,6 +63,7 @@ public class ProjectController {
      * @apiVersion 0.1.0
      * @apiGroup project
      */
+//    @LogInfo(format = "【{user.userName}】添加了【{vo.title}】项目", uuid = "vo.uuid", type = FruitDict.Parents.PROJECT, operateType = FruitDict.Systems.ADD)
     @RequestMapping(method = RequestMethod.POST)
     public RestResult insert(@JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
         projectDaoImpl.add(vo);
@@ -72,6 +75,7 @@ public class ProjectController {
      * @apiVersion 0.1.0
      * @apiGroup project
      */
+//    @LogInfo(format = "【{user.userName}】修改了【{vo.title}】项目", uuid = "uuid", type = FruitDict.Parents.PROJECT, operateType = FruitDict.Systems.UPDATE)
     @RequestMapping(value = "{uuid}", method = RequestMethod.PUT)
     public RestResult update(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
         vo.setUuidVo(uuid);
@@ -84,6 +88,7 @@ public class ProjectController {
      * @apiVersion 0.1.0
      * @apiGroup project
      */
+//    @LogInfo(format = "【{user.userName}】修改了【{vo.title}】项目", uuid = "uuid", type = FruitDict.Parents.PROJECT, operateType = FruitDict.Systems.UPDATE)
     @RequestMapping(value = "/complete/{uuid}", method = RequestMethod.PUT)
     public RestResult updateStatus(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
         vo.setUuidVo(uuid);

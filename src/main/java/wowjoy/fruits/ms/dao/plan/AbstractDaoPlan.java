@@ -93,7 +93,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
                 childVo.setAsc(vo.getAsc());
                 childVo.setPlanStatus(vo.getPlanStatus());
                 plan.getWeeks().addAll(this.findMonthWeek(childVo, false));
-                if (plan.getWeeks().isEmpty()) return false;
+                if (StringUtils.isNotBlank(vo.getPlanStatus()) && !plan.getPlanStatus().equals(vo.getPlanStatus()) && plan.getWeeks().isEmpty()) return false;
                 result.add(plan);
                 return true;
             });
