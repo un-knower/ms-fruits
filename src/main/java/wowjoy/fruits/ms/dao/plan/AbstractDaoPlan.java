@@ -61,6 +61,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
      * @return
      */
     public final List<FruitPlanDao> findMonthWeek(FruitPlanVo vo, boolean isPage) {
+        List<FruitPlanDao> result = Lists.newLinkedList();
         List<FruitPlanDao> planDaoList = findProject(this.findMonthWeekTemplate(vo), vo.getPageNum(), vo.getPageSize(), isPage);
         if (planDaoList.isEmpty()) return Lists.newLinkedList();
         DaoThread planThread = DaoThread.getInstance();
@@ -88,14 +89,17 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
             planThread.execute(() -> {
                 FruitPlanVo childVo = FruitPlan.getVo();
                 childVo.setParentId(plan.getUuid());
-                childVo.setDesc(plan.getDesc());
-                childVo.setAsc(plan.getAsc());
+                childVo.setDesc(vo.getDesc());
+                childVo.setAsc(vo.getAsc());
+                childVo.setPlanStatus(vo.getPlanStatus());
                 plan.getWeeks().addAll(this.findMonthWeek(childVo, false));
+                if (plan.getWeeks().isEmpty()) return false;
+                result.add(plan);
                 return true;
             });
         });
         planThread.get();
-        return planDaoList;
+        return result;
     }
 
     private FruitPlanDao findMonthWeekTemplate(FruitPlanVo vo) {
@@ -103,7 +107,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         final FruitPlanDao dao = FruitPlan.getDao();
         dao.setTitle(vo.getTitle());
         dao.setParentId(vo.getParentId());
-        dao.setPlanStatus(vo.getPlanStatus());
+        dao.setPlanStatus(StringUtils.isNotBlank(vo.getParentId()) ? vo.getPlanStatus() : null);
         dao.setStartDateDao(vo.getStartDateVo());
         dao.setEndDateDao(vo.getEndDateVo());
         dao.setProjectId(vo.getProjectId());

@@ -88,8 +88,9 @@ public class PlanDaoImpl extends AbstractDaoPlan {
             criteria.andParentIdEqualTo(dao.getParentId());
         if (Objects.nonNull(dao.getStartDateDao()) && Objects.nonNull(dao.getEndDateDao()))
             criteria.andEstimatedEndDateBetween(dao.getStartDateDao(), dao.getEndDateDao());
-        if (StringUtils.isNotBlank(dao.getPlanStatus()))
+        if (StringUtils.isNotBlank(dao.getPlanStatus())){
             criteria.andPlanStatusEqualTo(dao.getPlanStatus());
+        }
         String sort = dao.sortConstrue();
         if (StringUtils.isNotBlank(sort))
             example.setOrderByClause(sort);

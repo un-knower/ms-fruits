@@ -102,7 +102,7 @@ public class TeamDaoImpl extends AbstractDaoTeam {
         }
 
         public Relation deleteUser() {
-            data.getUserRelation(FruitDict.Systems.DELETE).forEach((i) -> dao.deleted(UserTeamRelation.newInstance(i.getUserId(), data.getUuid())));
+            data.getUserRelation(FruitDict.Systems.DELETE).forEach((i) -> dao.deleted(UserTeamRelation.newInstance(i.getUserId(), data.getUuid(), StringUtils.isNotBlank(i.getUtRole()) ? i.getUtRole() : null)));
             return this;
         }
 

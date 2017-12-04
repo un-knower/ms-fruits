@@ -2,7 +2,7 @@ package wowjoy.fruits.ms.module.relation.entity;
 
 import wowjoy.fruits.ms.module.AbstractEntity;
 
-public class UserTeamRelation extends AbstractEntity{
+public class UserTeamRelation extends AbstractEntity {
 
     private String userId;
 
@@ -34,15 +34,16 @@ public class UserTeamRelation extends AbstractEntity{
         this.utRole = utRole;
     }
 
-    public static UserTeamRelation newInstance(final String userId,final String teamId) {
+    public static UserTeamRelation newInstance(final String userId, final String teamId, final String utRole) {
         final UserTeamRelation relation = new UserTeamRelation();
         relation.setTeamId(teamId);
         relation.setUserId(userId);
+        relation.setUtRole(utRole);
         return relation;
     }
 
     public static UserTeamRelation newInstance(final String teamId) {
-        return newInstance(null,teamId);
+        return newInstance(null, teamId, null);
     }
 
     public static UserTeamRelation getInstance() {

@@ -160,7 +160,7 @@ public class ProjectDaoImpl extends AbstractDaoProject {
          * 删除所有关联团队
          */
         private Relation removesTeamRelation() {
-            TeamDao.deleted(ProjectTeamRelation.newInstance(Dao.getUuid(), null));
+            TeamDao.remove(ProjectTeamRelation.newInstance(Dao.getUuid(), null));
             return this;
         }
 

@@ -14,6 +14,7 @@ import java.util.Objects;
  */
 public class FruitTeamDao extends FruitTeam {
     protected FruitTeamDao() {
+        this.setUuid(null);
     }
 
     /**
