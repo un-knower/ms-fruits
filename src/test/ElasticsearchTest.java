@@ -1,3 +1,4 @@
+import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import org.elasticsearch.client.transport.TransportClient;
@@ -5,6 +6,8 @@ import org.junit.Test;
 import wowjoy.fruits.ms.module.project.FruitProject;
 
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -26,8 +29,8 @@ public class ElasticsearchTest {
 
     @Test
     public void name() throws Exception {
-        FruitProject project = new FruitProject();
-        System.out.println(new Gson().toJsonTree(project).toString());
+        ArrayList<Object> objects = new ArrayList<>(Arrays.asList(new Object[10]));
+        System.out.println(objects.size());
     }
 
 }

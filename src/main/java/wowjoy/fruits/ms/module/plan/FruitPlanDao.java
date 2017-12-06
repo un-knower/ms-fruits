@@ -28,6 +28,8 @@ public class FruitPlanDao extends FruitPlan {
     private volatile List<FruitPlanDao> weeks;
     private String projectId;
     private List<String> parentIds;
+    private String taskId;
+    private Integer days;
 
     public List<String> getParentIds() {
         return parentIds;
@@ -37,8 +39,9 @@ public class FruitPlanDao extends FruitPlan {
         this.days = days;
     }
 
-    private String taskId;
-    private Integer days;
+    public Integer getDays() {
+        return days;
+    }
 
     public String getTaskId() {
         return taskId;

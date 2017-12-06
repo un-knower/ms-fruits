@@ -21,7 +21,6 @@ import wowjoy.fruits.ms.module.plan.mapper.FruitPlanSummaryMapper;
 import wowjoy.fruits.ms.module.relation.entity.PlanProjectRelation;
 import wowjoy.fruits.ms.module.relation.entity.PlanUserRelation;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
-import wowjoy.fruits.ms.util.ApplicationContextUtils;
 
 import java.util.List;
 import java.util.Objects;
@@ -59,9 +58,9 @@ public class PlanDaoImpl extends AbstractDaoPlan {
     }
 
     @Override
-    protected List<FruitPlanDao> findUserByPlanIds(List<String> planIds) {
+    protected List<FruitPlanDao> findUserByPlanIds(List<String> planIds,String currentUserId) {
         if (planIds == null || planIds.isEmpty()) return Lists.newLinkedList();
-        return mapper.selectUserByPlanIds(planIds, ApplicationContextUtils.getCurrentUser().getUserId());
+        return mapper.selectUserByPlanIds(planIds, currentUserId);
     }
 
     @Override

@@ -36,6 +36,7 @@ public class AccountDaoImpl extends AbstractDaoAccount {
         FruitAccountExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(dao.getPrincipal()))
             criteria.andPrincipalEqualTo(dao.getPrincipal());
+        criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
         return accountMapper.relationUser(example);
     }
 

@@ -113,7 +113,10 @@ public class FruitDict extends AbstractEntity {
         //已完成
         COMPLETE("已完成"),
         //终止
-        END("已终止");
+        END("已终止"),
+        /*下列字段只用于数据统计，不在数据库中真实存放*/
+        DELAY("延期"),
+        DELAY_COMPLETE("延期完成");
 
 
         private String parentCode;
