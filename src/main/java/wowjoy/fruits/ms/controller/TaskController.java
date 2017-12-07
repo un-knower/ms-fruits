@@ -26,6 +26,48 @@ public class TaskController {
      * @api {post} /v1/task 添加任务
      * @apiVersion 0.1.0
      * @apiGroup task
+     * @apiParamExample {json} 关联计划:
+     *  {
+            "description":"2017年11月15日10:35:55：测试任务添加-计划",
+            "estimatedEndDate":"2017-11-15",
+            "title":"测试任务添加-计划",
+            "taskLevel":"LOW",
+            "userRelation":{
+            "ADD":[{
+                "userId":"fbdebd622b75404a9258e6ddd0c13a79"
+            }]
+            },
+            "listRelation":{
+            "ADD":[{
+                "listId":"6c59f8d69a27406c835f7a8f0d44a71f"
+            }]
+            },"planRelation":{
+            "ADD":[{
+                "planId":"963b729b7677406bbc3aa7eac2f58b19"
+            }]
+            }
+        }
+     * @apiParamExample {json} 关联项目:
+     *  {
+            "description":"2017年11月15日10:35:55：测试任务添加-计划",
+            "estimatedEndDate":"2017-11-15",
+            "title":"测试任务添加-计划",
+            "taskLevel":"LOW",
+            "userRelation":{
+            "ADD":[{
+                "userId":"fbdebd622b75404a9258e6ddd0c13a79"
+            }]
+            },
+            "listRelation":{
+            "ADD":[{
+                "listId":"6c59f8d69a27406c835f7a8f0d44a71f"
+            }]
+            },"projectRelation":{
+            "ADD":[{
+                "projectId":"5db11c2ee68e49208c368a9a670a7bbb"
+            }]
+            }
+        }
      */
     @RequestMapping(method = RequestMethod.POST)
     public RestResult insert(@JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {

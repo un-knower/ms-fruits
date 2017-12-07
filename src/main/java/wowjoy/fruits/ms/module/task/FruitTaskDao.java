@@ -26,10 +26,10 @@ public class FruitTaskDao extends FruitTask {
         this.setUuid(null);
     }
 
-    private Map<FruitDict.Systems, List<TaskPlanRelation>> taskPlanRelation;
-    private Map<FruitDict.Systems, List<TaskProjectRelation>> taskProjectRelation;
-    private Map<FruitDict.Systems, List<TaskUserRelation>> taskUserRelation;
-    private Map<FruitDict.Systems, List<TaskListRelation>> taskListRelation;
+    private Map<FruitDict.Systems, List<TaskPlanRelation>> planRelation;
+    private Map<FruitDict.Systems, List<TaskProjectRelation>> projectRelation;
+    private Map<FruitDict.Systems, List<TaskUserRelation>> userRelation;
+    private Map<FruitDict.Systems, List<TaskListRelation>> listRelation;
     private List<String> projectIds;
     private transient Integer pageNum = 1;
     private transient Integer pageSize = 10;
@@ -119,74 +119,74 @@ public class FruitTaskDao extends FruitTask {
         return this;
     }
 
-    public List<TaskPlanRelation> getTaskPlanRelation(FruitDict.Systems parents) {
-        return taskPlanRelation != null && taskPlanRelation.containsKey(parents) ? taskPlanRelation.get(parents) : Lists.newLinkedList();
+    public List<TaskPlanRelation> getPlanRelation(FruitDict.Systems parents) {
+        return planRelation != null && planRelation.containsKey(parents) ? planRelation.get(parents) : Lists.newLinkedList();
     }
 
-    public Map<FruitDict.Systems, List<TaskPlanRelation>> getTaskPlanRelation() {
-        return taskPlanRelation;
+    public Map<FruitDict.Systems, List<TaskPlanRelation>> getPlanRelation() {
+        return planRelation;
     }
 
-    public boolean checkTaskPlanRelation() {
-        if (taskPlanRelation == null || taskPlanRelation.isEmpty())
+    public boolean checkPlanRelation() {
+        if (planRelation == null || planRelation.isEmpty())
             return false;
         return true;
     }
 
-    public boolean checkTaskProjectRelation() {
-        if (taskProjectRelation == null || taskProjectRelation.isEmpty())
+    public boolean checkProjectRelation() {
+        if (projectRelation == null || projectRelation.isEmpty())
             return false;
         return true;
     }
 
-    public void setTaskPlanRelation(Map<FruitDict.Systems, List<TaskPlanRelation>> taskPlanRelation) {
-        this.taskPlanRelation = taskPlanRelation;
+    public void setPlanRelation(Map<FruitDict.Systems, List<TaskPlanRelation>> planRelation) {
+        this.planRelation = planRelation;
     }
 
-    public void setTaskPlanRelation(FruitDict.Systems parents, List<TaskPlanRelation> value) {
-        if (this.taskPlanRelation == null)
-            this.taskPlanRelation = Maps.newLinkedHashMap();
-        this.taskPlanRelation.put(parents, value);
+    public void setPlanRelation(FruitDict.Systems parents, List<TaskPlanRelation> value) {
+        if (this.planRelation == null)
+            this.planRelation = Maps.newLinkedHashMap();
+        this.planRelation.put(parents, value);
     }
 
-    public List<TaskProjectRelation> getTaskProjectRelation(FruitDict.Systems parents) {
-        return taskProjectRelation != null && taskProjectRelation.containsKey(parents) ? taskProjectRelation.get(parents) : Lists.newLinkedList();
+    public List<TaskProjectRelation> getProjectRelation(FruitDict.Systems parents) {
+        return projectRelation != null && projectRelation.containsKey(parents) ? projectRelation.get(parents) : Lists.newLinkedList();
     }
 
-    public Map<FruitDict.Systems, List<TaskProjectRelation>> getTaskProjectRelation() {
-        return taskProjectRelation;
+    public Map<FruitDict.Systems, List<TaskProjectRelation>> getProjectRelation() {
+        return projectRelation;
     }
 
-    public void setTaskProjectRelation(Map<FruitDict.Systems, List<TaskProjectRelation>> taskProjectRelation) {
-        this.taskProjectRelation = taskProjectRelation;
+    public void setProjectRelation(Map<FruitDict.Systems, List<TaskProjectRelation>> projectRelation) {
+        this.projectRelation = projectRelation;
     }
 
     public void setTaskProjectRelation(FruitDict.Systems parents, List<TaskProjectRelation> value) {
-        if (this.taskProjectRelation == null)
-            this.taskProjectRelation = Maps.newLinkedHashMap();
-        this.taskProjectRelation.put(parents, value);
+        if (this.projectRelation == null)
+            this.projectRelation = Maps.newLinkedHashMap();
+        this.projectRelation.put(parents, value);
     }
 
-    public List<TaskUserRelation> getTaskUserRelation(FruitDict.Systems parents) {
-        return taskUserRelation != null && taskUserRelation.containsKey(parents) ? taskUserRelation.get(parents) : Lists.newLinkedList();
+    public List<TaskUserRelation> getUserRelation(FruitDict.Systems parents) {
+        return userRelation != null && userRelation.containsKey(parents) ? userRelation.get(parents) : Lists.newLinkedList();
     }
 
-    public void setTaskUserRelation(Map<FruitDict.Systems, List<TaskUserRelation>> taskUserRelation) {
-        this.taskUserRelation = taskUserRelation;
+    public void setUserRelation(Map<FruitDict.Systems, List<TaskUserRelation>> userRelation) {
+        this.userRelation = userRelation;
     }
 
-    public List<TaskListRelation> getTaskListRelation(FruitDict.Systems parents) {
-        return taskListRelation != null && taskListRelation.containsKey(parents) ? taskListRelation.get(parents) : Lists.newLinkedList();
+    public List<TaskListRelation> getListRelation(FruitDict.Systems parents) {
+        return listRelation != null && listRelation.containsKey(parents) ? listRelation.get(parents) : Lists.newLinkedList();
     }
 
-    public void setTaskListRelation(Map<FruitDict.Systems, List<TaskListRelation>> taskListRelation) {
-        this.taskListRelation = taskListRelation;
+    public void setListRelation(Map<FruitDict.Systems, List<TaskListRelation>> listRelation) {
+        this.listRelation = listRelation;
     }
 
-    public void setTaskListRelation(FruitDict.Systems parents, List<TaskListRelation> value) {
-        if (taskListRelation == null)
-            taskListRelation = Maps.newLinkedHashMap();
-        this.taskListRelation.put(parents, value);
+    public void setListRelation(FruitDict.Systems parents, List<TaskListRelation> value) {
+        if (listRelation == null)
+            listRelation = Maps.newLinkedHashMap();
+        this.listRelation.put(parents, value);
     }
 
 

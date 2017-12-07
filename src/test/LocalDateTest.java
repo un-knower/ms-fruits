@@ -1,14 +1,19 @@
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.gson.Gson;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClients;
 import org.junit.Test;
+import wowjoy.fruits.ms.module.relation.entity.PlanProjectRelation;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Date;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
@@ -69,8 +74,9 @@ public class LocalDateTest {
 
     @Test
     public void test1() {
-        LinkedList<Object> test = Lists.newLinkedList();
-        System.out.println(test.toArray());
+        Map<FruitDict.Systems,List<PlanProjectRelation>> data = Maps.newLinkedHashMap();
+        data.put(FruitDict.Systems.ADD, Lists.newLinkedList());
+        System.out.println(new Gson().toJsonTree(data).isJsonObject());
     }
 
     private InputStreamReader urlClient() throws IOException {

@@ -11,18 +11,17 @@ import java.util.Map;
 public class FruitListVo extends FruitList {
     private String uuidVo;
 
-    private Map<FruitDict.Systems, List<String>> listRelation;
+    private Map<FruitDict.Systems, List<String>> projectRelation;
 
-    public Map<FruitDict.Systems, List<String>> getListRelation() {
-        return listRelation;
+    public Map<FruitDict.Systems, List<String>> getProjectRelation() {
+        return projectRelation;
     }
 
-    public void setListRelation(Map<FruitDict.Systems, List<String>> listRelation) {
-        this.listRelation = listRelation;
+    public void setProjectRelation(Map<FruitDict.Systems, List<String>> projectRelation) {
+        this.projectRelation = projectRelation;
     }
 
     public String getUuidVo() {
-
         return uuidVo;
     }
 

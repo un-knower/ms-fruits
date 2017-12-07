@@ -27,6 +27,7 @@ public abstract class AbstractDaoLogs implements InterfaceDao {
         dao.setFruitUuid(vo.getFruitUuid());
         dao.setFruitType(vo.getFruitType());
         dao.setOperateType(vo.getOperateType());
+        dao.setJsonObject(vo.getJsonObject());
         this.insert(dao);
     }
 

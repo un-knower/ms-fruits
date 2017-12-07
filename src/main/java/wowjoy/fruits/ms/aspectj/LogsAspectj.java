@@ -12,11 +12,13 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import wowjoy.fruits.ms.dao.AbstractDaoChain;
+import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.dao.logs.AbstractDaoLogs;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.logs.FruitLogs;
 import wowjoy.fruits.ms.module.logs.FruitLogsVo;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;
 import wowjoy.fruits.ms.util.AsmClassInfo;
 
@@ -46,7 +48,10 @@ public class LogsAspectj {
     public Object around(ProceedingJoinPoint joinPoint, LogInfo annotation) {
         try {
             Object result = joinPoint.proceed();
-            record(joinPoint, annotation);
+            InterfaceDao.DaoThread.getInstance().execute(()->{
+                record(joinPoint, annotation);
+                return true;
+            });
             return result;
         } catch (Throwable throwable) {
             throwable.printStackTrace();
@@ -71,16 +76,28 @@ public class LogsAspectj {
             if (v.getPrefix() != null && v.getValue() == null)
                 v.setValue(toString(fieldValue(DBData).get(v.getKey())));
         });
-        FruitLogsVo vo = FruitLogs.getVo();
-        /*获取对应的uuid*/
+        FruitLogsVo vo = logTemplate(methodParamValue, DBData, logInfo);
+         /*获取对应的uuid*/
         vo.setFruitUuid(placeValues.get(logInfo.uuid()).getValue());
-        vo.setFruitType(logInfo.type());
-        vo.setOperateType(logInfo.operateType());
         /*遍历【placeholders】将字符串中占位符部分替换为对应字符串数据*/
         vo.setContent(replace(logInfo.format(), placeholders));
-        vo.setUserId(ApplicationContextUtils.getCurrentUser().getUserId());
         /*记录日志*/
         logsDao.insert(vo);
+    }
+
+    private FruitLogsVo logTemplate(Map<String, Object> methodParamValue, AbstractEntity dbData, LogInfo logInfo) {
+        FruitLogsVo vo = FruitLogs.getVo();
+        if (logInfo.operateType().equals(FruitDict.Systems.UPDATE))
+            methodParamValue.forEach((name, obj) -> {
+                if (logInfo.mainParam().equals(name))
+                    vo.setJsonObject(new Gson().toJsonTree(obj).toString());
+            });
+        else if (logInfo.operateType().equals(FruitDict.Systems.DELETE) || logInfo.operateType().equals(FruitDict.Systems.ADD))
+            vo.setJsonObject(new Gson().toJsonTree(dbData).toString());
+        vo.setFruitType(logInfo.type());
+        vo.setOperateType(logInfo.operateType());
+        vo.setUserId(ApplicationContextUtils.getCurrentUser().getUserId());
+        return vo;
     }
 
     /*替换字符串中占位符部分*/
@@ -150,7 +167,8 @@ public class LogsAspectj {
                 field.setAccessible(true);
                 Object data = field.get(obj);
                 if (new Gson().toJsonTree(data).isJsonObject()) {
-                    fieldValue.put(field.getName(), data == null ? null : fieldValue(data));
+                    if (data instanceof AbstractEntity)
+                        fieldValue.put(field.getName(), data == null ? null : fieldValue(data));
                 } else {
                     fieldValue.put(field.getName(), data);
                 }

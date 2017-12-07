@@ -53,7 +53,7 @@
             <property name="replace" value="list"/>
         </include>
         from fruits_list list
-        inner join project_list_relation listRelation on list.uuid = listRelation.list_id
+        inner join project_list_relation projectRelation on list.uuid = projectRelation.list_id
         <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
             <where>
                 <if test="example != null">
@@ -62,11 +62,11 @@
                     </include>
                 </if>
                 <if test="projectIds != null">
-                    and listRelation.project_id in
+                    and projectRelation.project_id in
                     <foreach collection="projectIds" item="id" open="(" close=")" separator=",">
                         #{id}
                     </foreach>
-                    and listRelation.is_deleted = 'N'
+                    and projectRelation.is_deleted = 'N'
                 </if>
             </where>
         </trim>

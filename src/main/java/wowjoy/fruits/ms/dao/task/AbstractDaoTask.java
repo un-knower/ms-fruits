@@ -86,7 +86,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
             throw ex;
         } catch (RuntimeException ex) {
             ex.printStackTrace();
-            throw new CheckException("插入任务时，发生未处理异常，联系 Boss 严");
+            throw new CheckException("插入任务时，发生未处理异常");
         }
 
     }
@@ -146,7 +146,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
                 throw new CheckException("任务不存在，不允许操作。");
             FruitTaskDao dao = FruitTask.getDao();
             dao.setUuid(vo.getUuidVo());
-            dao.setTaskListRelation(vo.getTaskListRelation());
+            dao.setListRelation(vo.getListRelation());
             this.checkChangeList(dao);
             this.update(dao);
         } catch (ExceptionSupport ex) {
@@ -158,10 +158,10 @@ public abstract class AbstractDaoTask implements InterfaceDao {
     }
 
     private void checkChangeList(FruitTaskDao dao) {
-        if (dao.getTaskListRelation(FruitDict.Systems.ADD).isEmpty())
+        if (dao.getListRelation(FruitDict.Systems.ADD).isEmpty())
             throw new CheckException("没有目标源，无法切换列表");
         /*每次切换列表时，都删除旧的关联列表*/
-        dao.setTaskListRelation(FruitDict.Systems.DELETE, Lists.newArrayList(TaskListRelation.newInstance(dao.getUuid(), null)));
+        dao.setListRelation(FruitDict.Systems.DELETE, Lists.newArrayList(TaskListRelation.newInstance(dao.getUuid(), null)));
 
     }
 
@@ -345,9 +345,9 @@ public abstract class AbstractDaoTask implements InterfaceDao {
          * @return
          */
         private TaskTemplate checkInsert() {
-            if (dao.getTaskPlanRelation(FruitDict.Systems.ADD).isEmpty() && dao.getTaskProjectRelation(FruitDict.Systems.ADD).isEmpty())
+            if (dao.getPlanRelation(FruitDict.Systems.ADD).isEmpty() && dao.getProjectRelation(FruitDict.Systems.ADD).isEmpty())
                 throw new CheckException("未检测到任务所关联的元素");
-            if (!dao.getTaskPlanRelation(FruitDict.Systems.ADD).isEmpty() && !dao.getTaskProjectRelation(FruitDict.Systems.ADD).isEmpty())
+            if (!dao.getPlanRelation(FruitDict.Systems.ADD).isEmpty() && !dao.getProjectRelation(FruitDict.Systems.ADD).isEmpty())
                 throw new CheckException("检测到关联多个元素，这是不合法的");
             return this;
         }
@@ -359,10 +359,10 @@ public abstract class AbstractDaoTask implements InterfaceDao {
          */
         private TaskTemplate insertJoinProject() {
             try {
-                if (!vo.getTaskProjectRelation(FruitDict.Systems.ADD).isEmpty()) {
-                    if (vo.getTaskProjectRelation(FruitDict.Systems.ADD).size() > 1)
+                if (!vo.getProjectRelation(FruitDict.Systems.ADD).isEmpty()) {
+                    if (vo.getProjectRelation(FruitDict.Systems.ADD).size() > 1)
                         throw new CheckException("必须关联项目，且只能关联一个项目");
-                    dao.setTaskProjectRelation(vo.getTaskProjectRelation());
+                    dao.setProjectRelation(vo.getProjectRelation());
                 }
                 return this;
             } catch (ExceptionSupport ex) {
@@ -381,10 +381,10 @@ public abstract class AbstractDaoTask implements InterfaceDao {
          */
         private TaskTemplate insertJoinPlan() {
             try {
-                if (!vo.getTaskPlanRelation(FruitDict.Systems.ADD).isEmpty()) {
-                    if (vo.getTaskPlanRelation(FruitDict.Systems.ADD).size() > 1)
+                if (!vo.getPlanRelation(FruitDict.Systems.ADD).isEmpty()) {
+                    if (vo.getPlanRelation(FruitDict.Systems.ADD).size() > 1)
                         throw new CheckException("必须关联计划，且只能关联一个计划");
-                    dao.setTaskPlanRelation(vo.getTaskPlanRelation());
+                    dao.setPlanRelation(vo.getPlanRelation());
                 }
                 return this;
             } catch (ExceptionSupport ex) {
@@ -407,11 +407,11 @@ public abstract class AbstractDaoTask implements InterfaceDao {
             dao.setEstimatedEndDate(vo.getEstimatedEndDate());
             dao.setTitle(vo.getTitle());
             dao.setTaskLevel(vo.getTaskLevel());
-            dao.setTaskUserRelation(vo.getTaskUserRelation());
-            dao.setTaskListRelation(vo.getTaskListRelation());
-            if (dao.getTaskListRelation(FruitDict.Systems.ADD).isEmpty())
+            dao.setUserRelation(vo.getUserRelation());
+            dao.setListRelation(vo.getListRelation());
+            if (dao.getListRelation(FruitDict.Systems.ADD).isEmpty())
                 throw new CheckException("必须关联列表");
-            if (dao.getTaskListRelation(FruitDict.Systems.ADD).size() > 1)
+            if (dao.getListRelation(FruitDict.Systems.ADD).size() > 1)
                 throw new CheckException("一次只能关联一个列表");
             return this;
         }
@@ -431,16 +431,16 @@ public abstract class AbstractDaoTask implements InterfaceDao {
          * @return
          */
         private TaskTemplate checkModify() {
-            if (!dao.getTaskPlanRelation(FruitDict.Systems.ADD).isEmpty() && !dao.getTaskProjectRelation(FruitDict.Systems.ADD).isEmpty())
+            if (!dao.getPlanRelation(FruitDict.Systems.ADD).isEmpty() && !dao.getProjectRelation(FruitDict.Systems.ADD).isEmpty())
                 throw new CheckException("检测到关联多个元素，这是不合法的");
             return this;
         }
 
         private TaskTemplate modifyCheckJoinPlan() {
-            if (vo.getTaskPlanRelation(FruitDict.Systems.DELETE).isEmpty()) return this;
-            if (vo.getTaskPlanRelation(FruitDict.Systems.ADD).isEmpty()) return this;
+            if (vo.getPlanRelation(FruitDict.Systems.DELETE).isEmpty()) return this;
+            if (vo.getPlanRelation(FruitDict.Systems.ADD).isEmpty()) return this;
             this.insertJoinPlan();
-            dao.setTaskPlanRelation(FruitDict.Systems.DELETE, Lists.newArrayList(TaskPlanRelation.newInstance(dao.getUuid(), null)));
+            dao.setPlanRelation(FruitDict.Systems.DELETE, Lists.newArrayList(TaskPlanRelation.newInstance(dao.getUuid(), null)));
             return this;
         }
 
@@ -449,8 +449,8 @@ public abstract class AbstractDaoTask implements InterfaceDao {
          * 检查必须有
          */
         private TaskTemplate modifyCheckJoinProject() {
-            if (vo.getTaskProjectRelation(FruitDict.Systems.DELETE).isEmpty()) return this;
-            if (vo.getTaskProjectRelation(FruitDict.Systems.ADD).isEmpty()) return this;
+            if (vo.getProjectRelation(FruitDict.Systems.DELETE).isEmpty()) return this;
+            if (vo.getProjectRelation(FruitDict.Systems.ADD).isEmpty()) return this;
             insertJoinProject();
             dao.setTaskProjectRelation(FruitDict.Systems.DELETE, Lists.newArrayList(TaskProjectRelation.newInstance(dao.getUuid(), null)));
             return this;
@@ -461,7 +461,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
             dao.setTitle(vo.getTitle());
             dao.setTaskLevel(vo.getTaskLevel());
             dao.setDescription(vo.getDescription());
-            dao.setTaskUserRelation(vo.getTaskUserRelation());
+            dao.setUserRelation(vo.getUserRelation());
             return this;
         }
 

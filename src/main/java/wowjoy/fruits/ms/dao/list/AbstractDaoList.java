@@ -33,7 +33,7 @@ public abstract class AbstractDaoList implements InterfaceDao {
     public final void insertProject(FruitListVo vo) {
         try {
             FruitListDao dao = insertTemplate(vo);
-            dao.setProjectRelation(vo.getListRelation());
+            dao.setProjectRelation(vo.getProjectRelation());
             dao.setlType(FruitDict.Parents.PROJECT.name());
             if (dao.getProjectRelation(FruitDict.Systems.ADD).isEmpty())
                 throw new CheckException("添加项目列表时，必须绑定项目id");

@@ -17,6 +17,8 @@ public @interface LogInfo {
     /*查找到当前日志的uuid，使用方式和format相同*/
     String uuid();
 
+    String mainParam() default "vo";
+
     /*日志类型*/
     FruitDict.Parents type();
 

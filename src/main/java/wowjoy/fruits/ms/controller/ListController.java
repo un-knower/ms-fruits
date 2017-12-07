@@ -54,9 +54,16 @@ public class ListController {
     }
 
     /**
-     * @api {post} /v1/list/{uuid} 添加【项目】列表
+     * @api {post} /v1/list/project 添加【项目】列表
      * @apiVersion 0.1.0
      * @apiGroup list
+     * @apiExample {json} 项目添加示例
+     *
+    {
+        "title":"测试列表添加日志记录功能",
+        "description":"测试列表添加日志记录功能",
+        "projectRelation":{"ADD":["e41e0c03ee704b31b56f2ec1076609b5"]}
+    }
      */
     @LogInfo(format = "【{user.userName}】添加了【{vo.title}】列表", uuid = "vo.uuid", type = FruitDict.Parents.List, operateType = FruitDict.Systems.ADD)
     @RequestMapping(value = "project", method = RequestMethod.POST)

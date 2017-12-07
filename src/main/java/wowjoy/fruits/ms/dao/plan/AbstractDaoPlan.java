@@ -62,32 +62,32 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
      * @param vo
      * @return
      */
-    private final List<FruitPlanDao> findMonthWeek(FruitPlanVo vo, FruitUser currentUser, boolean isPage) {
-        List<FruitPlanDao> planDaoList = findProject(this.findMonthWeekTemplate(vo), vo.getPageNum(), vo.getPageSize(), isPage);
-        List<FruitPlanDao> result = new ArrayList<>(Arrays.asList(new FruitPlanDao[planDaoList.size()]));
-        Collections.copy(result, planDaoList);
-        if (planDaoList.isEmpty()) return Lists.newLinkedList();
+    public final List<FruitPlanDao> findMonthWeek(FruitPlanVo vo, FruitUser currentUser, boolean isPage) {
+        List<FruitPlanDao> planDaoListSource = findProject(this.findMonthWeekTemplate(vo), vo.getPageNum(), vo.getPageSize(), isPage);
+        List<FruitPlanDao> planDaoListCopy = new ArrayList<>(Arrays.asList(new FruitPlanDao[planDaoListSource.size()]));
+        Collections.copy(planDaoListCopy, planDaoListSource);
+        if (planDaoListSource.isEmpty()) return Lists.newLinkedList();
         DaoThread planThread = DaoThread.getInstance();
-        List<String> ids = toIds(planDaoList);
+        List<String> ids = toIds(planDaoListSource);
         /*查询用户信息*/
         planThread.execute(() -> {
             List<FruitPlanDao> users = this.findUserByPlanIds(ids, currentUser.getUserId());
             LinkedHashMap<String, List<FruitUserDao>> userMaps = Maps.newLinkedHashMap();
             users.forEach((i) -> userMaps.put(i.getUuid(), i.getUsers()));
-            planDaoList.forEach((i) -> i.setUsers(userMaps.get(i.getUuid())));
+            planDaoListSource.forEach((i) -> i.setUsers(userMaps.get(i.getUuid())));
             return true;
         });
         /*计算过期时间*/
         planThread.execute(() -> {
-            planDaoList.forEach((i) -> i.computeDays());
+            planDaoListSource.forEach((i) -> i.computeDays());
             return true;
         });
         /*只递归两层，相当于月、周*/
         if (StringUtils.isNotBlank(vo.getParentId())) {
             planThread.get();
-            return planDaoList;
+            return planDaoListSource;
         }
-        planDaoList.forEach((plan) -> {
+        planDaoListSource.forEach((plan) -> {
             plan.setWeeks(Lists.newLinkedList());
             planThread.execute(() -> {
                 FruitPlanVo childVo = FruitPlan.getVo();
@@ -97,32 +97,32 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
                 childVo.setPlanStatus(vo.getPlanStatus());
                 plan.getWeeks().addAll(this.findMonthWeek(childVo, currentUser, false));
                 if (StringUtils.isNotBlank(vo.getPlanStatus()) && !plan.getPlanStatus().equals(vo.getPlanStatus()) && plan.getWeeks().isEmpty())
-                    result.remove(plan);
+                    planDaoListCopy.remove(plan);
                 return true;
             });
         });
         planThread.get();
-        return result;
+        return planDaoListCopy;
     }
 
     /**
      * 统计当前不同状态下数目
-     * @param vo
+     *
      * @param result
      * @return
      */
-    private Result dataCount(FruitPlanVo vo, Result result) {
-        List<FruitPlanDao> data = findProject(findMonthWeekTemplate(vo), vo.getPageNum(), vo.getPageSize(), false);
-        data.forEach((i) -> {
-            /*状态匹配*/
-            /*进行中的不统计*/
-            i.computeDays();
-            if (FruitDict.PlanDict.END.name().equals(i.getPlanStatus()))
+    private Result dataCount(List<FruitPlanDao> plans, Result result) {
+        /*状态匹配*/
+        /*进行中的不统计*/
+        plans.forEach((plan) -> {
+            if (plan.getWeeks() != null && !plan.getWeeks().isEmpty()) dataCount(plan.getWeeks(), result);
+            plan.computeDays();
+            if (FruitDict.PlanDict.END.name().equals(plan.getPlanStatus()))
                 result.addStateType(FruitDict.PlanDict.END, 1);
-            else if (FruitDict.PlanDict.PENDING.name().equals(i.getPlanStatus()) && i.getDays() < 0)
+            else if (FruitDict.PlanDict.PENDING.name().equals(plan.getPlanStatus()) && plan.getDays() < 0)
                 result.addStateType(FruitDict.PlanDict.DELAY, 1);
-            else if (FruitDict.PlanDict.COMPLETE.name().equals(i.getPlanStatus()))
-                if (i.getDays() < 0) {
+            else if (FruitDict.PlanDict.COMPLETE.name().equals(plan.getPlanStatus()))
+                if (plan.getDays() < 0) {
                     result.addStateType(FruitDict.PlanDict.DELAY_COMPLETE, 1);
                 } else {
                     result.addStateType(FruitDict.PlanDict.COMPLETE, 1);
@@ -131,15 +131,13 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         return result;
     }
 
-    public Result compositeQuery(FruitPlanVo vo){
+    public Result compositeQuery(FruitPlanVo vo) {
         Result result = Result.getInstance();
-        DaoThread.getInstance()
-                .execute(()-> dataCount(vo,result))
-                .execute(()-> {
-                    result.setPlans(findMonthWeek(vo, ApplicationContextUtils.getCurrentUser(),false));
-                    return true;
-                })
-                .get();
+        result.setPlans(findMonthWeek(vo, ApplicationContextUtils.getCurrentUser(), false));
+        long start = System.currentTimeMillis();
+        dataCount(result.getPlans(), result);
+        long end = System.currentTimeMillis();
+        logger.info("--" + (end - start));
         return result;
     }
 
@@ -314,6 +312,10 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
     public static class Result {
         private final List<FruitPlanDao> plans = Lists.newLinkedList();
         private final Map<FruitDict.PlanDict, Integer> dataCount = Maps.newLinkedHashMap();
+
+        public List<FruitPlanDao> getPlans() {
+            return plans;
+        }
 
         public void setPlans(List<FruitPlanDao> plans) {
             this.plans.addAll(plans);

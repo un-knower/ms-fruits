@@ -63,7 +63,7 @@ public class ProjectController {
      * @apiVersion 0.1.0
      * @apiGroup project
      */
-//    @LogInfo(format = "【{user.userName}】添加了【{vo.title}】项目", uuid = "vo.uuid", type = FruitDict.Parents.PROJECT, operateType = FruitDict.Systems.ADD)
+    @LogInfo(format = "【{user.userName}】添加了【{vo.title}】项目", uuid = "vo.uuid", type = FruitDict.Parents.PROJECT, operateType = FruitDict.Systems.ADD)
     @RequestMapping(method = RequestMethod.POST)
     public RestResult insert(@JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
         projectDaoImpl.add(vo);
@@ -75,7 +75,7 @@ public class ProjectController {
      * @apiVersion 0.1.0
      * @apiGroup project
      */
-//    @LogInfo(format = "【{user.userName}】修改了【{vo.title}】项目", uuid = "uuid", type = FruitDict.Parents.PROJECT, operateType = FruitDict.Systems.UPDATE)
+    @LogInfo(format = "【{user.userName}】修改了【{vo.title}】项目", uuid = "uuid", type = FruitDict.Parents.PROJECT, operateType = FruitDict.Systems.UPDATE)
     @RequestMapping(value = "{uuid}", method = RequestMethod.PUT)
     public RestResult update(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
         vo.setUuidVo(uuid);
@@ -88,7 +88,7 @@ public class ProjectController {
      * @apiVersion 0.1.0
      * @apiGroup project
      */
-//    @LogInfo(format = "【{user.userName}】修改了【{vo.title}】项目", uuid = "uuid", type = FruitDict.Parents.PROJECT, operateType = FruitDict.Systems.UPDATE)
+    @LogInfo(format = "【{user.userName}】更改了【{vo.title}】项目状态为【已完成】", uuid = "uuid", type = FruitDict.Parents.PROJECT, operateType = FruitDict.Systems.UPDATE)
     @RequestMapping(value = "/complete/{uuid}", method = RequestMethod.PUT)
     public RestResult updateStatus(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
         vo.setUuidVo(uuid);
@@ -101,6 +101,7 @@ public class ProjectController {
      * @apiVersion 0.1.0
      * @apiGroup project
      */
+    @LogInfo(format = "【{user.userName}】删除了【{vo.title}】项目", uuid = "uuid", type = FruitDict.Parents.PROJECT, operateType = FruitDict.Systems.DELETE)
     @RequestMapping(value = "{uuid}", method = RequestMethod.DELETE)
     public RestResult delete(@PathVariable("uuid") String uuid) {
         FruitProjectVo vo = FruitProject.getVo();
