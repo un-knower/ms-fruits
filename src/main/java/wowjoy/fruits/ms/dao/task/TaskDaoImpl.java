@@ -75,6 +75,18 @@ public class TaskDaoImpl extends AbstractDaoTask {
     }
 
     @Override
+    protected FruitTask find(FruitTaskDao dao) {
+        FruitTaskExample example = new FruitTaskExample();
+        FruitTaskExample.Criteria criteria = example.createCriteria();
+        if (StringUtils.isNotBlank(dao.getUuid()))
+            criteria.andUuidEqualTo(dao.getUuid());
+        List<FruitTaskDao> datas = taskMapper.selectByExample(example);
+        if (datas.isEmpty())
+            return FruitTask.getEmpty();
+        return datas.get(0);
+    }
+
+    @Override
     public void update(FruitTaskDao dao) {
         FruitTaskExample example = new FruitTaskExample();
         FruitTaskExample.Criteria criteria = example.createCriteria();
@@ -89,7 +101,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
 
     @Override
     public void delete(FruitTaskDao dao) {
-        if (StringUtils.isNotBlank(dao.getUuid()))
+        if (StringUtils.isBlank(dao.getUuid()))
             throw new CheckException("缺少任务id");
         FruitTaskExample example = new FruitTaskExample();
         FruitTaskExample.Criteria criteria = example.createCriteria();

@@ -10,6 +10,7 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import wowjoy.fruits.ms.dao.AbstractDaoChain;
 import wowjoy.fruits.ms.dao.InterfaceDao;
@@ -21,6 +22,7 @@ import wowjoy.fruits.ms.module.logs.FruitLogsVo;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;
 import wowjoy.fruits.ms.util.AsmClassInfo;
+import wowjoy.fruits.ms.util.RestResult;
 
 import java.lang.reflect.Field;
 import java.text.MessageFormat;
@@ -32,6 +34,7 @@ import java.util.*;
  */
 @Aspect
 @Component
+@Order(1)
 public class LogsAspectj {
 
     @Autowired
@@ -48,10 +51,11 @@ public class LogsAspectj {
     public Object around(ProceedingJoinPoint joinPoint, LogInfo annotation) {
         try {
             Object result = joinPoint.proceed();
-            InterfaceDao.DaoThread.getInstance().execute(()->{
-                record(joinPoint, annotation);
-                return true;
-            });
+            if (((RestResult) result).getSuccess())
+                InterfaceDao.DaoThread.getInstance().execute(() -> {
+                    record(joinPoint, annotation);
+                    return true;
+                });
             return result;
         } catch (Throwable throwable) {
             throwable.printStackTrace();

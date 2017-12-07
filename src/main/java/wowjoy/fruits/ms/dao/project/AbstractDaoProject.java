@@ -37,9 +37,11 @@ public abstract class AbstractDaoProject implements InterfaceDao {
 
     protected abstract List<FruitProjectDao> finds(FruitProjectDao dao);
 
-    public abstract List<FruitProjectDao> findUserByProjectIds(String... ids);
+    protected abstract FruitProject find(FruitProjectDao dao);
 
-    public abstract List<FruitProjectDao> findTeamByProjectIds(String... ids);
+    protected abstract List<FruitProjectDao> findUserByProjectIds(String... ids);
+
+    protected abstract List<FruitProjectDao> findTeamByProjectIds(String... ids);
 
     protected abstract void update(FruitProjectDao dao);
 

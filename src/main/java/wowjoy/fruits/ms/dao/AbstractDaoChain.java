@@ -3,6 +3,7 @@ package wowjoy.fruits.ms.dao;
 import wowjoy.fruits.ms.dao.list.ListDaoNode;
 import wowjoy.fruits.ms.dao.plan.PlanDaoNode;
 import wowjoy.fruits.ms.dao.project.ProjectDaoNode;
+import wowjoy.fruits.ms.dao.task.TaskDaoNode;
 import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
@@ -34,7 +35,8 @@ public abstract class AbstractDaoChain {
         PlanDaoNode planDaoNode = new PlanDaoNode(type);
         ListDaoNode listDaoNode = new ListDaoNode(type);
         ProjectDaoNode projectDaoNode = new ProjectDaoNode(type);
-        planDaoNode.setNext(listDaoNode).setNext(projectDaoNode);
+        TaskDaoNode taskDaoNode = new TaskDaoNode(type);
+        planDaoNode.setNext(listDaoNode).setNext(projectDaoNode).setNext(taskDaoNode);
         return planDaoNode;
     }
 

@@ -67,6 +67,18 @@ public class ProjectDaoImpl extends AbstractDaoProject {
     }
 
     @Override
+    protected FruitProject find(FruitProjectDao dao) {
+        FruitProjectExample example = new FruitProjectExample();
+        FruitProjectExample.Criteria criteria = example.createCriteria();
+        if (StringUtils.isNotBlank(dao.getUuid()))
+            criteria.andUuidEqualTo(dao.getUuid());
+        List<FruitProjectDao> datas = projectMapper.selectByExample(example);
+        if (datas.isEmpty())
+            return FruitProject.getEmpty();
+        return datas.get(0);
+    }
+
+    @Override
     public List<FruitProjectDao> findUserByProjectIds(String... ids) {
         if (Arrays.isNullOrEmpty(ids))
             throw new CheckException("查询关联用户时，必须提供项目id");
@@ -160,7 +172,7 @@ public class ProjectDaoImpl extends AbstractDaoProject {
          * 删除所有关联团队
          */
         private Relation removesTeamRelation() {
-            TeamDao.remove(ProjectTeamRelation.newInstance(Dao.getUuid(), null));
+            TeamDao.deleted(ProjectTeamRelation.newInstance(Dao.getUuid(), null));
             return this;
         }
 

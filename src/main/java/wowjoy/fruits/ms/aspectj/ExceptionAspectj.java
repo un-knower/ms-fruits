@@ -4,6 +4,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMapping;
 import wowjoy.fruits.ms.exception.ExceptionSupport;
@@ -17,6 +18,7 @@ import java.sql.SQLException;
 
 @Aspect
 @Component
+@Order(2)
 public class ExceptionAspectj {
     @Pointcut("@annotation(org.springframework.web.bind.annotation.RequestMapping)")
     public void pointcut() {

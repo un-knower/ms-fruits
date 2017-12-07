@@ -43,6 +43,8 @@ public abstract class AbstractDaoTask implements InterfaceDao {
 
     protected abstract List<FruitTaskDao> finds(FruitTaskDao dao);
 
+    protected abstract FruitTask find(FruitTaskDao dao);
+
     protected abstract void update(FruitTaskDao dao);
 
     protected abstract void delete(FruitTaskDao dao);
