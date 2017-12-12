@@ -102,6 +102,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
             });
         });
         planThread.get();
+        planThread.shutdown();
         return planDaoListCopy;
     }
 

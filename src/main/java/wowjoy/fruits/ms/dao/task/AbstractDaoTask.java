@@ -227,11 +227,12 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         dao.setListId(vo.getListId());
         List<FruitTaskDao> tasks = this.findByListId(dao);
         List<String> ids = toIds(tasks);
-        DaoThread.getInstance()
-                .execute(this.plugPlan(ids, tasks))
+        DaoThread taskThread = DaoThread.getInstance();
+        taskThread.execute(this.plugPlan(ids, tasks))
                 .execute(this.plugUser(ids, tasks))
                 .execute(this.plugUtil(tasks))
                 .get();
+        taskThread.shutdown();
         return tasks;
     }
 
