@@ -10,6 +10,7 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import wowjoy.fruits.ms.dao.AbstractDaoChain;
@@ -37,6 +38,7 @@ import java.util.*;
 @Order(1)
 public class LogsAspectj {
 
+    @Qualifier("LogsDaoImpl")
     @Autowired
     private AbstractDaoLogs logsDao;
 

@@ -214,7 +214,7 @@ public abstract class AbstractDaoProject implements InterfaceDao {
                 throw new CheckException("项目已完成，错误的操作");
             final FruitProjectDao data = FruitProject.getDao();
             data.setUuid(vo.getUuidVo());
-        /*使用系统默认时间*/
+            /*使用系统默认时间*/
             data.setEndDate(LocalDateTime.now());
             data.setProjectStatus(FruitDict.ProjectDict.COMPLETE.name());
             data.setStatusDescription(vo.getStatusDescription());
@@ -232,7 +232,7 @@ public abstract class AbstractDaoProject implements InterfaceDao {
             throw new CheckException("项目id不存在");
         List<FruitProjectDao> result = findUserByProjectIds(projectId);
         if (result.isEmpty())
-            throw new CheckException("项目不存在");
+            throw new CheckException("未查到项目关联用户");
         return result.get(0).getUsers();
     }
 

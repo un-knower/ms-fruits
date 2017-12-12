@@ -1,4 +1,3 @@
-import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import org.elasticsearch.client.transport.TransportClient;
@@ -31,6 +30,10 @@ public class ElasticsearchTest {
     public void name() throws Exception {
         ArrayList<Object> objects = new ArrayList<>(Arrays.asList(new Object[10]));
         System.out.println(objects.size());
+    }
+
+    @Test
+    public void test() {
     }
 
 }

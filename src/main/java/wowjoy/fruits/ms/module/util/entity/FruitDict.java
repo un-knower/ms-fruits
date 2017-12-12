@@ -464,6 +464,42 @@ public class FruitDict extends AbstractEntity {
 
     }
 
+    /**
+     * Notepad 记事本状态
+     */
+    public enum NotepadDict {
+        PUNCTUAL_SUBMIT("准时提交"),
+        PAY_SUBMIT("补交"),
+        NOT_SUBMIT("未提交");
+
+
+        private String parentCode;
+        private String value;
+
+        private void setParentCode(String parentCode) {
+            this.parentCode = parentCode;
+        }
+
+        private void setValue(String value) {
+            this.value = value;
+        }
+
+        public String getParentCode() {
+            return parentCode;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        NotepadDict(String value) {
+            this.setParentCode(Parents.USERPROJECT.name());
+            this.setValue(value);
+        }
+
+    }
+
+
     public enum ESType {
         PROJECT("项目"),
         PLAN("计划");

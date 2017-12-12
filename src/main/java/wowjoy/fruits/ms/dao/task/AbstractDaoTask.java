@@ -23,9 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-/**
- * Created by wangziwen on 2017/8/30.
- */
 public abstract class AbstractDaoTask implements InterfaceDao {
     /*********************************************************************************
      * 抽象接口，私有，因为对外的公共接口用来书写业务层，发布api必须在自己的控制范围内，不发布无用的接口。*
@@ -51,8 +48,6 @@ public abstract class AbstractDaoTask implements InterfaceDao {
 
     /**
      * 查询关联项目的任务列表
-     *
-     * @return
      */
     protected abstract List<FruitTaskDao> findByPlanId(FruitTaskDao dao);
 
@@ -73,8 +68,6 @@ public abstract class AbstractDaoTask implements InterfaceDao {
 
     /**
      * 筛选出符合条件的添加函数
-     *
-     * @param vo
      */
     public final void insert(FruitTaskVo vo) {
         try {
@@ -194,9 +187,6 @@ public abstract class AbstractDaoTask implements InterfaceDao {
 
     /**
      * 操作任务前的任务检查
-     *
-     * @param vo
-     * @return
      */
     private FruitTask findByUUID(FruitTaskVo vo) {
         if (StringUtils.isBlank(vo.getUuidVo()))
@@ -228,9 +218,6 @@ public abstract class AbstractDaoTask implements InterfaceDao {
 
     /**
      * 查询指定列表的任务信息
-     *
-     * @param vo
-     * @return
      */
     public List<FruitTaskDao> findByListId(FruitTaskVo vo) {
         if (StringUtils.isBlank(vo.getListId()))
@@ -255,9 +242,6 @@ public abstract class AbstractDaoTask implements InterfaceDao {
      * 1、查询项目的任务列表集合
      * 2、查询每个列表对应的任务集合
      * 3、组合每个任务的详细信息，例如计划信息、用户信息
-     *
-     * @param vo
-     * @return
      */
     public List<FruitListDao> findJoinProjects(FruitTaskVo vo) {
         if (vo.getProjectIds() == null || vo.getProjectIds().isEmpty())
@@ -266,7 +250,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         dao.setProjectIds(vo.getProjectIds());
         List<FruitListDao> lists = this.findProjectList(dao.getProjectIds());
         DaoThread taskThread = DaoThread.getInstance();
-
+        long start = System.currentTimeMillis();
         lists.forEach((list) -> taskThread.execute(() -> {
             FruitTaskDao taskDao = FruitTask.getDao();
             taskDao.setListId(list.getUuid());
@@ -280,7 +264,8 @@ public abstract class AbstractDaoTask implements InterfaceDao {
             list.setTasks(tasks);
             return true;
         }));
-
+        long end = System.currentTimeMillis();
+        logger.info("---------" + (end - start));
         taskThread.get();
         return lists;
     }
@@ -334,8 +319,6 @@ public abstract class AbstractDaoTask implements InterfaceDao {
 
         /**
          * 获取添加结果
-         *
-         * @return
          */
         private FruitTaskDao queryAddResult() {
             return dao;
@@ -343,8 +326,6 @@ public abstract class AbstractDaoTask implements InterfaceDao {
 
         /**
          * 添加前限制
-         *
-         * @return
          */
         private TaskTemplate checkInsert() {
             if (dao.getPlanRelation(FruitDict.Systems.ADD).isEmpty() && dao.getProjectRelation(FruitDict.Systems.ADD).isEmpty())
@@ -356,8 +337,6 @@ public abstract class AbstractDaoTask implements InterfaceDao {
 
         /**
          * 检查是否是项目关联
-         *
-         * @return
          */
         private TaskTemplate insertJoinProject() {
             try {
@@ -378,8 +357,6 @@ public abstract class AbstractDaoTask implements InterfaceDao {
 
         /**
          * 检查是否是计划关联
-         *
-         * @return
          */
         private TaskTemplate insertJoinPlan() {
             try {
@@ -399,8 +376,6 @@ public abstract class AbstractDaoTask implements InterfaceDao {
 
         /**
          * 任务添加统一模板
-         *
-         * @return
          */
         private TaskTemplate insertTemplate() {
             dao.setUuid(vo.getUuid());
@@ -420,8 +395,6 @@ public abstract class AbstractDaoTask implements InterfaceDao {
 
         /**
          * 获取修改结果
-         *
-         * @return
          */
         private FruitTaskDao queryModifyResult() {
             return dao;
@@ -429,8 +402,6 @@ public abstract class AbstractDaoTask implements InterfaceDao {
 
         /**
          * 添加前限制
-         *
-         * @return
          */
         private TaskTemplate checkModify() {
             if (!dao.getPlanRelation(FruitDict.Systems.ADD).isEmpty() && !dao.getProjectRelation(FruitDict.Systems.ADD).isEmpty())

@@ -1,19 +1,15 @@
-import com.google.common.collect.Queues;
-import org.apache.commons.lang.math.RandomUtils;
 import org.junit.Test;
 
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.Date;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Locale;
-import java.util.Queue;
 import java.util.TimeZone;
 
 /**
  * Created by wangziwen on 2017/9/15.
  */
-public class LocalDateTime {
+public class LocalDateTime1 {
     @Test
     public void localDate() throws Exception {
 //        final LocalDate of = LocalDate.of(2017, 1, 1);
@@ -99,5 +95,15 @@ public class LocalDateTime {
         dateFormat.setTimeZone(TimeZone.getDefault());
         String format = dateFormat.format(date);
         System.out.println(format);
+    }
+
+    @Test
+    public void name() throws Exception {
+        LocalDateTime now = LocalDateTime.now().plusDays(1);
+        now = LocalDateTime.of(now.getYear(), now.getMonth(), now.getDayOfMonth(), 23, 59, 59);
+        LocalDateTime start = LocalDateTime.now();
+        System.out.println(now.toString());
+        System.out.println(start.toString());
+        System.out.println(Duration.between(now, start).toHours());
     }
 }
