@@ -44,10 +44,10 @@ public interface InterfaceDao {
 
         public void shutdown() {
             try {
-                if (executorService.awaitTermination(60, TimeUnit.SECONDS))
+                if (executorService.awaitTermination(0, TimeUnit.SECONDS))
                     executorService.shutdown();
             } catch (InterruptedException e) {
-                executorService.shutdown();
+                executorService.shutdownNow();
                 throw new CheckException("等待关闭时，被提前终止");
             }
         }
