@@ -10,7 +10,6 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import wowjoy.fruits.ms.dao.AbstractDaoChain;
@@ -38,12 +37,13 @@ import java.util.*;
 @Order(1)
 public class LogsAspectj {
 
-    @Qualifier("LogsDaoImpl")
+    //    @Qualifier("LogsDaoImpl")
     @Autowired
     private AbstractDaoLogs logsDao;
 
     private final String prefix = "{";
     private final String suffix = "}";
+    private final InterfaceDao.DaoThread daoThread = InterfaceDao.DaoThread.getInstance();
 
     @Pointcut("@annotation(wowjoy.fruits.ms.aspectj.LogInfo)")
     public void myAnnotation() {
@@ -54,7 +54,7 @@ public class LogsAspectj {
         try {
             Object result = joinPoint.proceed();
             if (((RestResult) result).getSuccess())
-                InterfaceDao.DaoThread.getInstance().execute(() -> {
+                daoThread.execute(() -> {
                     record(joinPoint, annotation);
                     return true;
                 });

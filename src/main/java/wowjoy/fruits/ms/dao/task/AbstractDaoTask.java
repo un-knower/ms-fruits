@@ -209,10 +209,11 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         dao.setPlanId(vo.getPlanId());
         List<FruitTaskDao> tasks = this.findByPlanId(dao);
         List<String> ids = toIds(tasks);
-        DaoThread.getInstance()
-                .execute(this.plugUser(ids, tasks))
+        DaoThread taskThread = DaoThread.getInstance();
+        taskThread.execute(this.plugUser(ids, tasks))
                 .execute(this.plugUtil(tasks))
                 .get();
+        taskThread.shutdown();
         return tasks;
     }
 
@@ -249,24 +250,27 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         FruitTaskDao dao = TaskTemplate.newInstance(vo).findTemplate();
         dao.setProjectIds(vo.getProjectIds());
         List<FruitListDao> lists = this.findProjectList(dao.getProjectIds());
+        DaoThread listThread = DaoThread.getInstance();
         DaoThread taskThread = DaoThread.getInstance();
         long start = System.currentTimeMillis();
-        lists.forEach((list) -> taskThread.execute(() -> {
+        lists.forEach((list) -> listThread.execute(() -> {
             FruitTaskDao taskDao = FruitTask.getDao();
             taskDao.setListId(list.getUuid());
             List<FruitTaskDao> tasks = this.findByListId(taskDao);
             List<String> ids = toIds(tasks);
-            DaoThread.getInstance()
+            taskThread
                     .execute(this.plugPlan(ids, tasks))
                     .execute(this.plugUser(ids, tasks))
-                    .execute(this.plugUtil(tasks))
-                    .get();
+                    .execute(this.plugUtil(tasks));
             list.setTasks(tasks);
             return true;
         }));
         long end = System.currentTimeMillis();
         logger.info("---------" + (end - start));
+        listThread.get();
         taskThread.get();
+        listThread.shutdown();
+        taskThread.shutdown();
         return lists;
     }
 

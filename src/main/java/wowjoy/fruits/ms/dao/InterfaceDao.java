@@ -34,11 +34,21 @@ public interface InterfaceDao {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 futures.forEach((i) -> i.cancel(true));
-                throw new CheckException("中断线程");
+                throw new CheckException("强制中断线程");
             } catch (ExecutionException e) {
                 executorService.shutdownNow();
                 e.printStackTrace();
                 throw new CheckException("获取线程数据异常，线程已终止");
+            }
+        }
+
+        public void shutdown() {
+            try {
+                if (executorService.awaitTermination(60, TimeUnit.SECONDS))
+                    executorService.shutdown();
+            } catch (InterruptedException e) {
+                executorService.shutdown();
+                throw new CheckException("等待关闭时，被提前终止");
             }
         }
 

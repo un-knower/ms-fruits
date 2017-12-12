@@ -177,6 +177,7 @@ public abstract class AbstractDaoProject implements InterfaceDao {
             return true;
         });
         thread.get();
+        thread.shutdown();
         return result;
     }
 
