@@ -155,7 +155,7 @@ public abstract class AbstractDaoProject implements InterfaceDao {
         if (!isJoin) return result;
         List<String> ids = Lists.newLinkedList();
         result.forEach((i) -> ids.add(i.getUuid()));
-        DaoThread thread = DaoThread.getInstance();
+        DaoThread thread = DaoThread.getFixed();
         thread.execute(() -> {
             LinkedHashMap<String, List<FruitUserDao>> users = Maps.newLinkedHashMap();
             this.findUserByProjectIds(ids.toArray(new String[ids.size()])).forEach((i) -> users.put(i.getUuid(), i.getUsers()));

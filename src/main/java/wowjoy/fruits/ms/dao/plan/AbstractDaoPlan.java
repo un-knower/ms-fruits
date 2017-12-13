@@ -67,7 +67,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         List<FruitPlanDao> planDaoListCopy = new ArrayList<>(Arrays.asList(new FruitPlanDao[planDaoListSource.size()]));
         Collections.copy(planDaoListCopy, planDaoListSource);
         if (planDaoListSource.isEmpty()) return Lists.newLinkedList();
-        DaoThread planThread = DaoThread.getInstance();
+        DaoThread planThread = DaoThread.getFixed();
         List<String> ids = toIds(planDaoListSource);
         /*查询用户信息*/
         planThread.execute(() -> {

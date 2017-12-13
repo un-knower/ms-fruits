@@ -1,5 +1,6 @@
 package wowjoy.fruits.ms.module.notepad;
 
+import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
@@ -15,7 +16,8 @@ public class FruitNotepad extends AbstractEntity {
 
     private String state;
 
-    private Date notepadDate;
+    /*预计提交时间*/
+    private Date estimatedSubmitDate;
 
     public String getContent() {
         return content;
@@ -41,17 +43,19 @@ public class FruitNotepad extends AbstractEntity {
         this.state = state;
     }
 
-    public Date getNotepadDate() {
-        return notepadDate;
+    public Date getEstimatedSubmitDate() {
+        return estimatedSubmitDate;
     }
 
-    public void setNotepadDate(Date notepadDate) {
-        this.notepadDate = notepadDate;
+    public void setEstimatedSubmitDate(Date estimatedSubmitDate) {
+        if (estimatedSubmitDate == null)
+            throw new CheckException("必须提供日报预计结束时间");
+        this.estimatedSubmitDate = estimatedSubmitDate;
         selectState();
     }
 
     private void selectState() {
-        LocalDateTime notepadDateTime = LocalDateTime.ofInstant(notepadDate.toInstant(), ZoneId.systemDefault());
+        LocalDateTime notepadDateTime = LocalDateTime.ofInstant(estimatedSubmitDate.toInstant(), ZoneId.systemDefault());
         notepadDateTime = LocalDateTime.of(notepadDateTime.getYear(),
                 notepadDateTime.getMonth(),
                 notepadDateTime.getDayOfMonth(),
@@ -59,14 +63,14 @@ public class FruitNotepad extends AbstractEntity {
                 59,
                 59);
         LocalDateTime now = LocalDateTime.now();
-        if (Duration.between(notepadDateTime, now).toHours() < 0)
+        if (Duration.between(now, notepadDateTime).toHours() < 0)
             this.setState(FruitDict.NotepadDict.PAY_SUBMIT.name());
         else
             this.setState(FruitDict.NotepadDict.PUNCTUAL_SUBMIT.name());
     }
 
     public void setNotepadDate(LocalDateTime notePadDate) {
-        this.notepadDate = Date.from(notePadDate.atZone(ZoneId.systemDefault()).toInstant());
+        this.estimatedSubmitDate = Date.from(notePadDate.atZone(ZoneId.systemDefault()).toInstant());
     }
 
     public static FruitNotepadDao getDao() {

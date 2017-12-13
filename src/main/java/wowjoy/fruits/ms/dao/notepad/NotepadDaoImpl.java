@@ -64,15 +64,27 @@ public class NotepadDaoImpl extends AbstractDaoNotepad {
 
     @Override
     protected List<FruitNotepadDao> finds(FruitNotepadDao dao) {
+        return mapper.selectJoinByExample(this.findsTemplate(dao));
+    }
+
+    @Override
+    protected List<FruitNotepadDao> finds(FruitNotepadDao dao, String... teamIds) {
+        return mapper.selectJoinByTeamIds(this.findsTemplate(dao), teamIds);
+    }
+
+    private FruitNotepadExample findsTemplate(FruitNotepadDao dao) {
         FruitNotepadExample example = new FruitNotepadExample();
         FruitNotepadExample.Criteria criteria = example.createCriteria();
         if (dao.getStartDate() != null && dao.getEndDate() != null)
-            criteria.andNotepadDateBetween(dao.getStartDate(), dao.getEndDate());
+            criteria.andEstimatedSubmitDateBetween(dao.getStartDate(), dao.getEndDate());
         if (StringUtils.isNotBlank(dao.getState()))
             criteria.andStateEqualTo(dao.getState());
         if (StringUtils.isNotBlank(dao.getUuid()))
             criteria.andUuidEqualTo(dao.getUuid());
-        return mapper.selectByExample(example);
+        if (StringUtils.isNotBlank(dao.getUserId()))
+            criteria.andUserIdEqualTo(dao.getUserId());
+        example.setOrderByClause("estimated_submit_date desc");
+        return example;
     }
 
     private void checkUuid(String uuid) {

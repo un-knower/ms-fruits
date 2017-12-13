@@ -16,11 +16,15 @@ public interface InterfaceDao {
     Integer processorCount = Runtime.getRuntime().availableProcessors() + 1;
 
     class DaoThread {
-        private final ExecutorService executorService = Executors.newFixedThreadPool(processorCount);
+        private final ExecutorService executorService;
         private final List<Future> futures = Lists.newLinkedList();
 
-        public static DaoThread getInstance() {
-            return new DaoThread();
+        public DaoThread(ExecutorService executorService) {
+            this.executorService = executorService;
+        }
+
+        public static DaoThread getFixed() {
+            return new DaoThread(Executors.newFixedThreadPool(processorCount));
         }
 
         public DaoThread execute(Callable callable) {

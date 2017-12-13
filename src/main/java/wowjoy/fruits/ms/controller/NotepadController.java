@@ -20,12 +20,27 @@ public class NotepadController {
     @Autowired
     private AbstractDaoNotepad daoNotepad;
 
+    /**
+     * @api {post} /v1/notepad 添加日报
+     * @apiVersion 0.1.0
+     * @apiGroup notepad
+     * @apiExample {json} 添加日报
+     * {
+        "content":"今天我很生气，我要吃鸡",
+        "notepadDate":"2017-10-20"
+        }
+     */
     @RequestMapping(method = RequestMethod.POST)
     public RestResult insert(@JsonArgument(type = FruitNotepadVo.class) FruitNotepadVo vo) {
         daoNotepad.insert(vo);
         return RestResult.getInstance().setData(vo.getUuid());
     }
 
+    /**
+     * @api {put} /v1/notepad/{uuid} 修改日报
+     * @apiVersion 0.1.0
+     * @apiGroup notepad
+     */
     @RequestMapping(value = "{uuid}", method = RequestMethod.PUT)
     public RestResult update(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitNotepadVo.class) FruitNotepadVo vo) {
         vo.setUuidVo(uuid);
@@ -33,14 +48,34 @@ public class NotepadController {
         return RestResult.getInstance().setData(vo.getUuidVo());
     }
 
+    /**
+     * @api {delete} /v1/notepad/{uuid} 删除日报
+     * @apiVersion 0.1.0
+     * @apiGroup notepad
+     */
     @RequestMapping(value = "{uuid}", method = RequestMethod.DELETE)
     public RestResult delete(@PathVariable("uuid") String uuid) {
         daoNotepad.delete(uuid);
         return RestResult.getInstance().setData(uuid);
     }
 
-    @RequestMapping(method = RequestMethod.GET)
-    public RestResult find(@JsonArgument(type = FruitNotepadVo.class) FruitNotepadVo vo) {
+    /**
+     * @api {get} /v1/notepad 查看日报（当前登录用户）
+     * @apiVersion 0.1.0
+     * @apiGroup notepad
+     */
+    @RequestMapping(value = "user", method = RequestMethod.GET)
+    public RestResult findCurrentUser(@JsonArgument(type = FruitNotepadVo.class) FruitNotepadVo vo) {
         return RestResult.getInstance().setData(daoNotepad.findByCurrentUser(vo));
+    }
+
+    /**
+     * @api {get} /v1/notepad/team/{teamId} 查看日报（团队视角）
+     * @apiVersion 0.1.0
+     * @apiGroup notepad
+     */
+    @RequestMapping(value = "team/{teamId}", method = RequestMethod.GET)
+    public RestResult find(@PathVariable("teamId") String teamId, @JsonArgument(type = FruitNotepadVo.class) FruitNotepadVo vo) {
+        return RestResult.getInstance().setData(daoNotepad.findTeam(vo, teamId));
     }
 }

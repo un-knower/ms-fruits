@@ -19,7 +19,7 @@
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
         <result column="task_id" jdbcType="VARCHAR" property="taskId"/>
-        <collection property="users" ofType="wowjoy.fruits.ms.module.user.FruitUser" resultMap="UserResultMap"
+        <collection property="users" ofType="wowjoy.fruits.ms.module.user.FruitUserDao" resultMap="UserResultMap"
                     columnPrefix="user_"/>
     </resultMap>
     <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="wowjoy.fruits.ms.module.plan.FruitPlanDao">

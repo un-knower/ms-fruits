@@ -209,7 +209,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         dao.setPlanId(vo.getPlanId());
         List<FruitTaskDao> tasks = this.findByPlanId(dao);
         List<String> ids = toIds(tasks);
-        DaoThread taskThread = DaoThread.getInstance();
+        DaoThread taskThread = DaoThread.getFixed();
         taskThread.execute(this.plugUser(ids, tasks))
                 .execute(this.plugUtil(tasks))
                 .get();
@@ -227,7 +227,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         dao.setListId(vo.getListId());
         List<FruitTaskDao> tasks = this.findByListId(dao);
         List<String> ids = toIds(tasks);
-        DaoThread taskThread = DaoThread.getInstance();
+        DaoThread taskThread = DaoThread.getFixed();
         taskThread.execute(this.plugPlan(ids, tasks))
                 .execute(this.plugUser(ids, tasks))
                 .execute(this.plugUtil(tasks))
@@ -251,8 +251,8 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         FruitTaskDao dao = TaskTemplate.newInstance(vo).findTemplate();
         dao.setProjectIds(vo.getProjectIds());
         List<FruitListDao> lists = this.findProjectList(dao.getProjectIds());
-        DaoThread listThread = DaoThread.getInstance();
-        DaoThread taskThread = DaoThread.getInstance();
+        DaoThread listThread = DaoThread.getFixed();
+        DaoThread taskThread = DaoThread.getFixed();
         long start = System.currentTimeMillis();
         lists.forEach((list) -> listThread.execute(() -> {
             FruitTaskDao taskDao = FruitTask.getDao();

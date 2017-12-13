@@ -43,7 +43,7 @@ public class LogsAspectj {
 
     private final String prefix = "{";
     private final String suffix = "}";
-    private final InterfaceDao.DaoThread daoThread = InterfaceDao.DaoThread.getInstance();
+    private final InterfaceDao.DaoThread daoThread = InterfaceDao.DaoThread.getFixed();
 
     @Pointcut("@annotation(wowjoy.fruits.ms.aspectj.LogInfo)")
     public void myAnnotation() {

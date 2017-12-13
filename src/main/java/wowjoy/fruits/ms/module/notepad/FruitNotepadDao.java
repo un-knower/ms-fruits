@@ -1,5 +1,7 @@
 package wowjoy.fruits.ms.module.notepad;
 
+import wowjoy.fruits.ms.module.user.FruitUserDao;
+
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -14,6 +16,16 @@ public class FruitNotepadDao extends FruitNotepad {
 
     private LocalDateTime startDate;
     private LocalDateTime endDate;
+
+    private FruitUserDao user;
+
+    public FruitUserDao getUser() {
+        return user;
+    }
+
+    public void setUser(FruitUserDao user) {
+        this.user = user;
+    }
 
     public Date getStartDate() {
         return startDate != null ? Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant()) : null;

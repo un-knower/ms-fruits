@@ -27,12 +27,13 @@ public abstract class AbstractDaoNotepad implements InterfaceDao {
 
     protected abstract List<FruitNotepadDao> finds(FruitNotepadDao dao);
 
+    protected abstract List<FruitNotepadDao> finds(FruitNotepadDao dao, String... teamIds);
 
     public final void insert(FruitNotepadVo vo) {
         FruitNotepadDao dao = FruitNotepad.getDao();
         dao.setUuid(vo.getUuid());
         dao.setContent(vo.getContent());
-        dao.setNotepadDate(vo.getNotepadDate());
+        dao.setEstimatedSubmitDate(vo.getEstimatedSubmitDate());
         dao.setUserId(ApplicationContextUtils.getCurrentUser().getUserId());
         this.insertCheckNotepad(dao);
         this.insert(dao);
@@ -59,6 +60,15 @@ public abstract class AbstractDaoNotepad implements InterfaceDao {
         dao.setState(vo.getState());
         return finds(dao);
     }
+
+    public final List<FruitNotepadDao> findTeam(FruitNotepadVo vo, String teamId) {
+        FruitNotepadDao dao = FruitNotepad.getDao();
+        dao.setStartDate(vo.getStartDate());
+        dao.setEndDate(vo.getEndDate());
+        dao.setState(vo.getState());
+        return finds(dao, teamId);
+    }
+
 
     /*检查添加参数*/
     private void insertCheckNotepad(FruitNotepadDao dao) {
