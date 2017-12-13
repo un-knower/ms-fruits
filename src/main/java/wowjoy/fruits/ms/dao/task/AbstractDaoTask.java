@@ -388,7 +388,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
             dao.setDescription(vo.getDescription());
             dao.setEstimatedEndDate(vo.getEstimatedEndDate());
             dao.setTitle(vo.getTitle());
-            dao.setTaskLevel(vo.getTaskLevel());
+            dao.setTaskLevel(FruitDict.TaskDict.LOW.name());
             dao.setUserRelation(vo.getUserRelation());
             dao.setListRelation(vo.getListRelation());
             if (dao.getListRelation(FruitDict.Systems.ADD).isEmpty())
