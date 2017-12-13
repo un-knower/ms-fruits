@@ -195,8 +195,8 @@
         from fruits_task task
         left join task_user_relation userRelation on userRelation.task_id = task.uuid
         left join fruits_user fuser on fuser.user_id = userRelation.user_id
-        left join task_plan_relation planRelation on planRelation.task_id = task.uuid
-        left join fruits_plan plan on planRelation.plan_id = plan.uuid
+--         left join task_plan_relation planRelation on planRelation.task_id = task.uuid
+--         left join fruits_plan plan on planRelation.plan_id = plan.uuid
         <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
             <where>
                 <include refid="Base_Example_Where_Clause">
@@ -204,8 +204,8 @@
                 </include>
                 and userRelation.is_deleted = 'N'
                 and fuser.is_deleted = 'N'
-                and planRelation.is_deleted = 'N'
-                and plan.is_deleted = 'N'
+--                 and planRelation.is_deleted = 'N'
+--                 and plan.is_deleted = 'N'
             </where>
         </trim>
     </select>
