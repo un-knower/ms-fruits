@@ -17,6 +17,7 @@ import wowjoy.fruits.ms.module.project.mapper.FruitProjectMapper;
 import wowjoy.fruits.ms.module.relation.entity.ProjectTeamRelation;
 import wowjoy.fruits.ms.module.relation.entity.UserProjectRelation;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
+import wowjoy.fruits.ms.util.ApplicationContextUtils;
 
 import java.text.MessageFormat;
 import java.util.List;
@@ -49,6 +50,15 @@ public class ProjectDaoImpl extends AbstractDaoProject {
 
     @Override
     public List<FruitProjectDao> finds(FruitProjectDao dao) {
+        return projectMapper.selectByExample(findTemplate(dao));
+    }
+
+    @Override
+    public List<FruitProjectDao> findsCurrentUser(FruitProjectDao dao) {
+        return projectMapper.selectCurrentUserByExample(findTemplate(dao), ApplicationContextUtils.getCurrentUser().getUserId());
+    }
+
+    private FruitProjectExample findTemplate(FruitProjectDao dao) {
         final FruitProjectExample example = new FruitProjectExample();
         final FruitProjectExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(dao.getTitle()))
@@ -63,8 +73,9 @@ public class ProjectDaoImpl extends AbstractDaoProject {
             example.setOrderByClause(order);
         else
             example.setOrderByClause("create_date_time desc");
-        return projectMapper.selectByExample(example);
+        return example;
     }
+
 
     @Override
     protected FruitProject find(FruitProjectDao dao) {

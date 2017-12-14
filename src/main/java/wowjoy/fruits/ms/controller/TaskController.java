@@ -192,11 +192,11 @@ public class TaskController {
      ************************************************************************************************/
 
     /**
-     * @api {get} /v1/task/user 查询当前登录用户的所有任务列表
+     * @api {get} /v1/task/current 查询当前登录用户的所有任务列表
      * @apiVersion 0.1.0
      * @apiGroup task
      */
-    @RequestMapping(value = "/user", method = RequestMethod.GET)
+    @RequestMapping(value = "/current", method = RequestMethod.GET)
     public RestResult userFinds(@JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
         return RestResult.getInstance().setData(daoTask.userFindByVo(vo));
     }

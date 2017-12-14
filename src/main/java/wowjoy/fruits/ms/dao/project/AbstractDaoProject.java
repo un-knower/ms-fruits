@@ -37,6 +37,8 @@ public abstract class AbstractDaoProject implements InterfaceDao {
 
     protected abstract List<FruitProjectDao> finds(FruitProjectDao dao);
 
+    protected abstract List<FruitProjectDao> findsCurrentUser(FruitProjectDao dao);
+
     protected abstract FruitProject find(FruitProjectDao dao);
 
     protected abstract List<FruitProjectDao> findUserByProjectIds(String... ids);
@@ -147,19 +149,36 @@ public abstract class AbstractDaoProject implements InterfaceDao {
     }
 
     public final List<FruitProjectDao> finds(FruitProjectVo vo, boolean isJoin) {
+        List<FruitProjectDao> result = this.finds(findsTemplate(vo));
+        if (!isJoin) return result;
+        findJoinInfo(result);
+        return result;
+    }
+
+    public final List<FruitProjectDao> findsCurrentUser(FruitProjectVo vo) {
+        List<FruitProjectDao> result = this.findsCurrentUser(findsTemplate(vo));
+        findJoinInfo(result);
+        return result;
+    }
+
+    private FruitProjectDao findsTemplate(FruitProjectVo vo) {
         FruitProjectDao dao = FruitProject.getDao();
         dao.setTitle(vo.getTitle());
         dao.setUuid(vo.getUuidVo());
         dao.setProjectStatus(vo.getProjectStatus());
-        List<FruitProjectDao> result = this.finds(dao);
-        if (!isJoin) return result;
+        return dao;
+    }
+
+
+    private void findJoinInfo(List<FruitProjectDao> datas) {
+        if (datas == null || datas.isEmpty()) return;
         List<String> ids = Lists.newLinkedList();
-        result.forEach((i) -> ids.add(i.getUuid()));
+        datas.forEach((i) -> ids.add(i.getUuid()));
         DaoThread thread = DaoThread.getFixed();
         thread.execute(() -> {
             LinkedHashMap<String, List<FruitUserDao>> users = Maps.newLinkedHashMap();
             this.findUserByProjectIds(ids.toArray(new String[ids.size()])).forEach((i) -> users.put(i.getUuid(), i.getUsers()));
-            result.forEach((i) -> {
+            datas.forEach((i) -> {
                 if (!users.containsKey(i.getUuid())) return;
                 i.setUsers(users.get(i.getUuid()));
                 i.seekPrincipalUser();
@@ -169,7 +188,7 @@ public abstract class AbstractDaoProject implements InterfaceDao {
         thread.execute(() -> {
             LinkedHashMap<String, List<FruitTeamDao>> teams = Maps.newLinkedHashMap();
             this.findTeamByProjectIds(ids.toArray(new String[ids.size()])).forEach((i) -> teams.put(i.getUuid(), i.getTeams()));
-            result.forEach((i) -> {
+            datas.forEach((i) -> {
                 if (!teams.containsKey(i.getUuid())) return;
                 i.setTeams(teams.get(i.getUuid()));
                 i.seekPrincipalTeam();
@@ -178,7 +197,6 @@ public abstract class AbstractDaoProject implements InterfaceDao {
         });
         thread.get();
         thread.shutdown();
-        return result;
     }
 
     /**

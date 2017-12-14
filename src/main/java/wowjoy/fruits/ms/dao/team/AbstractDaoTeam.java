@@ -14,6 +14,7 @@ import wowjoy.fruits.ms.module.team.FruitTeamVo;
 import wowjoy.fruits.ms.module.user.FruitUser;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
+import wowjoy.fruits.ms.util.ApplicationContextUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,20 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
         dao.setTitle(vo.getTitle());
         dao.setUuid(vo.getUuidVo());
         FruitUserDao user = FruitUser.getDao();
+        if (StringUtils.isNotBlank(vo.getUserName()))
+            user.setUserName(vo.getUserName());
+        List<FruitTeamDao> result = this.findRelation(dao, user);
+        /*检索团队leader*/
+        result.forEach((i) -> i.searchLeader());
+        return result;
+    }
+
+    public final List<FruitTeamDao> findCurrent(FruitTeamVo vo) {
+        FruitTeamDao dao = FruitTeam.getDao();
+        dao.setTitle(vo.getTitle());
+        dao.setUuid(vo.getUuidVo());
+        FruitUserDao user = FruitUser.getDao();
+        user.setUserId(ApplicationContextUtils.getCurrentUser().getUserId());
         if (StringUtils.isNotBlank(vo.getUserName()))
             user.setUserName(vo.getUserName());
         List<FruitTeamDao> result = this.findRelation(dao, user);

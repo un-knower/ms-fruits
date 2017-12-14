@@ -37,6 +37,16 @@ public class ProjectController {
     }
 
     /**
+     * @api {get} /v1/project/current 项目查询【列表，当前用户关联项目】
+     * @apiVersion 0.1.0
+     * @apiGroup project
+     */
+    @RequestMapping(value = "/current", method = RequestMethod.GET)
+    public RestResult findCurrent(@JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
+        return RestResult.getInstance().setData(projectDaoImpl.findsCurrentUser(vo));
+    }
+
+    /**
      * @api {get} /v1/project/user/{uuid} 根据项目id，查询用户信息
      * @apiVersion 0.1.0
      * @apiGroup project

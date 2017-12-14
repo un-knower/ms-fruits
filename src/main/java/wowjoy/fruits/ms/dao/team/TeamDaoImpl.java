@@ -50,6 +50,8 @@ public class TeamDaoImpl extends AbstractDaoTeam {
         criteriaUser.andUserIdIsNotNull();
         if (StringUtils.isNotBlank(userDao.getUserName()))
             criteriaUser.andUserNameLike(MessageFormat.format("%{0}%", userDao.getUserName()));
+        if (StringUtils.isNotBlank(userDao.getUserId()))
+            criteriaUser.andUserIdEqualTo(userDao.getUserId());
         return mapper.selectRelationByExample(example, exampleUser);
     }
 

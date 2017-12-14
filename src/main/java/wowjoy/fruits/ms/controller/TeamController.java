@@ -34,6 +34,16 @@ public class TeamController {
     }
 
     /**
+     * @api {get} /v1/team/current 团队信息查询【当前用户】
+     * @apiVersion 0.1.0
+     * @apiGroup team
+     */
+    @RequestMapping(value = "/current", method = RequestMethod.GET)
+    public RestResult findCurrent(@JsonArgument(type = FruitTeamVo.class) FruitTeamVo vo) {
+        return RestResult.getInstance().setData(teamDao.findCurrent(vo));
+    }
+
+    /**
      * @api {get} /v1/team/{uuid} 团队详情查询
      * @apiVersion 0.1.0
      * @apiGroup team

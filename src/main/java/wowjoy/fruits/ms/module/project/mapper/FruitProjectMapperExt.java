@@ -13,9 +13,11 @@ import java.util.List;
 @Mapper
 public interface FruitProjectMapperExt {
     @Deprecated
-    List<FruitProjectDao> selectUserRelationByExample(FruitProjectExample example);
+    List<FruitProjectDao> selectUserRelationByExample(@Param("example") FruitProjectExample example);
 
     List<FruitProjectDao> selectUserByProjectId(@Param("projectIds") String... ids);
 
     List<FruitProjectDao> selectTeamByProjectId(@Param("projectIds") String... ids);
+
+    List<FruitProjectDao> selectCurrentUserByExample(@Param("example") FruitProjectExample example, @Param("userId") String userId);
 }
