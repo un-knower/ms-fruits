@@ -98,7 +98,8 @@ public class TaskController {
      */
     @LogInfo(format = "【{user.userName}】变更了【{vo.title}】任务状态为【已结束】", uuid = "uuid", type = FruitDict.Parents.TASK, operateType = FruitDict.Systems.UPDATE)
     @RequestMapping(value = "/end/{uuid}", method = RequestMethod.PUT)
-    public RestResult changeStatusToEnd(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
+    public RestResult changeStatusToEnd(@PathVariable("uuid") String uuid) {
+        FruitTaskVo vo = FruitTask.getVo();
         vo.setUuidVo(uuid);
         daoTask.changeStatusToEnd(vo);
         return RestResult.getInstance().setData(vo.getUuidVo());
@@ -111,7 +112,8 @@ public class TaskController {
      */
     @LogInfo(format = "【{user.userName}】变更了【{vo.title}】任务状态为【已开始】", uuid = "uuid", type = FruitDict.Parents.TASK, operateType = FruitDict.Systems.UPDATE)
     @RequestMapping(value = "/start/{uuid}", method = RequestMethod.PUT)
-    public RestResult changeStatusToStart(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
+    public RestResult changeStatusToStart(@PathVariable("uuid") String uuid) {
+        FruitTaskVo vo = FruitTask.getVo();
         vo.setUuidVo(uuid);
         daoTask.changeStatusToStart(vo);
         return RestResult.getInstance().setData(vo.getUuidVo());
