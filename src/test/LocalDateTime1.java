@@ -14,7 +14,11 @@ public class LocalDateTime1 {
     public void localDate() throws Exception {
 //        final LocalDate of = LocalDate.of(2017, 1, 1);
 //        System.out.println(of.toEpochDay());
-        System.out.println(java.time.LocalDateTime.now().compareTo(java.time.LocalDateTime.now().plusHours(1)));
+//        System.out.println(java.time.LocalDateTime.now().compareTo(java.time.LocalDateTime.now().plusHours(1)));
+        StringBuffer string = new StringBuffer();
+        string.append("1111");
+        string.insert(0, "2222");
+        System.out.println(string.toString());
     }
 
     /**

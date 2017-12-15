@@ -2,15 +2,11 @@ package wowjoy.fruits.ms.module;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
-import wowjoy.fruits.ms.exception.CheckException;
-import wowjoy.fruits.ms.exception.NullException;
-import wowjoy.fruits.ms.module.plan.FruitPlanDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.text.MessageFormat;
 import java.util.Date;
 import java.util.LinkedList;
-import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -88,14 +84,18 @@ public abstract class AbstractEntity implements InterfaceEntity {
         return isDeleted;
     }
 
-    public String sortConstrue() {
+    public String sortConstrue(String prefix) {
         LinkedList<String> sorts = Lists.newLinkedList();
         if (StringUtils.isNotBlank(this.getDesc())) for (String desc : this.getDesc().split(","))
-            sorts.add(MessageFormat.format("{0} desc", toMysqlField(desc)));
+            sorts.add(MessageFormat.format("{0}{1} desc", prefix, toMysqlField(desc)));
         if (StringUtils.isNotBlank(this.getAsc())) for (String asc : this.getAsc().split(","))
-            sorts.add(MessageFormat.format("{0} asc", toMysqlField(asc)));
+            sorts.add(MessageFormat.format("{0}{1} asc", prefix, toMysqlField(asc)));
         if (sorts.isEmpty()) return null;
         return StringUtils.join(sorts, ",");
+    }
+
+    public String sortConstrue() {
+        return sortConstrue("");
     }
 
     private String toMysqlField(String field) {

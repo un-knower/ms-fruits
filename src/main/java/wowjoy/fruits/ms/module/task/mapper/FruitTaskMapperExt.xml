@@ -153,6 +153,9 @@
         left join task_list_relation listRelation on listRelation.task_id = task.uuid
         <trim prefixOverrides="ADN | OR" suffixOverrides="ADN | OR">
             <where>
+                <include refid="Base_Example_Where_Clause">
+                    <property name="replace" value="task"/>
+                </include>
                 <if test="id != null">
                     AND listRelation.list_id = #{id}
                     AND listRelation.is_deleted = 'N'
@@ -160,7 +163,9 @@
                 AND task.is_deleted = 'N'
             </where>
         </trim>
-        order by task.create_date_time desc
+        <if test="example.orderByClause != null">
+            order by ${example.orderByClause}
+        </if>
     </select>
 
     <select id="selectByTaskPlan" resultMap="BaseResultMap">

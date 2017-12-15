@@ -122,9 +122,20 @@ public class TaskDaoImpl extends AbstractDaoTask {
 
     @Override
     public List<FruitTaskDao> findByListId(FruitTaskDao dao) {
+        final String prefix = "task.";
+        final String status = prefix + "task_status desc";
         PageHelper.startPage(dao.getPageNum(), dao.getPageSize());
+        FruitTaskExample example = new FruitTaskExample();
+        StringBuffer sort = new StringBuffer();
+        String sortConstrue = dao.sortConstrue(prefix);
+        sort.append(StringUtils.isNotBlank(sortConstrue) ? sortConstrue : "");
+        if (StringUtils.isBlank(sort.toString()))
+            sort.append(status).append(",").append("task.create_date_time desc");
+        else
+            sort.insert(0, status).append(",");
+        example.setOrderByClause(sort.toString());
         long start = System.currentTimeMillis();
-        List<FruitTaskDao> data = taskMapper.selectByTaskList(dao.getListId());
+        List<FruitTaskDao> data = taskMapper.selectByTaskList(example, dao.getListId());
         long end = System.currentTimeMillis();
         logger.info("查询耗时findByListId：" + (end - start));
         return data;
