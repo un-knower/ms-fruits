@@ -291,11 +291,11 @@ public abstract class AbstractDaoTask implements InterfaceDao {
             DaoThread thread = DaoThread.getFixed();
             List<String> ids = toIds(tasks);
             thread
-                    .execute(this.plugProject(ids,tasks))
-                    .execute(this.plugPlanJoinProject(ids,tasks))
-                    .execute(this.plugUser(ids,tasks))
-                    .execute(this.plugList(ids,tasks))
-                    .execute(this.plugPlan(ids,tasks))
+                    .execute(this.plugProject(ids, tasks))
+                    .execute(this.plugPlanJoinProject(ids, tasks))
+                    .execute(this.plugUser(ids, tasks))
+                    .execute(this.plugList(ids, tasks))
+                    .execute(this.plugPlan(ids, tasks))
                     .execute(this.plugUtil(tasks)).get();
             thread.shutdown();
         } catch (Exception e) {
@@ -323,7 +323,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         return () -> {
             Map<String, FruitProjectDao> projectDaoMap = Maps.newLinkedHashMap();
             this.findProjectByTask(taskIds).forEach((i) -> projectDaoMap.put(i.getUuid(), i.getProject()));
-            tasks.forEach((task) -> task.setProject(projectDaoMap.get(task.getUuid())));
+            tasks.forEach((task) -> task.setProject(projectDaoMap.get(task.getUuid()) != null ? projectDaoMap.get(task.getUuid()) : task.getProject()));
             return true;
         };
     }
@@ -332,7 +332,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         return () -> {
             Map<String, FruitProjectDao> projectDaoMap = Maps.newLinkedHashMap();
             this.findPlanJoinProjectByTask(taskIds).forEach((i) -> projectDaoMap.put(i.getUuid(), i.getProject()));
-            tasks.forEach((task) -> task.setProject(projectDaoMap.get(task.getUuid())));
+            tasks.forEach((task) -> task.setProject(projectDaoMap.get(task.getUuid()) != null ? projectDaoMap.get(task.getUuid()) : task.getProject()));
             return true;
         };
     }
