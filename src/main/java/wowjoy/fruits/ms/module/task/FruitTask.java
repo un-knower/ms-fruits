@@ -1,6 +1,7 @@
 package wowjoy.fruits.ms.module.task;
 
 
+import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
@@ -43,7 +44,8 @@ public class FruitTask extends AbstractEntity {
 
     public void setTaskStatus(String taskStatus) {
         try {
-            this.taskStatus = FruitDict.TaskDict.valueOf(taskStatus).name();
+            if (StringUtils.isNotBlank(taskStatus))
+                this.taskStatus = FruitDict.TaskDict.valueOf(taskStatus).name();
         } catch (IllegalArgumentException ex) {
             throw new CheckException("无效的任务状态：" + ex.getMessage());
         }
