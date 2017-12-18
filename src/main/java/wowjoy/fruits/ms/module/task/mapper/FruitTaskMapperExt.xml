@@ -15,9 +15,25 @@
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
         <result column="list_id" jdbcType="VARCHAR" property="listId"/>
         <association property="plan" resultMap="PlanResultMap" columnPrefix="plan_"/>
+        <association property="project" resultMap="ProjectResultMap" columnPrefix="project_"/>
+        <association property="list" resultMap="ListResultMap" columnPrefix="list_"/>
         <collection resultMap="UserResultMap" property="users"
                     columnPrefix="user_">
         </collection>
+    </resultMap>
+
+    <resultMap id="ProjectResultMap" type="wowjoy.fruits.ms.module.project.FruitProjectDao">
+        <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
+        <result column="title" jdbcType="VARCHAR" property="title"/>
+        <result column="project_status" jdbcType="VARCHAR" property="projectStatus"/>
+        <result column="status_description" jdbcType="VARCHAR" property="statusDescription"/>
+        <result column="predict_start_date" jdbcType="DATE" property="predictStartDate"/>
+        <result column="predict_end_date" jdbcType="DATE" property="predictEndDate"/>
+        <result column="end_date" jdbcType="TIMESTAMP" property="endDate"/>
+        <result column="description" jdbcType="VARCHAR" property="description"/>
+        <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
+        <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
+        <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
     </resultMap>
 
     <resultMap id="UserResultMap" type="wowjoy.fruits.ms.module.user.FruitUserDao">
@@ -116,16 +132,6 @@
         ${replace}.is_deleted as ${prefix}is_deleted
     </sql>
 
-    <sql id="List_Column_List">
-        ${replace}.uuid as ${prefix}uuid,
-        ${replace}.title as ${prefix}title,
-        ${replace}.l_type as ${prefix}l_type,
-        ${replace}.description as ${prefix}description,
-        ${replace}.modify_date_time as ${prefix}modify_date_time,
-        ${replace}.create_date_time as ${prefix}create_date_time,
-        ${replace}.is_deleted as ${prefix}is_deleted
-    </sql>
-
     <sql id="Plan_Column_List">
         ${replace}.uuid as ${prefix}uuid,
         ${replace}.title as ${prefix}title,
@@ -140,6 +146,30 @@
         ${replace}.create_date_time as ${prefix}create_date_time,
         ${replace}.is_deleted as ${prefix}is_deleted,
         ${replace}.description as ${prefix}description
+    </sql>
+
+    <sql id="Project_Column_List">
+        ${replace}.uuid as ${prefix}uuid,
+        ${replace}.title as ${prefix}title,
+        ${replace}.project_status as ${prefix}project_status,
+        ${replace}.status_description as ${prefix}status_description,
+        ${replace}.predict_start_date as ${prefix}predict_start_date,
+        ${replace}.predict_end_date as ${prefix}predict_end_date,
+        ${replace}.end_date as ${prefix}end_date,
+        ${replace}.description as ${prefix}description,
+        ${replace}.modify_date_time as ${prefix}modify_date_time,
+        ${replace}.create_date_time as ${prefix}create_date_time,
+        ${replace}.is_deleted as ${prefix}is_deleted
+    </sql>
+
+    <sql id="List_Column_List">
+        ${replace}.uuid as ${prefix}uuid,
+        ${replace}.title as ${prefix}title,
+        ${replace}.l_type as ${prefix}l_type,
+        ${replace}.description as ${prefix}description,
+        ${replace}.modify_date_time as ${prefix}modify_date_time,
+        ${replace}.create_date_time as ${prefix}create_date_time,
+        ${replace}.is_deleted as ${prefix}is_deleted
     </sql>
 
     <select id="selectByTaskList" resultMap="BaseResultMap">
@@ -200,8 +230,8 @@
         from fruits_task task
         left join task_user_relation userRelation on userRelation.task_id = task.uuid
         left join fruits_user fuser on fuser.user_id = userRelation.user_id
---         left join task_plan_relation planRelation on planRelation.task_id = task.uuid
---         left join fruits_plan plan on planRelation.plan_id = plan.uuid
+        -- left join task_plan_relation planRelation on planRelation.task_id = task.uuid
+        -- left join fruits_plan plan on planRelation.plan_id = plan.uuid
         <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
             <where>
                 <include refid="Base_Example_Where_Clause">
@@ -209,8 +239,8 @@
                 </include>
                 and userRelation.is_deleted = 'N'
                 and fuser.is_deleted = 'N'
---                 and planRelation.is_deleted = 'N'
---                 and plan.is_deleted = 'N'
+                -- and planRelation.is_deleted = 'N'
+                -- and plan.is_deleted = 'N'
             </where>
         </trim>
     </select>
@@ -239,6 +269,82 @@
         </trim>
     </select>
 
+    <!-- 查询任务关联项目 -->
+    <select id="selectProjectByTask" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List">
+            <property name="replace" value="task"/>
+        </include>
+        ,
+        <include refid="Project_Column_List">
+            <property name="replace" value="project"/>
+            <property name="prefix" value="project_"/>
+        </include>
+        from fruits_task task
+        left join task_project_relation projectRelation on projectRelation.task_id = task.uuid
+        left join fruits_project project on project.uuid = projectRelation.project_id
+        <trim suffixOverrides="AND | OR" prefixOverrides="AND | OR ">
+            <where>
+                <include refid="Base_Example_Where_Clause">
+                    <property name="replace" value="task"/>
+                </include>
+                and projectRelation.is_deleted = 'N'
+                and project.is_deleted = 'N'
+            </where>
+        </trim>
+    </select>
+
+    <!-- 根据关联任务，查询出，任务关联项目 -->
+    <select id="selectPlanJoinProjectByTask" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List">
+            <property name="replace" value="task"/>
+        </include>
+        ,
+        <include refid="Project_Column_List">
+            <property name="replace" value="project"/>
+            <property name="prefix" value="project_"/>
+        </include>
+        from fruits_task task
+        left join task_plan_relation planRelation on planRelation.task_id = task.uuid
+        left join plan_project_relation projectRelation on projectRelation.plan_id = planRelation.plan_id
+        left join fruits_project project on project.uuid = projectRelation.project_id
+        <trim suffixOverrides="AND | OR" prefixOverrides="AND | OR ">
+            <where>
+                <include refid="Base_Example_Where_Clause">
+                    <property name="replace" value="task"/>
+                </include>
+                and projectRelation.is_deleted = 'N'
+                and project.is_deleted = 'N'
+            </where>
+        </trim>
+    </select>
+
+    <!--根据任务查询列表-->
+    <select id="selectListByTask" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List">
+            <property name="replace" value="task"/>
+        </include>
+        ,
+        <include refid="List_Column_List">
+            <property name="replace" value="flist"/>
+            <property name="prefix" value="list_"/>
+        </include>
+        from fruits_task task
+        left join task_list_relation listJoin on listJoin.task_id = task.uuid
+        left join fruits_list flist on flist.uuid = listJoin.list_id
+        <trim suffixOverrides="AND | OR" prefixOverrides="AND | OR ">
+            <where>
+                <include refid="Base_Example_Where_Clause">
+                    <property name="replace" value="task"/>
+                </include>
+                and listJoin.is_deleted = 'N'
+                and flist.is_deleted = 'N'
+            </where>
+        </trim>
+    </select>
+
 
     <!--/************************************************************************************************-->
     <!--*                                       个人中心专供                                            *-->
@@ -261,6 +367,9 @@
                 and userRelation.is_deleted = 'N'
             </where>
         </trim>
+        <if test="example.orderByClause != null">
+            order by ${example.orderByClause}
+        </if>
     </select>
 
 

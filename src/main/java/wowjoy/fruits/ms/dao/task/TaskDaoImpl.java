@@ -134,10 +134,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
         else
             sort.insert(0, status).append(",");
         example.setOrderByClause(sort.toString());
-        long start = System.currentTimeMillis();
         List<FruitTaskDao> data = taskMapper.selectByTaskList(example, dao.getListId());
-        long end = System.currentTimeMillis();
-        logger.info("查询耗时findByListId：" + (end - start));
         return data;
     }
 
@@ -152,10 +149,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
             return Lists.newLinkedList();
         FruitTaskExample example = new FruitTaskExample();
         example.createCriteria().andUuidIn(taskIds).andIsDeletedEqualTo(FruitDict.Systems.N.name());
-        long start = System.currentTimeMillis();
         List<FruitTaskDao> data = taskMapper.selectUserByTask(example);
-        long end = System.currentTimeMillis();
-        logger.info("查询耗时findUserByTaskIds：" + (end - start));
         return data;
     }
 
@@ -165,10 +159,37 @@ public class TaskDaoImpl extends AbstractDaoTask {
             return Lists.newLinkedList();
         FruitTaskExample example = new FruitTaskExample();
         example.createCriteria().andUuidIn(taskIds).andIsDeletedEqualTo(FruitDict.Systems.N.name());
-        long start = System.currentTimeMillis();
         List<FruitTaskDao> data = taskMapper.selectPlanByTask(example);
-        long end = System.currentTimeMillis();
-        logger.info("查询耗时findUserByTaskIds：" + (end - start));
+        return data;
+    }
+
+    @Override
+    protected List<FruitTaskDao> findProjectByTask(List<String> taskIds) {
+        if (taskIds == null || taskIds.isEmpty())
+            return Lists.newLinkedList();
+        FruitTaskExample example = new FruitTaskExample();
+        example.createCriteria().andUuidIn(taskIds).andIsDeletedEqualTo(FruitDict.Systems.N.name());
+        List<FruitTaskDao> data = taskMapper.selectProjectByTask(example);
+        return data;
+    }
+
+    @Override
+    protected List<FruitTaskDao> findPlanJoinProjectByTask(List<String> taskIds) {
+        if (taskIds == null || taskIds.isEmpty())
+            return Lists.newLinkedList();
+        FruitTaskExample example = new FruitTaskExample();
+        example.createCriteria().andUuidIn(taskIds).andIsDeletedEqualTo(FruitDict.Systems.N.name());
+        List<FruitTaskDao> data = taskMapper.selectPlanJoinProjectByTask(example);
+        return data;
+    }
+
+    @Override
+    protected List<FruitTaskDao> findListByTask(List<String> taskIds) {
+        if (taskIds == null || taskIds.isEmpty())
+            return Lists.newLinkedList();
+        FruitTaskExample example = new FruitTaskExample();
+        example.createCriteria().andUuidIn(taskIds).andIsDeletedEqualTo(FruitDict.Systems.N.name());
+        List<FruitTaskDao> data = taskMapper.selectListByTask(example);
         return data;
     }
 
@@ -277,12 +298,17 @@ public class TaskDaoImpl extends AbstractDaoTask {
 
     @Override
     protected List<FruitTaskDao> userFindByDao(FruitTaskDao dao) {
+        final String prefix = "task.";
         FruitTaskExample example = new FruitTaskExample();
         FruitTaskExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(dao.getTitle()))
             criteria.andTitleLike(MessageFormat.format("%{0}%", dao.getTitle()));
         if (StringUtils.isNotBlank(dao.getTaskStatus()))
             criteria.andTaskStatusEqualTo(dao.getTaskStatus());
+        String sort = dao.sortConstrue(prefix);
+        if (StringUtils.isNotBlank(sort))
+            sort = MessageFormat.format("{0}create_date_time desc", prefix);
+        example.setOrderByClause(sort);
         criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
 //        PageHelper.startPage(dao.getPageNum(), dao.getPageSize());
         return taskMapper.userSelectByExample(example, ApplicationContextUtils.getCurrentUser().getUserId());

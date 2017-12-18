@@ -2,7 +2,9 @@ package wowjoy.fruits.ms.module.task;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import wowjoy.fruits.ms.module.list.FruitListDao;
 import wowjoy.fruits.ms.module.plan.FruitPlanDao;
+import wowjoy.fruits.ms.module.project.FruitProjectDao;
 import wowjoy.fruits.ms.module.relation.entity.TaskListRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskPlanRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskProjectRelation;
@@ -36,10 +38,30 @@ public class FruitTaskDao extends FruitTask {
 
     private List<FruitUserDao> users;
     private FruitPlanDao plan;
+    private FruitProjectDao project;
+    private FruitListDao list;
+
     private Integer days;
 
     private transient String listId;
+
+    public FruitListDao getList() {
+        return list;
+    }
+
+    public void setList(FruitListDao list) {
+        this.list = list;
+    }
+
     private transient String planId;
+
+    public FruitProjectDao getProject() {
+        return project;
+    }
+
+    public void setProject(FruitProjectDao project) {
+        this.project = project;
+    }
 
     public String getPlanId() {
         return planId;

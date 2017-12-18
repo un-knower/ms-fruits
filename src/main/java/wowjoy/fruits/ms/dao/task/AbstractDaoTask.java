@@ -9,6 +9,7 @@ import wowjoy.fruits.ms.exception.ExceptionSupport;
 import wowjoy.fruits.ms.exception.ServiceException;
 import wowjoy.fruits.ms.module.list.FruitListDao;
 import wowjoy.fruits.ms.module.plan.FruitPlanDao;
+import wowjoy.fruits.ms.module.project.FruitProjectDao;
 import wowjoy.fruits.ms.module.relation.entity.TaskListRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskPlanRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskProjectRelation;
@@ -58,6 +59,12 @@ public abstract class AbstractDaoTask implements InterfaceDao {
     protected abstract List<FruitTaskDao> findUserByTaskIds(List<String> taskIds);
 
     protected abstract List<FruitTaskDao> findPlanByTaskIds(List<String> taskIds);
+
+    protected abstract List<FruitTaskDao> findProjectByTask(List<String> taskIds);
+
+    protected abstract List<FruitTaskDao> findPlanJoinProjectByTask(List<String> taskIds);
+
+    protected abstract List<FruitTaskDao> findListByTask(List<String> taskIds);
 
     protected abstract List<FruitTaskDao> userFindByDao(FruitTaskDao dao);
 
@@ -275,6 +282,28 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         return lists;
     }
 
+    /************************************************************************************************
+     *                                       个人中心专供                                            *
+     ************************************************************************************************/
+    public List<FruitTaskDao> userFindByVo(FruitTaskVo vo) {
+        List<FruitTaskDao> tasks = this.userFindByDao(TaskTemplate.newInstance(vo).findTemplate());
+        try {
+            DaoThread thread = DaoThread.getFixed();
+            List<String> ids = toIds(tasks);
+            thread
+                    .execute(this.plugProject(ids,tasks))
+                    .execute(this.plugPlanJoinProject(ids,tasks))
+                    .execute(this.plugUser(ids,tasks))
+                    .execute(this.plugList(ids,tasks))
+                    .execute(this.plugPlan(ids,tasks))
+                    .execute(this.plugUtil(tasks)).get();
+            thread.shutdown();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return tasks;
+    }
+
     private List<String> toIds(List<FruitTaskDao> tasks) {
         List<String> taskIds = Lists.newLinkedList();
         tasks.forEach((i) -> taskIds.add(i.getUuid()));
@@ -286,6 +315,33 @@ public abstract class AbstractDaoTask implements InterfaceDao {
             Map<String, FruitPlanDao> planDaoMap = Maps.newLinkedHashMap();
             this.findPlanByTaskIds(taskIds).forEach((i) -> planDaoMap.put(i.getUuid(), i.getPlan()));
             tasks.forEach((task) -> task.setPlan(planDaoMap.get(task.getUuid())));
+            return true;
+        };
+    }
+
+    private Callable plugProject(List<String> taskIds, List<FruitTaskDao> tasks) {
+        return () -> {
+            Map<String, FruitProjectDao> projectDaoMap = Maps.newLinkedHashMap();
+            this.findProjectByTask(taskIds).forEach((i) -> projectDaoMap.put(i.getUuid(), i.getProject()));
+            tasks.forEach((task) -> task.setProject(projectDaoMap.get(task.getUuid())));
+            return true;
+        };
+    }
+
+    private Callable plugPlanJoinProject(List<String> taskIds, List<FruitTaskDao> tasks) {
+        return () -> {
+            Map<String, FruitProjectDao> projectDaoMap = Maps.newLinkedHashMap();
+            this.findPlanJoinProjectByTask(taskIds).forEach((i) -> projectDaoMap.put(i.getUuid(), i.getProject()));
+            tasks.forEach((task) -> task.setProject(projectDaoMap.get(task.getUuid())));
+            return true;
+        };
+    }
+
+    private Callable plugList(List<String> taskIds, List<FruitTaskDao> tasks) {
+        return () -> {
+            Map<String, FruitListDao> listDaoMap = Maps.newLinkedHashMap();
+            this.findListByTask(taskIds).forEach((i) -> listDaoMap.put(i.getUuid(), i.getList()));
+            tasks.forEach((task) -> task.setList(listDaoMap.get(task.getUuid())));
             return true;
         };
     }
@@ -451,19 +507,6 @@ public abstract class AbstractDaoTask implements InterfaceDao {
             return dao;
         }
 
-    }
-
-    /************************************************************************************************
-     *                                       个人中心专供                                            *
-     ************************************************************************************************/
-    public List<FruitTaskDao> userFindByVo(FruitTaskVo vo) {
-        List<FruitTaskDao> tasks = this.userFindByDao(TaskTemplate.newInstance(vo).findTemplate());
-        try {
-            this.plugUtil(tasks).call();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return tasks;
     }
 
 }
