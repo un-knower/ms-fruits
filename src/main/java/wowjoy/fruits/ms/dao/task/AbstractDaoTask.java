@@ -502,6 +502,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         public FruitTaskDao findTemplate() {
             dao.setTitle(vo.getTitle());
             dao.setTaskStatus(vo.getTaskStatus());
+            dao.setProjectIds(vo.getProjectIds());
             dao.setAsc(vo.getAsc());
             dao.setDesc(vo.getDesc());
             return dao;

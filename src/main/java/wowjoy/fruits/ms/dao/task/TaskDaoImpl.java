@@ -3,6 +3,7 @@ package wowjoy.fruits.ms.dao.task;
 import com.github.pagehelper.PageHelper;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
+import org.assertj.core.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -305,12 +306,13 @@ public class TaskDaoImpl extends AbstractDaoTask {
             criteria.andTitleLike(MessageFormat.format("%{0}%", dao.getTitle()));
         if (StringUtils.isNotBlank(dao.getTaskStatus()))
             criteria.andTaskStatusEqualTo(dao.getTaskStatus());
+        String projectId = dao.getProjectIds()!=null && !dao.getProjectIds().isEmpty() ? dao.getProjectIds().get(0) : null;
         String sort = dao.sortConstrue(prefix);
-        if (StringUtils.isNotBlank(sort))
+        if (StringUtils.isBlank(sort))
             sort = MessageFormat.format("{0}create_date_time desc", prefix);
         example.setOrderByClause(sort);
         criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
 //        PageHelper.startPage(dao.getPageNum(), dao.getPageSize());
-        return taskMapper.userSelectByExample(example, ApplicationContextUtils.getCurrentUser().getUserId());
+        return taskMapper.userSelectByExample(example, ApplicationContextUtils.getCurrentUser().getUserId(), projectId);
     }
 }

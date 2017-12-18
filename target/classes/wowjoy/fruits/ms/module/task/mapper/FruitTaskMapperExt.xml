@@ -358,13 +358,22 @@
         FROM
         fruits_task task
         left join task_user_relation userRelation on userRelation.task_id = task.uuid
+        left join task_project_relation projectJoin on task.uuid = projectJoin.task_id
+        left join task_plan_relation planJoin on planJoin.task_id = task.uuid
+        left join plan_project_relation planProjectRelation on planProjectRelation.plan_id = planJoin.plan_id
+        left join fruits_project fproject on fproject.uuid = planProjectRelation.project_id or fproject.uuid = projectJoin.project_id
         <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
             <where>
                 <include refid="Base_Example_Where_Clause">
                     <property name="replace" value="task"/>
                 </include>
+                <if test="projectId != null">
+                    and fproject.uuid = #{projectId}
+                </if>
                 and userRelation.user_id = #{userId}
                 and userRelation.is_deleted = 'N'
+                and (projectJoin.is_deleted = 'N' or (planJoin.is_deleted = 'N' and planProjectRelation.is_deleted = 'N'))
+                and fproject.is_deleted = 'N'
             </where>
         </trim>
         <if test="example.orderByClause != null">
