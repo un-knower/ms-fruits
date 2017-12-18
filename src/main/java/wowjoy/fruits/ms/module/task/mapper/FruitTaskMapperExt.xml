@@ -254,11 +254,11 @@
         left join task_user_relation userRelation on userRelation.task_id = task.uuid
         <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
             <where>
-                userRelation.user_id = #{userId}
-                and userRelation.is_deleted = 'N'
                 <include refid="Base_Example_Where_Clause">
                     <property name="replace" value="task"/>
                 </include>
+                and userRelation.user_id = #{userId}
+                and userRelation.is_deleted = 'N'
             </where>
         </trim>
     </select>

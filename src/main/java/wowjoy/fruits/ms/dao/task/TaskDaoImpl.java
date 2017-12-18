@@ -284,7 +284,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
         if (StringUtils.isNotBlank(dao.getTaskStatus()))
             criteria.andTaskStatusEqualTo(dao.getTaskStatus());
         criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
-        PageHelper.startPage(dao.getPageNum(), dao.getPageSize());
+//        PageHelper.startPage(dao.getPageNum(), dao.getPageSize());
         return taskMapper.userSelectByExample(example, ApplicationContextUtils.getCurrentUser().getUserId());
     }
 }
