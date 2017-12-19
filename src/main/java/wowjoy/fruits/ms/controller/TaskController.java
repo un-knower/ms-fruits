@@ -197,8 +197,18 @@ public class TaskController {
      * @apiGroup task
      */
     @RequestMapping(value = "/current", method = RequestMethod.GET)
-    public RestResult userFinds(@JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
+    public RestResult myTask(@JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
         return RestResult.getInstance().setData(daoTask.myTask(vo));
+    }
+
+    /**
+     * @api {get} /v1/task/current_create 查询当前登录用户创建的任务
+     * @apiVersion 0.1.0
+     * @apiGroup task
+     */
+    @RequestMapping(value = "/current_create", method = RequestMethod.GET)
+    public RestResult userFinds(@JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
+        return RestResult.getInstance().setData(daoTask.myCreateTask(vo));
     }
 
 }

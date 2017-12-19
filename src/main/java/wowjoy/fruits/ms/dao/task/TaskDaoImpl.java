@@ -298,6 +298,17 @@ public class TaskDaoImpl extends AbstractDaoTask {
 
     @Override
     protected List<FruitTaskDao> myTask(FruitTaskDao dao) {
+        String projectId = dao.getProjectIds() != null && !dao.getProjectIds().isEmpty() ? dao.getProjectIds().get(0) : null;
+//        PageHelper.startPage(dao.getPageNum(), dao.getPageSize());
+        return taskMapper.myTaskByExample(myTaskTemplate(dao), ApplicationContextUtils.getCurrentUser().getUserId(), projectId);
+    }
+
+    @Override
+    protected List<FruitTaskDao> myCreateTask(FruitTaskDao dao) {
+        return taskMapper.myCreateTask(myTaskTemplate(dao), ApplicationContextUtils.getCurrentUser().getUserId());
+    }
+
+    private FruitTaskExample myTaskTemplate(FruitTaskDao dao) {
         final String prefix = "task.";
         FruitTaskExample example = new FruitTaskExample();
         FruitTaskExample.Criteria criteria = example.createCriteria();
@@ -305,13 +316,12 @@ public class TaskDaoImpl extends AbstractDaoTask {
             criteria.andTitleLike(MessageFormat.format("%{0}%", dao.getTitle()));
         if (StringUtils.isNotBlank(dao.getTaskStatus()))
             criteria.andTaskStatusEqualTo(dao.getTaskStatus());
-        String projectId = dao.getProjectIds()!=null && !dao.getProjectIds().isEmpty() ? dao.getProjectIds().get(0) : null;
         String sort = dao.sortConstrue(prefix);
         if (StringUtils.isBlank(sort))
             sort = MessageFormat.format("{0}create_date_time desc", prefix);
         example.setOrderByClause(sort);
         criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
-//        PageHelper.startPage(dao.getPageNum(), dao.getPageSize());
-        return taskMapper.myTaskByExample(example, ApplicationContextUtils.getCurrentUser().getUserId(), projectId);
+        return example;
     }
+
 }

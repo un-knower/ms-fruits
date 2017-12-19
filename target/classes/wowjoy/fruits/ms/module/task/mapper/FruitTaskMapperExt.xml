@@ -384,11 +384,24 @@
     <select  id="myCreateTask" resultMap="BaseResultMap">
         SELECT
         <include refid="Base_Column_List">
-            <property name="" value="task"/>
+            <property name="replace" value="task"/>
         </include>
         FROM
         fruits_task task
-
+        inner join
+        (select `user_id`,`fruit_uuid` from fruits_logs
+        where fruit_type = 'TASK' and `operate_type` = 'ADD' and is_deleted = 'N'
+        AND user_id = #{userId}) flogs on flogs.fruit_uuid = task.uuid
+        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
+            <where>
+                <include refid="Base_Example_Where_Clause">
+                    <property name="replace" value="task"/>
+                </include>
+            </where>
+        </trim>
+        <if test="example.orderByClause != null">
+            order by ${example.orderByClause}
+        </if>
     </select>
 
 

@@ -68,6 +68,8 @@ public abstract class AbstractDaoTask implements InterfaceDao {
 
     protected abstract List<FruitTaskDao> myTask(FruitTaskDao dao);
 
+    protected abstract List<FruitTaskDao> myCreateTask(FruitTaskDao dao);
+
     /*******************************
      * PUBLIC 函数，公共接口         *
      * 尽量保证规范，不直接调用dao接口 *
@@ -287,6 +289,17 @@ public abstract class AbstractDaoTask implements InterfaceDao {
      ************************************************************************************************/
     public List<FruitTaskDao> myTask(FruitTaskVo vo) {
         List<FruitTaskDao> tasks = this.myTask(TaskTemplate.newInstance(vo).findTemplate());
+        myTaskPlug(tasks);
+        return tasks;
+    }
+
+    public List<FruitTaskDao> myCreateTask(FruitTaskVo vo) {
+        List<FruitTaskDao> task = this.myCreateTask(TaskTemplate.newInstance(vo).findTemplate());
+        myTaskPlug(task);
+        return task;
+    }
+
+    private void myTaskPlug(List<FruitTaskDao> tasks) {
         try {
             DaoThread thread = DaoThread.getFixed();
             List<String> ids = toIds(tasks);
@@ -301,7 +314,6 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return tasks;
     }
 
     private List<String> toIds(List<FruitTaskDao> tasks) {
@@ -361,6 +373,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
             return true;
         };
     }
+
 
     /**
      * 检查添加信息合法性
