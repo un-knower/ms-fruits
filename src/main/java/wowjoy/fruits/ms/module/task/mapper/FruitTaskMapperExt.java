@@ -29,6 +29,6 @@ public interface FruitTaskMapperExt {
     /************************************************************************************************
      *                                       个人中心专供                                            *
      ************************************************************************************************/
-    List<FruitTaskDao> userSelectByExample(@Param("example") FruitTaskExample example, @Param("userId") String userId, @Param("projectId") String projectId);
+    List<FruitTaskDao> myTaskByExample(@Param("example") FruitTaskExample example, @Param("userId") String userId, @Param("projectId") String projectId);
 
 }

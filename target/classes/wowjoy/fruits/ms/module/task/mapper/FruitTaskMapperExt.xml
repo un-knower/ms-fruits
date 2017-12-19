@@ -350,7 +350,7 @@
     <!--*                                       个人中心专供                                            *-->
     <!--************************************************************************************************/-->
 
-    <select id="userSelectByExample" resultMap="BaseResultMap">
+    <select id="myTaskByExample" resultMap="BaseResultMap">
         SELECT
         <include refid="Base_Column_List">
             <property name="replace" value="task"/>
@@ -379,6 +379,16 @@
         <if test="example.orderByClause != null">
             order by ${example.orderByClause}
         </if>
+    </select>
+
+    <select  id="myCreateTask" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List">
+            <property name="" value="task"/>
+        </include>
+        FROM
+        fruits_task task
+
     </select>
 
 

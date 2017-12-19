@@ -3,7 +3,6 @@ package wowjoy.fruits.ms.dao.task;
 import com.github.pagehelper.PageHelper;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
-import org.assertj.core.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -298,7 +297,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
      ************************************************************************************************/
 
     @Override
-    protected List<FruitTaskDao> userFindByDao(FruitTaskDao dao) {
+    protected List<FruitTaskDao> myTask(FruitTaskDao dao) {
         final String prefix = "task.";
         FruitTaskExample example = new FruitTaskExample();
         FruitTaskExample.Criteria criteria = example.createCriteria();
@@ -313,6 +312,6 @@ public class TaskDaoImpl extends AbstractDaoTask {
         example.setOrderByClause(sort);
         criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
 //        PageHelper.startPage(dao.getPageNum(), dao.getPageSize());
-        return taskMapper.userSelectByExample(example, ApplicationContextUtils.getCurrentUser().getUserId(), projectId);
+        return taskMapper.myTaskByExample(example, ApplicationContextUtils.getCurrentUser().getUserId(), projectId);
     }
 }

@@ -198,7 +198,7 @@ public class TaskController {
      */
     @RequestMapping(value = "/current", method = RequestMethod.GET)
     public RestResult userFinds(@JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
-        return RestResult.getInstance().setData(daoTask.userFindByVo(vo));
+        return RestResult.getInstance().setData(daoTask.myTask(vo));
     }
 
 }

@@ -66,7 +66,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
 
     protected abstract List<FruitTaskDao> findListByTask(List<String> taskIds);
 
-    protected abstract List<FruitTaskDao> userFindByDao(FruitTaskDao dao);
+    protected abstract List<FruitTaskDao> myTask(FruitTaskDao dao);
 
     /*******************************
      * PUBLIC 函数，公共接口         *
@@ -285,8 +285,8 @@ public abstract class AbstractDaoTask implements InterfaceDao {
     /************************************************************************************************
      *                                       个人中心专供                                            *
      ************************************************************************************************/
-    public List<FruitTaskDao> userFindByVo(FruitTaskVo vo) {
-        List<FruitTaskDao> tasks = this.userFindByDao(TaskTemplate.newInstance(vo).findTemplate());
+    public List<FruitTaskDao> myTask(FruitTaskVo vo) {
+        List<FruitTaskDao> tasks = this.myTask(TaskTemplate.newInstance(vo).findTemplate());
         try {
             DaoThread thread = DaoThread.getFixed();
             List<String> ids = toIds(tasks);
@@ -447,6 +447,8 @@ public abstract class AbstractDaoTask implements InterfaceDao {
             dao.setTaskLevel(FruitDict.TaskDict.LOW.name());
             dao.setUserRelation(vo.getUserRelation());
             dao.setListRelation(vo.getListRelation());
+            if (StringUtils.isBlank(dao.getTitle()))
+                throw new CheckException("标题不能为空（前端难道没有校验吗！！）");
             if (dao.getListRelation(FruitDict.Systems.ADD).isEmpty())
                 throw new CheckException("必须关联列表");
             if (dao.getListRelation(FruitDict.Systems.ADD).size() > 1)
