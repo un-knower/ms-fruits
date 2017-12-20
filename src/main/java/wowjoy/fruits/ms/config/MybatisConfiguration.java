@@ -20,10 +20,9 @@ public class MybatisConfiguration {
     private final static String SQLSESSIONFACTORYBEAN_TYPEALIASESPACKAGE = "wowjoy.fruits.ms";
     @Autowired
     private Environment environment;
-
     /**
      * 采用hikari连接池
-     *
+     *C
      * @return
      */
     @Bean

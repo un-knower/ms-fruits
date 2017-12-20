@@ -26,7 +26,9 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
      * 抽象接口，私有，因为对外的公共接口用来书写业务层，发布api必须在自己的控制范围内，不发布无用的接口。*
      *********************************************************************************/
 
-    protected abstract List<FruitPlanDao> findProject(FruitPlanDao dao, Integer pageNum, Integer pageSize, boolean isPage);
+    protected abstract List<FruitPlanDao> findByProjectId(FruitPlanDao dao, Integer pageNum, Integer pageSize, boolean isPage);
+
+    protected abstract List<FruitPlanDao> findByProjectId(FruitPlanDao dao);
 
     protected abstract List<FruitPlanDao> findUserByPlanIds(List<String> planIds, String currentUserId);
 
@@ -62,8 +64,8 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
      * @param vo
      * @return
      */
-    public final List<FruitPlanDao> findMonthWeek(FruitPlanVo vo, FruitUser currentUser, boolean isPage) {
-        List<FruitPlanDao> planDaoListSource = findProject(this.findMonthWeekTemplate(vo), vo.getPageNum(), vo.getPageSize(), isPage);
+    private final List<FruitPlanDao> findMonthWeek(FruitPlanVo vo, FruitUser currentUser, boolean isPage) {
+        List<FruitPlanDao> planDaoListSource = findByProjectId(this.findTemplate(vo), vo.getPageNum(), vo.getPageSize(), isPage);
         List<FruitPlanDao> planDaoListCopy = new ArrayList<>(Arrays.asList(new FruitPlanDao[planDaoListSource.size()]));
         Collections.copy(planDaoListCopy, planDaoListSource);
         if (planDaoListSource.isEmpty()) return Lists.newLinkedList();
@@ -142,7 +144,11 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         return result;
     }
 
-    private FruitPlanDao findMonthWeekTemplate(FruitPlanVo vo) {
+    public List<FruitPlanDao> findByProjectId(FruitPlanVo vo) {
+        return findByProjectId(findTemplate(vo));
+    }
+
+    private FruitPlanDao findTemplate(FruitPlanVo vo) {
         this.getStartTimeAndEndTime(vo);
         final FruitPlanDao dao = FruitPlan.getDao();
         dao.setTitle(vo.getTitle());

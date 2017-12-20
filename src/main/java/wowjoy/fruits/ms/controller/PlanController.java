@@ -11,7 +11,6 @@ import wowjoy.fruits.ms.dao.plan.AbstractDaoPlan;
 import wowjoy.fruits.ms.module.plan.FruitPlan;
 import wowjoy.fruits.ms.module.plan.FruitPlanSummaryVo;
 import wowjoy.fruits.ms.module.plan.FruitPlanVo;
-import wowjoy.fruits.ms.util.ApplicationContextUtils;
 import wowjoy.fruits.ms.util.DateUtils;
 import wowjoy.fruits.ms.util.JsonArgument;
 import wowjoy.fruits.ms.util.RestResult;
@@ -52,13 +51,25 @@ public class PlanController {
     }
 
     /**
-     * @api {get} /v1/plan/project/{uuid} 计划综合查询【项目查询】
+     * @api {get} /v1/plan/project/composite/{uuid} 计划综合查询【项目查询】
      * @apiVersion 0.1.0
      * @apiGroup plan
      */
-    @RequestMapping(value = "/project", method = RequestMethod.GET)
-    public RestResult findMonthWeek(@JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlanVo) {
+    @RequestMapping(value = "/project/composite/{uuid}", method = RequestMethod.GET)
+    public RestResult findMonthWeek(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlanVo) {
+        fruitPlanVo.setProjectId(uuid);
         return RestResult.getInstance().setData(dataPlanDao.compositeQuery(fruitPlanVo));
+    }
+
+    /**
+     * @api {get} /v1/plan/project/{uuid} 列出所有计划，非综合查询【项目查询】
+     * @apiVersion 0.1.0
+     * @apiGroup plan
+     */
+    @RequestMapping(value = "/project/{uuid}", method = RequestMethod.GET)
+    public RestResult findsByProjectId(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlanVo) {
+        fruitPlanVo.setProjectId(uuid);
+        return RestResult.getInstance().setData(dataPlanDao.findByProjectId(fruitPlanVo));
     }
 
     /**

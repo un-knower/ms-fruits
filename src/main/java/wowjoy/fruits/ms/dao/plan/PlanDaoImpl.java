@@ -45,7 +45,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
 
 
     @Override
-    protected List<FruitPlanDao> findProject(FruitPlanDao dao, Integer pageNum, Integer pageSize, boolean isPage) {
+    protected List<FruitPlanDao> findByProjectId(FruitPlanDao dao, Integer pageNum, Integer pageSize, boolean isPage) {
         FruitPlanExample example = this.findTemplate(dao);
         if (StringUtils.isNotBlank(dao.getParentId()))
             example.getOredCriteria().get(0).andParentIdIsNotNull();
@@ -58,7 +58,12 @@ public class PlanDaoImpl extends AbstractDaoPlan {
     }
 
     @Override
-    protected List<FruitPlanDao> findUserByPlanIds(List<String> planIds,String currentUserId) {
+    protected List<FruitPlanDao> findByProjectId(FruitPlanDao dao) {
+        return mapper.selectByProjectId(this.findTemplate(dao), dao.getProjectId());
+    }
+
+    @Override
+    protected List<FruitPlanDao> findUserByPlanIds(List<String> planIds, String currentUserId) {
         if (planIds == null || planIds.isEmpty()) return Lists.newLinkedList();
         return mapper.selectUserByPlanIds(planIds, currentUserId);
     }
@@ -87,7 +92,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
             criteria.andParentIdEqualTo(dao.getParentId());
         if (Objects.nonNull(dao.getStartDateDao()) && Objects.nonNull(dao.getEndDateDao()))
             criteria.andEstimatedEndDateBetween(dao.getStartDateDao(), dao.getEndDateDao());
-        if (StringUtils.isNotBlank(dao.getPlanStatus())){
+        if (StringUtils.isNotBlank(dao.getPlanStatus())) {
             criteria.andPlanStatusEqualTo(dao.getPlanStatus());
         }
         String sort = dao.sortConstrue();
