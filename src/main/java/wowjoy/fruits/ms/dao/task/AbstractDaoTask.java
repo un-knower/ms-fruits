@@ -220,6 +220,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         List<String> ids = toIds(tasks);
         DaoThread taskThread = DaoThread.getFixed();
         taskThread.execute(this.plugUser(ids, tasks))
+                .execute(this.plugList(ids,tasks))
                 .execute(this.plugUtil(tasks))
                 .get();
         taskThread.shutdown();
