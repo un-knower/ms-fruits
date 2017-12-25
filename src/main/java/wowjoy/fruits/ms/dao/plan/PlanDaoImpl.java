@@ -69,6 +69,12 @@ public class PlanDaoImpl extends AbstractDaoPlan {
     }
 
     @Override
+    protected List<FruitPlanDao> findLogsByPlanIds(List<String> planIds) {
+        if (planIds == null || planIds.isEmpty()) return Lists.newLinkedList();
+        return mapper.selectLogsByPlanIds(planIds);
+    }
+
+    @Override
     protected FruitPlan find(FruitPlanDao dao) {
         FruitPlanExample example = new FruitPlanExample();
         FruitPlanExample.Criteria criteria = example.createCriteria();

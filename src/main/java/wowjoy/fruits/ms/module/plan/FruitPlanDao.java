@@ -1,6 +1,7 @@
 package wowjoy.fruits.ms.module.plan;
 
 import com.google.common.collect.Lists;
+import wowjoy.fruits.ms.module.logs.FruitLogsDao;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
@@ -22,7 +23,10 @@ public class FruitPlanDao extends FruitPlan {
 
     private Date startDateDao;
     private Date endDateDao;
-    private volatile List<FruitUserDao> users;
+
+    private List<FruitUserDao> users;
+    private List<FruitLogsDao> logs;
+
     private Map<FruitDict.Systems, List<String>> userRelation;
     private Map<FruitDict.Systems, List<String>> projectRelation;
     private volatile List<FruitPlanDao> weeks;
@@ -30,6 +34,14 @@ public class FruitPlanDao extends FruitPlan {
     private List<String> parentIds;
     private String taskId;
     private Integer days;
+
+    public List<FruitLogsDao> getLogs() {
+        return logs;
+    }
+
+    public void setLogs(List<FruitLogsDao> logs) {
+        this.logs = logs;
+    }
 
     public List<String> getParentIds() {
         return parentIds;

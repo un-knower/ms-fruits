@@ -8,6 +8,7 @@ import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.logs.FruitLogs;
+import wowjoy.fruits.ms.module.logs.FruitLogsDao;
 import wowjoy.fruits.ms.module.notepad.FruitNotepadDao;
 import wowjoy.fruits.ms.module.user.FruitUser;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
@@ -33,7 +34,7 @@ public abstract class LogsTemplate<T extends AbstractEntity> {
         return templates.get(logsDict);
     }
 
-    public String msg(FruitLogs logs) {
+    public String msg(FruitLogsDao logs) {
         T obj = fromJson(logs.getJsonObject());
         /*替换个性化参数*/
         String msg = replace(obj, getTemplates(logs.getOperateType()));

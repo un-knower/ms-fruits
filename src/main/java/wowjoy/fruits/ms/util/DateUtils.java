@@ -23,13 +23,26 @@ public class DateUtils {
         return yearMap.get(year);
     }
 
+    public static List<Month<Week>> getMonthBetween(Integer year) {
+        return DateUtils.newInstance(year).months().Months;
+    }
+
+    public static List<Month<Week>> getMonthBetween(String year) {
+        checkYear(year);
+        return getMonthBetween(Integer.valueOf(year));
+    }
+
     public static List<Month<Week.WeekChinese>> getWeekByYear(String year) {
+        checkYear(year);
+        return getWeekByYear(Integer.valueOf(year));
+    }
+
+    private static void checkYear(String year) {
         try {
             Integer.valueOf(year);
         } catch (Exception ex) {
             throw new CheckException("年份必须是整数");
         }
-        return getWeekByYear(Integer.valueOf(year));
     }
 
     public static Month<Week.WeekChinese> getMonthByYearMonth(Integer year, Integer month) {
@@ -162,6 +175,15 @@ public class DateUtils {
         final int centoryWeekNumber = centoryWeekNumber();
         final int number = (centoryWeekNumber + yearNumber + leapYearNumber) % 7;
         return calendar() == 365 ? number + 1 : number;
+    }
+
+    public DateUtils months() {
+        for (int monthNum = 1; monthNum <= 12; monthNum++) {
+            Months.add(new Month<>(monthNum, null));
+            Months.get(monthNum - 1).setStartDate(LocalDate.of(this.Year, monthNum, 1));
+            Months.get(monthNum - 1).setEndDate(LocalDate.of(this.Year, monthNum, this.monthDays(monthNum)));
+        }
+        return this;
     }
 
     /**

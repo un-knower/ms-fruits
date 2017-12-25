@@ -7,6 +7,7 @@ import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.exception.ExceptionSupport;
 import wowjoy.fruits.ms.exception.ServiceException;
+import wowjoy.fruits.ms.module.logs.FruitLogsDao;
 import wowjoy.fruits.ms.module.plan.*;
 import wowjoy.fruits.ms.module.user.FruitUser;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
@@ -31,6 +32,8 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
     protected abstract List<FruitPlanDao> findByProjectId(FruitPlanDao dao);
 
     protected abstract List<FruitPlanDao> findUserByPlanIds(List<String> planIds, String currentUserId);
+
+    protected abstract List<FruitPlanDao> findLogsByPlanIds(List<String> planIds);
 
     protected abstract FruitPlan find(FruitPlanDao dao);
 
@@ -81,12 +84,19 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
             planDaoListSource.forEach((i) -> i.setUsers(userMaps.get(i.getUuid())));
             return true;
         });
+        planThread.execute(() -> {
+            List<FruitPlanDao> logs = this.findLogsByPlanIds(ids);
+            LinkedHashMap<String, List<FruitLogsDao>> logsMaps = Maps.newLinkedHashMap();
+            logs.forEach((i) -> logsMaps.put(i.getUuid(), i.getLogs()));
+            planDaoListCopy.forEach((i) -> i.setLogs(logsMaps.get(i.getUuid())));
+            return true;
+        });
         /*计算过期时间*/
         planThread.execute(() -> {
             planDaoListSource.forEach((i) -> i.computeDays());
             return true;
         });
-        /*只递归两层，相当于月、周*/
+        /*只递归两层*/
         if (StringUtils.isNotBlank(vo.getParentId())) {
             planThread.get();
             return planDaoListSource;
@@ -273,10 +283,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
      * @param vo
      */
     public final void end(FruitPlanVo vo) {
-        FruitPlan project = this.findByUUID(vo.getUuidVo());
-        if (!project.isNotEmpty()) throw new CheckException("计划不存在，无法终止");
-        if (FruitDict.PlanDict.END.name().equals(project.getPlanStatus()))
-            throw new CheckException("计划状态已终止");
+        checkPlan(vo);
         try {
             vo.setPlanStatus(FruitDict.PlanDict.END.name());
             this.modifyStatus(vo);
@@ -288,16 +295,14 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         }
     }
 
+
     /**
      * 完成计划
      *
      * @param vo
      */
     public final void complete(FruitPlanVo vo) {
-        FruitPlan project = this.findByUUID(vo.getUuidVo());
-        if (!project.isNotEmpty()) throw new CheckException("计划不存在，无法完成");
-        if (FruitDict.PlanDict.COMPLETE.name().equals(project.getPlanStatus()))
-            throw new CheckException("计划状态已完成");
+        FruitPlan project = checkPlan(vo);
         /*是否延期*/
         if (((FruitPlanDao) project).computeDays().getDays() < 0) {
             /*必须填写延期说明*/
@@ -316,6 +321,14 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
             ex.printStackTrace();
             throw new ServiceException("计划状态转为完成时出现错误");
         }
+    }
+
+    private FruitPlan checkPlan(FruitPlanVo vo) {
+        FruitPlan project = this.findByUUID(vo.getUuidVo());
+        if (!project.isNotEmpty()) throw new CheckException("计划不存在");
+        if (!FruitDict.PlanDict.PENDING.name().equals(project.getPlanStatus()))
+            throw new CheckException("计划生命周期已结束，无法更改");
+        return project;
     }
 
     /**

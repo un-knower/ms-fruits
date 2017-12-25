@@ -1,7 +1,9 @@
 package wowjoy.fruits.ms.util;
 
 import com.google.common.reflect.TypeToken;
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.support.WebDataBinderFactory;
@@ -46,10 +48,19 @@ public class ArgumentInterceptor implements HandlerMethodArgumentResolver {
         if (Object.class.getName().equals(type.getName()))
             return (T) type;
         try {
-            return gsonBuilder.fromJson(parameter, TypeToken.of(type).getType());
+            T obj = gsonBuilder.fromJson(parameter, TypeToken.of(type).getType());
+            if (obj == null)
+                return type.newInstance();
+            return obj;
         } catch (RuntimeException ex) {
             ex.printStackTrace();
             throw new CheckException("参数不符合设计需求，请联系接口开发人员核对接口入参");
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+            throw new CheckException("创建默认实例失败");
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+            throw new CheckException("创建默认实例失败");
         }
     }
 

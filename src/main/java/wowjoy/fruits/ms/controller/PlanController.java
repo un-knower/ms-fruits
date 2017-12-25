@@ -13,7 +13,6 @@ import wowjoy.fruits.ms.module.plan.FruitPlan;
 import wowjoy.fruits.ms.module.plan.FruitPlanSummaryVo;
 import wowjoy.fruits.ms.module.plan.FruitPlanVo;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
-import wowjoy.fruits.ms.util.ApplicationContextUtils;
 import wowjoy.fruits.ms.util.DateUtils;
 import wowjoy.fruits.ms.util.JsonArgument;
 import wowjoy.fruits.ms.util.RestResult;
@@ -32,13 +31,23 @@ public class PlanController {
     private AbstractDaoPlan dataPlanDao;
 
     /**
-     * @api {get} /v1/plan/{year} 查询某年的年周对照表
+     * @api {get} /v1/plan/week/{year} 查询一年中每周的开始和结束时间
      * @apiVersion 0.1.0
      * @apiGroup plan
      */
-    @RequestMapping(value = "/year/{year}", method = RequestMethod.GET)
-    public RestResult regular(@PathVariable("year") String year) {
+    @RequestMapping(value = "/week/{year}", method = RequestMethod.GET)
+    public RestResult yearWeek(@PathVariable("year") String year) {
         return RestResult.getInstance().setData(DateUtils.getWeekByYear(year));
+    }
+
+    /**
+     * @api {get} /v1/plan/month/{year} 查询一年中每月的开始和结束时间
+     * @apiVersion 0.1.0
+     * @apiGroup plan
+     */
+    @RequestMapping(value = "/month/{year}", method = RequestMethod.GET)
+    public RestResult yearMonth(@PathVariable("year") String year) {
+        return RestResult.getInstance().setData(DateUtils.getMonthBetween(year));
     }
 
     /**
@@ -59,9 +68,10 @@ public class PlanController {
      * @apiGroup plan
      */
     @RequestMapping(value = "/project/composite/{uuid}", method = RequestMethod.GET)
-    public RestResult findMonthWeek(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlanVo) {
-        fruitPlanVo.setProjectId(uuid);
-        return RestResult.getInstance().setData(dataPlanDao.compositeQuery(fruitPlanVo));
+    public RestResult findMonthWeek(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
+
+        vo.setProjectId(uuid);
+        return RestResult.getInstance().setData(dataPlanDao.compositeQuery(vo));
     }
 
     /**
@@ -70,9 +80,10 @@ public class PlanController {
      * @apiGroup plan
      */
     @RequestMapping(value = "/project/{uuid}", method = RequestMethod.GET)
-    public RestResult findsByProjectId(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlanVo) {
-        fruitPlanVo.setProjectId(uuid);
-        return RestResult.getInstance().setData(dataPlanDao.findByProjectId(fruitPlanVo));
+    public RestResult findsByProjectId(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
+
+        vo.setProjectId(uuid);
+        return RestResult.getInstance().setData(dataPlanDao.findByProjectId(vo));
     }
 
     /**
@@ -82,9 +93,10 @@ public class PlanController {
      */
     @LogInfo(uuid = "fruitPlan.uuid", type = FruitDict.Parents.PLAN, operateType = FruitDict.LogsDict.ADD)
     @RequestMapping(method = RequestMethod.POST)
-    public RestResult addJoinProject(@JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlan) {
-        dataPlanDao.addJoinProject(fruitPlan);
-        return RestResult.getInstance().setData(fruitPlan.getUuid());
+    public RestResult addJoinProject(@JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
+
+        dataPlanDao.addJoinProject(vo);
+        return RestResult.getInstance().setData(vo.getUuid());
     }
 
     /**
@@ -94,9 +106,9 @@ public class PlanController {
      */
     @LogInfo(uuid = "uuid", type = FruitDict.Parents.PLAN, operateType = FruitDict.LogsDict.UPDATE)
     @RequestMapping(value = "{uuid}", method = RequestMethod.PUT)
-    public RestResult update(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlan) {
-        fruitPlan.setUuidVo(uuid);
-        dataPlanDao.modify(fruitPlan);
+    public RestResult update(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
+        vo.setUuidVo(uuid);
+        dataPlanDao.modify(vo);
         return RestResult.getInstance().setData(uuid);
     }
 
@@ -121,6 +133,7 @@ public class PlanController {
     @LogInfo(uuid = "uuid", type = FruitDict.Parents.PLAN, operateType = FruitDict.LogsDict.END)
     @RequestMapping(value = "/end/{uuid}", method = RequestMethod.PUT)
     public RestResult end(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
+
         vo.setUuidVo(uuid);
         dataPlanDao.end(vo);
         return RestResult.getInstance().setData(uuid);

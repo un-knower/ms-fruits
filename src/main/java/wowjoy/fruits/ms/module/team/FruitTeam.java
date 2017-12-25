@@ -25,7 +25,7 @@ public class FruitTeam extends AbstractEntity {
         return new FruitTeamDao();
     }
 
-    public static FruitTeamVo getFruitTeamVo() {
+    public static FruitTeamVo getVo() {
         return new FruitTeamVo();
     }
 

@@ -40,7 +40,7 @@
         <result column="user_id" jdbcType="VARCHAR" property="userId"/>
         <result column="fruit_uuid" jdbcType="VARCHAR" property="fruitUuid"/>
         <result column="fruit_type" jdbcType="VARCHAR" property="fruitType"/>
-        <result column="json_object" jdbcType="LONGVARCHAR" property="jsonObject" />
+        <result column="json_object" jdbcType="LONGVARCHAR" property="jsonObject"/>
         <result column="operate_type" jdbcType="VARCHAR" property="operateType"/>
         <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
@@ -100,6 +100,19 @@
         ${replace}.create_date_time as ${prefix}create_date_time,
         ${replace}.is_deleted as ${prefix}is_deleted
      </sql>
+    <sql id="User_v2_Column_List">
+       ${replace}.uuid,
+        ${replace}.user_id,
+        ${replace}.user_name,
+        ${replace}.birthday,
+        ${replace}.user_email,
+        ${replace}.user_sex,
+        ${replace}.job_title,
+        ${replace}.description,
+        ${replace}.modify_date_time,
+        ${replace}.create_date_time,
+        ${replace}.is_deleted
+    </sql>
     <sql id="Logs_Column_List">
         ${replace}.uuid as ${prefix}uuid,
         ${replace}.user_id as ${prefix}user_id,

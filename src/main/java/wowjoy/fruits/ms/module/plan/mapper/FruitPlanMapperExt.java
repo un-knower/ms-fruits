@@ -17,4 +17,6 @@ public interface FruitPlanMapperExt {
 
     List<FruitPlanDao> selectUserByPlanIds(@Param("planIds") List<String> planIds, @Param("userId") String userId);
 
+    List<FruitPlanDao> selectLogsByPlanIds(@Param("planIds") List<String> planIds);
+
 }

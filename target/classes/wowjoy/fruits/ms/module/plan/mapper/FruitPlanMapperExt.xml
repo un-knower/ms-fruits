@@ -19,6 +19,7 @@
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
         <result column="task_id" jdbcType="VARCHAR" property="taskId"/>
+        <collection property="logs" resultMap="LogsResultMap" columnPrefix="flogs_"/>
         <collection property="users" ofType="wowjoy.fruits.ms.module.user.FruitUserDao" resultMap="UserResultMap"
                     columnPrefix="user_"/>
     </resultMap>
@@ -39,6 +40,17 @@
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
         <!-- 扩展字段 -->
         <result column="pu_role" jdbcType="VARCHAR" property="planRole"/>
+    </resultMap>
+    <resultMap id="LogsResultMap" type="wowjoy.fruits.ms.module.logs.FruitLogsDao">
+        <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
+        <result column="user_id" jdbcType="VARCHAR" property="userId"/>
+        <result column="fruit_uuid" jdbcType="VARCHAR" property="fruitUuid"/>
+        <result column="fruit_type" jdbcType="VARCHAR" property="fruitType"/>
+        <result column="json_object" jdbcType="LONGVARCHAR" property="jsonObject"/>
+        <result column="operate_type" jdbcType="VARCHAR" property="operateType"/>
+        <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
+        <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
+        <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
     </resultMap>
     <sql id="Example_Where_Clause">
         <foreach collection="example.oredCriteria" item="criteria" separator="or">
@@ -96,6 +108,17 @@
     ${replace}.create_date_time as ${prefix}create_date_time,
     ${replace}.is_deleted as ${prefix}is_deleted
   </sql>
+    <sql id="Logs_Column_List">
+        ${replace}.uuid as ${prefix}uuid,
+        ${replace}.user_id as ${prefix}user_id,
+        ${replace}.fruit_uuid as ${prefix}fruit_uuid,
+        ${replace}.fruit_type as ${prefix}fruit_type,
+        ${replace}.json_object as ${prefix}json_object,
+        ${replace}.operate_type as ${prefix}operate_type,
+        ${replace}.modify_date_time as ${prefix}modify_date_time,
+        ${replace}.create_date_time as ${prefix}create_date_time,
+        ${replace}.is_deleted as ${prefix}is_deleted
+    </sql>
     <select id="selectByProjectId" parameterType="wowjoy.fruits.ms.module.plan.example.FruitPlanExample"
             resultMap="ResultMapWithBLOBs">
         select
@@ -120,7 +143,7 @@
         </if>
     </select>
 
-    <select id="selectUserByPlanIds" resultMap="ResultMapWithBLOBs">
+    <select id="selectUserByPlanIds" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List">
             <property name="replace" value="plan"/>
@@ -147,5 +170,31 @@
             </where>
         </trim>
         order by fruitUser.user_id = #{userId} desc
+    </select>
+    <select id="selectLogsByPlanIds" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List">
+            <property name="replace" value="plan"/>
+        </include>
+        ,
+        <include refid="Logs_Column_List">
+            <property name="replace" value="flogs"/>
+            <property name="prefix" value="flogs_"/>
+        </include>
+        FROM
+        fruits_plan plan
+        right join (select uuid, user_id, fruit_uuid, json_object, fruit_type, operate_type, modify_date_time, create_date_time,
+        is_deleted from fruits_logs where fruit_type = 'PLAN' and is_deleted = 'N') flogs on flogs.fruit_uuid =
+        plan.uuid
+        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
+            <where>
+                and plan.uuid in
+                <foreach collection="planIds" item="id" close=")" open="(" separator=",">
+                    #{id}
+                </foreach>
+                AND plan.is_deleted = 'N'
+            </where>
+        </trim>
+        ORDER by flogs.create_date_time desc
     </select>
 </mapper>

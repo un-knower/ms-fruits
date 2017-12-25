@@ -50,7 +50,7 @@ public class FruitNotepad extends AbstractEntity {
     public void setEstimatedSubmitDate(Date estimatedSubmitDate) {
         if (estimatedSubmitDate == null)
             throw new CheckException("必须提供日报预计结束时间");
-        this.estimatedSubmitDate = estimatedSubmitDate;
+        this.estimatedSubmitDate = Date.from(LocalDateTime.ofInstant(estimatedSubmitDate.toInstant(), ZoneId.systemDefault()).toLocalDate().atTime(0, 0, 0).atZone(ZoneId.systemDefault()).toInstant());
         selectState();
     }
 
