@@ -131,8 +131,8 @@
             <property name="prefix" value="user_"/>
         </include>
         from fruits_plan plan
-        left join plan_user_relation userRelation on userRelation.plan_id = plan.uuid
-        left join fruits_user fruitUser on fruitUser.user_id = userRelation.user_id
+        RIGHT join plan_user_relation userRelation on userRelation.plan_id = plan.uuid
+        RIGHT join fruits_user fruitUser on fruitUser.user_id = userRelation.user_id
         <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
             <where>
                 <if test="planIds != null">
