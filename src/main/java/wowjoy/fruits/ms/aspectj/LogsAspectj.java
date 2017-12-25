@@ -3,6 +3,7 @@ package wowjoy.fruits.ms.aspectj;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import org.apache.commons.lang.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -19,7 +20,6 @@ import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.logs.FruitLogs;
 import wowjoy.fruits.ms.module.logs.FruitLogsVo;
-import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;
 import wowjoy.fruits.ms.util.AsmClassInfo;
 import wowjoy.fruits.ms.util.RestResult;
@@ -70,36 +70,22 @@ public class LogsAspectj {
         /*获取当前操作方法对应的：参数-数据列表*/
         Map<String, Object> methodParamValue = methodParamValue(joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName(), joinPoint.getArgs());
         /*提取占位符关键字*/
-        LinkedList<Placeholder> placeholders = extract(logInfo.format(), prefix, suffix);
-        placeholders.add(Placeholder.newComma(logInfo.uuid()));
-        Map<String, Placeholder> placeValues = Maps.newLinkedHashMap();
         /*从当前方法【参数-数据列表】中获取对应的数据*/
-        placeholders.forEach((i) -> placeValues.put(i.getKeyPrefix(), setPlaceholder(i, methodParamValue)));
+        Map<String, Placeholder> placeValues = Maps.newLinkedHashMap();
         /*根据uuid查询数据库中保存数据*/
         AbstractDaoChain daoChain = AbstractDaoChain.newInstance(logInfo.type());
-        AbstractEntity DBData = daoChain.find(placeValues.get(logInfo.uuid()).getValue());
-        if (DBData != null) placeValues.forEach((k, v) -> {
-            if (v.getPrefix() != null && v.getValue() == null)
-                v.setValue(toString(fieldValue(DBData).get(v.getKey())));
-        });
-        FruitLogsVo vo = logTemplate(methodParamValue, DBData, logInfo);
+        AbstractEntity DBData = daoChain.find(setPlaceholder(Placeholder.newComma(logInfo.uuid()), methodParamValue).getValue());
+        FruitLogsVo vo = logTemplate(DBData, logInfo);
          /*获取对应的uuid*/
-        vo.setFruitUuid(placeValues.get(logInfo.uuid()).getValue());
-        /*遍历【placeholders】将字符串中占位符部分替换为对应字符串数据*/
-        vo.setContent(replace(logInfo.format(), placeholders));
+        vo.setFruitUuid(DBData.getUuid());
         /*记录日志*/
         logsDao.insert(vo);
     }
 
-    private FruitLogsVo logTemplate(Map<String, Object> methodParamValue, AbstractEntity dbData, LogInfo logInfo) {
+    private FruitLogsVo logTemplate(AbstractEntity dbData, LogInfo logInfo) {
         FruitLogsVo vo = FruitLogs.getVo();
-        if (logInfo.operateType().equals(FruitDict.Systems.UPDATE))
-            methodParamValue.forEach((name, obj) -> {
-                if (logInfo.mainParam().equals(name))
-                    vo.setJsonObject(new Gson().toJsonTree(obj).toString());
-            });
-        else if (logInfo.operateType().equals(FruitDict.Systems.DELETE) || logInfo.operateType().equals(FruitDict.Systems.ADD))
-            vo.setJsonObject(new Gson().toJsonTree(dbData).toString());
+        JsonElement jsonObject = new Gson().toJsonTree(dbData);
+        vo.setJsonObject(!jsonObject.isJsonNull() ? jsonObject.toString() : null);
         vo.setFruitType(logInfo.type());
         vo.setOperateType(logInfo.operateType());
         vo.setUserId(ApplicationContextUtils.getCurrentUser().getUserId());
@@ -208,7 +194,7 @@ public class LogsAspectj {
 
     /*将所有对象全部转换为 string 类型字符串*/
     private String toString(Object obj) {
-        JsonElement arg = new Gson().toJsonTree(obj);
+        JsonElement arg = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss:").create().toJsonTree(obj);
         String result = null;
         if (arg.isJsonArray() || arg.isJsonObject())
             result = arg.toString();

@@ -38,4 +38,8 @@ public class FruitPlanSummary extends AbstractEntity {
     public static FruitPlanSummaryVo getVo() {
         return new FruitPlanSummaryVo();
     }
+
+    public static FruitPlanSummary getEmpty() {
+        return new FruitPlanSummaryEmpty();
+    }
 }

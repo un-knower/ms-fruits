@@ -155,6 +155,18 @@ public class PlanDaoImpl extends AbstractDaoPlan {
     }
 
     @Override
+    protected FruitPlanSummary find(FruitPlanSummaryDao dao) {
+        FruitPlanSummaryExample example = new FruitPlanSummaryExample();
+        FruitPlanSummaryExample.Criteria criteria = example.createCriteria();
+        if (StringUtils.isNotBlank(dao.getUuid()))
+            criteria.andUuidEqualTo(dao.getUuid());
+        List<FruitPlanSummaryDao> result = summaryMapper.selectByExample(example);
+        if (result.isEmpty())
+            return FruitPlanSummary.getEmpty();
+        return result.get(0);
+    }
+
+    @Override
     public void insertSummary(FruitPlanSummaryDao dao) {
         summaryMapper.insertSelective(dao);
     }

@@ -1,10 +1,12 @@
 package wowjoy.fruits.ms.module.notepad;
 
+import wowjoy.fruits.ms.module.logs.FruitLogsDao;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by wangziwen on 2017/12/8.
@@ -18,6 +20,15 @@ public class FruitNotepadDao extends FruitNotepad {
     private LocalDateTime endDate;
 
     private FruitUserDao user;
+    private List<FruitLogsDao> logs;
+
+    public List<FruitLogsDao> getLogs() {
+        return logs;
+    }
+
+    public void setLogs(List<FruitLogsDao> logs) {
+        this.logs = logs;
+    }
 
     public FruitUserDao getUser() {
         return user;

@@ -7,10 +7,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import wowjoy.fruits.ms.aspectj.LogInfo;
 import wowjoy.fruits.ms.dao.plan.AbstractDaoPlan;
 import wowjoy.fruits.ms.module.plan.FruitPlan;
 import wowjoy.fruits.ms.module.plan.FruitPlanSummaryVo;
 import wowjoy.fruits.ms.module.plan.FruitPlanVo;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
+import wowjoy.fruits.ms.util.ApplicationContextUtils;
 import wowjoy.fruits.ms.util.DateUtils;
 import wowjoy.fruits.ms.util.JsonArgument;
 import wowjoy.fruits.ms.util.RestResult;
@@ -77,6 +80,7 @@ public class PlanController {
      * @apiVersion 0.1.0
      * @apiGroup plan
      */
+    @LogInfo(uuid = "fruitPlan.uuid", type = FruitDict.Parents.PLAN, operateType = FruitDict.LogsDict.ADD)
     @RequestMapping(method = RequestMethod.POST)
     public RestResult addJoinProject(@JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlan) {
         dataPlanDao.addJoinProject(fruitPlan);
@@ -88,6 +92,7 @@ public class PlanController {
      * @apiVersion 0.1.0
      * @apiGroup plan
      */
+    @LogInfo(uuid = "uuid", type = FruitDict.Parents.PLAN, operateType = FruitDict.LogsDict.UPDATE)
     @RequestMapping(value = "{uuid}", method = RequestMethod.PUT)
     public RestResult update(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo fruitPlan) {
         fruitPlan.setUuidVo(uuid);
@@ -100,6 +105,7 @@ public class PlanController {
      * @apiVersion 0.1.0
      * @apiGroup plan
      */
+    @LogInfo(uuid = "uuid", type = FruitDict.Parents.PLAN, operateType = FruitDict.LogsDict.COMPLETE)
     @RequestMapping(value = "/complete/{uuid}", method = RequestMethod.PUT)
     public RestResult complete(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
         vo.setUuidVo(uuid);
@@ -112,6 +118,7 @@ public class PlanController {
      * @apiVersion 0.1.0
      * @apiGroup plan
      */
+    @LogInfo(uuid = "uuid", type = FruitDict.Parents.PLAN, operateType = FruitDict.LogsDict.END)
     @RequestMapping(value = "/end/{uuid}", method = RequestMethod.PUT)
     public RestResult end(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
         vo.setUuidVo(uuid);
@@ -124,6 +131,7 @@ public class PlanController {
      * @apiVersion 0.1.0
      * @apiGroup plan
      */
+    @LogInfo(uuid = "uuid", type = FruitDict.Parents.PLAN, operateType = FruitDict.LogsDict.DELETE)
     @RequestMapping(value = "{uuid}", method = RequestMethod.DELETE)
     public RestResult delete(@PathVariable("uuid") String uuid) {
         FruitPlanVo vo = FruitPlan.getVo();
@@ -137,6 +145,7 @@ public class PlanController {
      * @apiVersion 0.1.0
      * @apiGroup plan
      */
+    @LogInfo(uuid = "uuid", type = FruitDict.Parents.SUMMARY, operateType = FruitDict.LogsDict.ADD)
     @RequestMapping(value = "/summary/{uuid}", method = RequestMethod.POST)
     public RestResult insertSummary(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanSummaryVo.class) FruitPlanSummaryVo vo) {
         vo.setPlanId(uuid);

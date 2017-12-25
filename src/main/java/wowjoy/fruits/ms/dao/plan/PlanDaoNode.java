@@ -5,6 +5,8 @@ import wowjoy.fruits.ms.dao.AbstractDaoChain;
 import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.plan.FruitPlan;
 import wowjoy.fruits.ms.module.plan.FruitPlanDao;
+import wowjoy.fruits.ms.module.plan.FruitPlanSummary;
+import wowjoy.fruits.ms.module.plan.FruitPlanSummaryDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;
 
@@ -21,7 +23,7 @@ public class PlanDaoNode extends AbstractDaoChain {
     @Override
     public AbstractEntity find(String uuid) {
         if (!super.type.name().equals(FruitDict.Parents.PLAN.name()))
-            return super.getNext().find(uuid);
+            return findSummary(uuid);
         if (StringUtils.isBlank(uuid))
             return null;
         FruitPlanDao dao = FruitPlan.getDao();
@@ -29,5 +31,17 @@ public class PlanDaoNode extends AbstractDaoChain {
         FruitPlan data = planDao.find(dao);
         if (!data.isNotEmpty()) return null;
         return data;
+    }
+
+    private AbstractEntity findSummary(String uuid){
+        if (!super.type.name().equals(FruitDict.Parents.SUMMARY.name()))
+            return super.getNext().find(uuid);
+        if (StringUtils.isBlank(uuid))
+            return null;
+        FruitPlanSummaryDao dao = FruitPlanSummary.getDao();
+        dao.setUuid(uuid);
+        FruitPlanSummary summary = planDao.find(dao);
+        if (!summary.isNotEmpty()) return null;
+        return summary;
     }
 }

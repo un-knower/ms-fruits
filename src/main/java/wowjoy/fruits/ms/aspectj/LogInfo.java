@@ -23,5 +23,5 @@ public @interface LogInfo {
     FruitDict.Parents type();
 
     /*日志操作类型*/
-    FruitDict.Systems operateType();
+    FruitDict.LogsDict operateType();
 }

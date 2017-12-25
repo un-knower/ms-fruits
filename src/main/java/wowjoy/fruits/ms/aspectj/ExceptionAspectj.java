@@ -36,7 +36,7 @@ public class ExceptionAspectj {
             return RestResult.newError(ex.getMessage());
         } catch (RuntimeException e) {
             e.printStackTrace();
-            return RestResult.newError("后台发生无法处理的异常，联系开发人员");
+            return RestResult.newError("发生了未捕获的异常，等待处理");
         } catch (Exception ex) {
             ex.printStackTrace();
             String message = "";

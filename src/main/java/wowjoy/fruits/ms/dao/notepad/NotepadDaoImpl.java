@@ -10,6 +10,7 @@ import wowjoy.fruits.ms.module.notepad.FruitNotepadDao;
 import wowjoy.fruits.ms.module.notepad.FruitNotepadExample;
 import wowjoy.fruits.ms.module.notepad.mapper.FruitNotepadMapper;
 
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -63,13 +64,23 @@ public class NotepadDaoImpl extends AbstractDaoNotepad {
     }
 
     @Override
-    protected List<FruitNotepadDao> finds(FruitNotepadDao dao) {
-        return mapper.selectJoinByExample(this.findsTemplate(dao));
+    protected List<FruitNotepadDao> findsByCurrentIds(FruitNotepadDao dao) {
+        return mapper.selectByCurrentUser(this.findsTemplate(dao));
     }
 
     @Override
-    protected List<FruitNotepadDao> finds(FruitNotepadDao dao, String... teamIds) {
-        return mapper.selectJoinByTeamIds(this.findsTemplate(dao), teamIds);
+    protected List<FruitNotepadDao> findsByTeamIds(FruitNotepadDao dao, String... teamIds) {
+        return mapper.selectByTeamIds(this.findsTemplate(dao), teamIds);
+    }
+
+    @Override
+    protected List<FruitNotepadDao> joinLogs(LinkedList<String> ids) {
+        return mapper.selectJoinLogsByNotepadIds(ids.toArray(new String[ids.size()]));
+    }
+
+    @Override
+    protected List<FruitNotepadDao> joinUser(LinkedList<String> ids) {
+        return mapper.selectJoinUserByNotepadIds(ids.toArray(new String[ids.size()]));
     }
 
     private FruitNotepadExample findsTemplate(FruitNotepadDao dao) {
@@ -88,7 +99,7 @@ public class NotepadDaoImpl extends AbstractDaoNotepad {
     }
 
     private void checkUuid(String uuid) {
-        if (StringUtils.isNotBlank(uuid))
+        if (StringUtils.isBlank(uuid))
             throw new CheckException("uuid");
         FruitNotepadExample example = new FruitNotepadExample();
         FruitNotepadExample.Criteria criteria = example.createCriteria();

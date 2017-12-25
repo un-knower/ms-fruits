@@ -112,21 +112,17 @@ public class FruitPlanDao extends FruitPlan {
      * 延期天数
      */
     public FruitPlanDao computeDays() {
-        Date startDate;
         Date endDate;
-        if (this.getEstimatedEndDate() != null) {
-            if (this.getEndDate() != null && !FruitDict.PlanDict.PENDING.name().equals(this.getPlanStatus())) {
-                startDate = this.getEstimatedEndDate();
-                endDate = this.getEndDate();
-            } else {
-                startDate = this.getEstimatedEndDate();
-                endDate = new Date();
-            }
-        } else {
+        if (this.getEstimatedEndDate() == null) {
             this.setDays(999999999);
             return this;
         }
-        LocalDateTime predictEndTime = LocalDateTime.parse(new SimpleDateFormat(DateTimeFormat).format(startDate));
+        if (FruitDict.PlanDict.PENDING.name().equals(this.getPlanStatus()) && this.getEndDate() == null) {
+            endDate = new Date();
+        } else {
+            endDate = this.getEndDate();
+        }
+        LocalDateTime predictEndTime = LocalDateTime.parse(new SimpleDateFormat(DateTimeFormat).format(this.getEstimatedEndDate()));
         LocalDateTime currentTime = LocalDateTime.parse(new SimpleDateFormat(DateTimeFormat).format(endDate));
         Duration between = Duration.between(currentTime, predictEndTime);
         this.setDays((int) between.toDays());

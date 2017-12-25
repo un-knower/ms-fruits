@@ -2,7 +2,10 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import org.elasticsearch.client.transport.TransportClient;
 import org.junit.Test;
+import wowjoy.fruits.ms.module.logs.FruitLogs;
+import wowjoy.fruits.ms.module.logs.FruitLogsVo;
 import wowjoy.fruits.ms.module.project.FruitProject;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -34,6 +37,8 @@ public class ElasticsearchTest {
 
     @Test
     public void test() {
+        FruitLogsVo vo = FruitLogs.getVo();
+        System.out.println(vo.getClass().getName().equals(FruitLogsVo.class.getName()));
     }
 
 }

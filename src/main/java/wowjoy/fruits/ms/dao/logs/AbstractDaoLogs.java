@@ -22,7 +22,6 @@ public abstract class AbstractDaoLogs implements InterfaceDao {
     public void insert(FruitLogsVo vo) {
         FruitLogsDao dao = FruitLogs.getDao();
         dao.setUuid(vo.getUuid());
-        dao.setContent(vo.getContent());
         dao.setUserId(vo.getUserId());
         dao.setFruitUuid(vo.getFruitUuid());
         dao.setFruitType(vo.getFruitType());

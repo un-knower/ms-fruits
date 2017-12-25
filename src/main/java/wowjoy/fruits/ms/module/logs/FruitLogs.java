@@ -5,17 +5,15 @@ import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 public class FruitLogs extends AbstractEntity {
 
-    private String content;
+    private transient String userId;
 
-    private String userId;
+    private transient String fruitUuid;
 
-    private String fruitUuid;
+    private transient String fruitType;
 
-    private String fruitType;
+    private transient String operateType;
 
-    private String operateType;
-
-    private String jsonObject;
+    private transient String jsonObject;
 
     public String getJsonObject() {
         return jsonObject;
@@ -25,20 +23,12 @@ public class FruitLogs extends AbstractEntity {
         this.jsonObject = jsonObject;
     }
 
-    public FruitDict.Systems getOperateType() {
-        return FruitDict.Systems.valueOf(operateType);
+    public FruitDict.LogsDict getOperateType() {
+        return FruitDict.LogsDict.valueOf(operateType);
     }
 
-    public void setOperateType(FruitDict.Systems operateType) {
+    public void setOperateType(FruitDict.LogsDict operateType) {
         this.operateType = operateType.name();
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
     }
 
     public String getUserId() {

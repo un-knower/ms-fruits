@@ -71,7 +71,7 @@ public class TaskController {
      * }
      * }
      */
-    @LogInfo(format = "【{user.userName}】添加了【{vo.title}】任务", uuid = "vo.uuid", type = FruitDict.Parents.TASK, operateType = FruitDict.Systems.ADD)
+    @LogInfo(uuid = "vo.uuid", type = FruitDict.Parents.TASK, operateType = FruitDict.LogsDict.ADD)
     @RequestMapping(method = RequestMethod.POST)
     public RestResult insert(@JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
         daoTask.insert(vo);
@@ -83,7 +83,7 @@ public class TaskController {
      * @apiVersion 0.1.0
      * @apiGroup task
      */
-    @LogInfo(format = "【{user.userName}】修改了【{vo.title}】任务", uuid = "uuid", type = FruitDict.Parents.TASK, operateType = FruitDict.Systems.UPDATE)
+    @LogInfo(uuid = "uuid", type = FruitDict.Parents.TASK, operateType = FruitDict.LogsDict.UPDATE)
     @RequestMapping(value = "/{uuid}", method = RequestMethod.PUT)
     public RestResult modify(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
         vo.setUuidVo(uuid);
@@ -96,7 +96,7 @@ public class TaskController {
      * @apiVersion 0.1.0
      * @apiGroup task
      */
-    @LogInfo(format = "【{user.userName}】变更了【{vo.title}】任务状态为【已结束】", uuid = "uuid", type = FruitDict.Parents.TASK, operateType = FruitDict.Systems.UPDATE)
+    @LogInfo(uuid = "uuid", type = FruitDict.Parents.TASK, operateType = FruitDict.LogsDict.END)
     @RequestMapping(value = "/end/{uuid}", method = RequestMethod.PUT)
     public RestResult changeStatusToEnd(@PathVariable("uuid") String uuid) {
         FruitTaskVo vo = FruitTask.getVo();
@@ -110,7 +110,7 @@ public class TaskController {
      * @apiVersion 0.1.0
      * @apiGroup task
      */
-    @LogInfo(format = "【{user.userName}】变更了【{vo.title}】任务状态为【已开始】", uuid = "uuid", type = FruitDict.Parents.TASK, operateType = FruitDict.Systems.UPDATE)
+    @LogInfo(uuid = "uuid", type = FruitDict.Parents.TASK, operateType = FruitDict.LogsDict.START)
     @RequestMapping(value = "/start/{uuid}", method = RequestMethod.PUT)
     public RestResult changeStatusToStart(@PathVariable("uuid") String uuid) {
         FruitTaskVo vo = FruitTask.getVo();
@@ -124,7 +124,7 @@ public class TaskController {
      * @apiVersion 0.1.0
      * @apiGroup task
      */
-    @LogInfo(format = "【{user.userName}】改变了【{vo.title}】任务的所在列表", uuid = "uuid", type = FruitDict.Parents.TASK, operateType = FruitDict.Systems.UPDATE)
+    @LogInfo(uuid = "uuid", type = FruitDict.Parents.TASK, operateType = FruitDict.LogsDict.MOVE_TASK)
     @RequestMapping(value = "/list/{uuid}", method = RequestMethod.PUT)
     public RestResult changeList(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
         vo.setUuidVo(uuid);
@@ -141,7 +141,7 @@ public class TaskController {
      * 3、完成删除关联计划
      * 4、完成删除关联项目
      */
-    @LogInfo(format = "【{user.userName}】删除了【{vo.title}】任务", uuid = "uuid", type = FruitDict.Parents.TASK, operateType = FruitDict.Systems.DELETE)
+    @LogInfo(uuid = "uuid", type = FruitDict.Parents.TASK, operateType = FruitDict.LogsDict.DELETE)
     @RequestMapping(value = "{uuid}", method = RequestMethod.DELETE)
     public RestResult delete(@PathVariable("uuid") String uuid) {
         FruitTaskVo vo = FruitTask.getVo();

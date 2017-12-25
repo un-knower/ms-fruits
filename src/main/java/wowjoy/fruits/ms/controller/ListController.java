@@ -31,7 +31,7 @@ public class ListController {
      * @apiVersion 0.1.0
      * @apiGroup list
      */
-    @LogInfo(format = "【{user.userName}】修改了【{vo.title}】列表", uuid = "uuid", type = FruitDict.Parents.List, operateType = FruitDict.Systems.UPDATE)
+    @LogInfo(uuid = "uuid", type = FruitDict.Parents.List, operateType = FruitDict.LogsDict.UPDATE)
     @RequestMapping(value = "{uuid}", method = RequestMethod.PUT)
     public RestResult update(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitListVo.class) FruitListVo vo) {
         vo.setUuidVo(uuid);
@@ -44,7 +44,7 @@ public class ListController {
      * @apiVersion 0.1.0
      * @apiGroup list
      */
-    @LogInfo(format = "【{user.userName}】删除了【{vo.title}】列表", uuid = "uuid", type = FruitDict.Parents.List, operateType = FruitDict.Systems.DELETE)
+    @LogInfo(uuid = "uuid", type = FruitDict.Parents.List, operateType = FruitDict.LogsDict.DELETE)
     @RequestMapping(value = "{uuid}", method = RequestMethod.DELETE)
     public RestResult delete(@PathVariable("uuid") String uuid) {
         FruitListVo vo = FruitList.getVo();
@@ -65,7 +65,7 @@ public class ListController {
         "projectRelation":{"ADD":["e41e0c03ee704b31b56f2ec1076609b5"]}
     }
      */
-    @LogInfo(format = "【{user.userName}】添加了【{vo.title}】列表", uuid = "vo.uuid", type = FruitDict.Parents.List, operateType = FruitDict.Systems.ADD)
+    @LogInfo(uuid = "vo.uuid", type = FruitDict.Parents.List, operateType = FruitDict.LogsDict.ADD)
     @RequestMapping(value = "project", method = RequestMethod.POST)
     public RestResult insertProject(@JsonArgument(type = FruitListVo.class) FruitListVo vo) {
         listDao.insertProject(vo);

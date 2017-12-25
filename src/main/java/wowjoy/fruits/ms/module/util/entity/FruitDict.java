@@ -69,6 +69,41 @@ public class FruitDict extends AbstractEntity {
         }
     }
 
+    public enum LogsDict{
+        DELETE("删除"),
+        ADD("添加"),
+        UPDATE("修改"),
+        MOVE_TASK("移动任务"),
+        COMPLETE("完成"),
+        START("开始"),
+        END("结束");
+
+        private String parentCode;
+        private String value;
+
+        private void setParentCode(String parentCode) {
+            this.parentCode = parentCode;
+        }
+
+        private void setValue(String value) {
+            this.value = value;
+        }
+
+        public String getParentCode() {
+            return parentCode;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        LogsDict(String value) {
+            this.setParentCode(Parents.PLAN.name());
+            this.setValue(value);
+        }
+
+    }
+
     /**
      * dict 管理项目所有父节点，便于父节点的管理和维护。
      */
@@ -77,6 +112,8 @@ public class FruitDict extends AbstractEntity {
          * 业务字典
          */
         PROJECT("项目"),
+        SUMMARY("小结"),
+        NOTEPAD("日报"),
         PLAN("计划"),
         TASK("任务"),
         USER("用户"),
@@ -493,7 +530,7 @@ public class FruitDict extends AbstractEntity {
         }
 
         NotepadDict(String value) {
-            this.setParentCode(Parents.USERPROJECT.name());
+            this.setParentCode(Parents.NOTEPAD.name());
             this.setValue(value);
         }
 
