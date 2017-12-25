@@ -21,10 +21,12 @@ public class FruitNotepadVo extends FruitNotepad {
     }
 
     public LocalDateTime getStartDate() {
+        if (startDate == null) return null;
         return LocalDateTime.ofInstant(startDate.toInstant(), ZoneId.systemDefault());
     }
 
     public LocalDateTime getEndDate() {
+        if (endDate == null) return null;
         return LocalDateTime.ofInstant(endDate.toInstant(), ZoneId.systemDefault());
     }
 
