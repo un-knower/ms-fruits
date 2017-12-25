@@ -94,7 +94,7 @@ public class NotepadDaoImpl extends AbstractDaoNotepad {
             criteria.andUuidEqualTo(dao.getUuid());
         if (StringUtils.isNotBlank(dao.getUserId()))
             criteria.andUserIdEqualTo(dao.getUserId());
-        example.setOrderByClause("estimated_submit_date desc");
+        example.setOrderByClause("notepad.estimated_submit_date desc,notepad.create_date_time desc");
         return example;
     }
 
