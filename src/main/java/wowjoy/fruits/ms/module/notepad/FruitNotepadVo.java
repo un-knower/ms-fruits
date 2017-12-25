@@ -1,14 +1,16 @@
 package wowjoy.fruits.ms.module.notepad;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 
 /**
  * Created by wangziwen on 2017/12/8.
  */
 public class FruitNotepadVo extends FruitNotepad {
     private String uuidVo;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
+    private Date startDate;
+    private Date endDate;
 
     public String getUuidVo() {
         return uuidVo;
@@ -19,18 +21,11 @@ public class FruitNotepadVo extends FruitNotepad {
     }
 
     public LocalDateTime getStartDate() {
-        return startDate;
-    }
-
-    public void setStartDate(LocalDateTime startDate) {
-        this.startDate = startDate;
+        return LocalDateTime.ofInstant(startDate.toInstant(), ZoneId.systemDefault());
     }
 
     public LocalDateTime getEndDate() {
-        return endDate;
+        return LocalDateTime.ofInstant(endDate.toInstant(), ZoneId.systemDefault());
     }
 
-    public void setEndDate(LocalDateTime endDate) {
-        this.endDate = endDate;
-    }
 }

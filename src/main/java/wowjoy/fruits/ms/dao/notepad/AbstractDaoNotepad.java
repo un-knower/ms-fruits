@@ -16,7 +16,6 @@ import wowjoy.fruits.ms.util.ApplicationContextUtils;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.Callable;
 
 /**
@@ -72,6 +71,8 @@ public abstract class AbstractDaoNotepad implements InterfaceDao {
         dao.setUserId(ApplicationContextUtils.getCurrentUser().getUserId());
         dao.setState(vo.getState());
         List<FruitNotepadDao> result = findsByCurrentIds(dao);
+        if (result.isEmpty())
+            return result;
         LinkedList<String> ids = toIds(result);
         DaoThread thread = DaoThread.getFixed();
         thread.execute(this.plugLogs(ids, result)).execute(this.plugUser(ids, result)).get();
@@ -86,6 +87,8 @@ public abstract class AbstractDaoNotepad implements InterfaceDao {
         dao.setEndDate(vo.getEndDate());
         dao.setState(vo.getState());
         List<FruitNotepadDao> result = findsByTeamIds(dao, teamId);
+        if (result.isEmpty())
+            return result;
         LinkedList<String> ids = toIds(result);
         DaoThread thread = DaoThread.getFixed();
         thread.execute(this.plugLogs(ids, result)).execute(this.plugUser(ids, result)).get();

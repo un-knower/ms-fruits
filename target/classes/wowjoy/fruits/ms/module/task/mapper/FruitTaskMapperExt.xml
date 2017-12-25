@@ -228,10 +228,8 @@
             <property name="prefix" value="user_"/>
         </include>
         from fruits_task task
-        left join task_user_relation userRelation on userRelation.task_id = task.uuid
-        left join fruits_user fuser on fuser.user_id = userRelation.user_id
-        -- left join task_plan_relation planRelation on planRelation.task_id = task.uuid
-        -- left join fruits_plan plan on planRelation.plan_id = plan.uuid
+        RIGHT join task_user_relation userRelation on userRelation.task_id = task.uuid
+        RIGHT join fruits_user fuser on fuser.user_id = userRelation.user_id
         <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
             <where>
                 <include refid="Base_Example_Where_Clause">
@@ -239,8 +237,6 @@
                 </include>
                 and userRelation.is_deleted = 'N'
                 and fuser.is_deleted = 'N'
-                -- and planRelation.is_deleted = 'N'
-                -- and plan.is_deleted = 'N'
             </where>
         </trim>
     </select>
@@ -256,8 +252,8 @@
             <property name="prefix" value="plan_"/>
         </include>
         from fruits_task task
-        left join task_plan_relation planRelation on planRelation.task_id = task.uuid
-        left join fruits_plan plan on planRelation.plan_id = plan.uuid
+        RIGHT join task_plan_relation planRelation on planRelation.task_id = task.uuid
+        RIGHT join fruits_plan plan on planRelation.plan_id = plan.uuid
         <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
             <where>
                 <include refid="Base_Example_Where_Clause">
@@ -281,8 +277,8 @@
             <property name="prefix" value="project_"/>
         </include>
         from fruits_task task
-        left join task_project_relation projectRelation on projectRelation.task_id = task.uuid
-        left join fruits_project project on project.uuid = projectRelation.project_id
+        RIGHT join task_project_relation projectRelation on projectRelation.task_id = task.uuid
+        RIGHT join fruits_project project on project.uuid = projectRelation.project_id
         <trim suffixOverrides="AND | OR" prefixOverrides="AND | OR ">
             <where>
                 <include refid="Base_Example_Where_Clause">
@@ -294,7 +290,7 @@
         </trim>
     </select>
 
-    <!-- 根据关联任务，查询出，任务关联项目 -->
+    <!-- 根据关联计划，查询出任务关联项目 -->
     <select id="selectPlanJoinProjectByTask" resultMap="BaseResultMap">
         SELECT
         <include refid="Base_Column_List">
@@ -306,9 +302,9 @@
             <property name="prefix" value="project_"/>
         </include>
         from fruits_task task
-        left join task_plan_relation planRelation on planRelation.task_id = task.uuid
-        left join plan_project_relation projectRelation on projectRelation.plan_id = planRelation.plan_id
-        left join fruits_project project on project.uuid = projectRelation.project_id
+        RIGHT join task_plan_relation planRelation on planRelation.task_id = task.uuid
+        RIGHT join plan_project_relation projectRelation on projectRelation.plan_id = planRelation.plan_id
+        RIGHT join fruits_project project on project.uuid = projectRelation.project_id
         <trim suffixOverrides="AND | OR" prefixOverrides="AND | OR ">
             <where>
                 <include refid="Base_Example_Where_Clause">
