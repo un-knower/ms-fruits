@@ -77,7 +77,6 @@ public class NotepadController {
      * @apiParam {Date} endDate 结束日期
      * @apiParam {String} state 状态 PUNCTUAL_SUBMIT("准时提交"),PAY_SUBMIT("补交"),NOT_SUBMIT("未提交")
      */
-
     @RequestMapping(value = "user", method = RequestMethod.GET)
     public RestResult findCurrentUser(@JsonArgument(type = FruitNotepadVo.class) FruitNotepadVo vo) {
         return RestResult.getInstance().setData(daoNotepad.findByCurrentUser(vo));
