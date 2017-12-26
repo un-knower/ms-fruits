@@ -34,7 +34,7 @@ public class NotepadController {
      * "estimatedSubmitDate":"2017-10-20"
      * }
      */
-    @LogInfo(uuid = "vo.uuid", type = FruitDict.Parents.NOTEPAD, operateType = FruitDict.LogsDict.ADD)
+    @LogInfo(uuid = "uuid", type = FruitDict.Parents.NOTEPAD, operateType = FruitDict.LogsDict.ADD)
     @RequestMapping(method = RequestMethod.POST)
     public RestResult insert(@JsonArgument(type = FruitNotepadVo.class) FruitNotepadVo vo) {
         daoNotepad.insert(vo);
@@ -50,7 +50,7 @@ public class NotepadController {
      * "content":"今天我很生气，我要吃鸡"
      * }
      */
-    @LogInfo(uuid = "uuid", type = FruitDict.Parents.NOTEPAD, operateType = FruitDict.LogsDict.UPDATE)
+    @LogInfo(uuid = "uuidVo", type = FruitDict.Parents.NOTEPAD, operateType = FruitDict.LogsDict.UPDATE)
     @RequestMapping(value = "{uuid}", method = RequestMethod.PUT)
     public RestResult update(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitNotepadVo.class) FruitNotepadVo vo) {
         vo.setUuidVo(uuid);

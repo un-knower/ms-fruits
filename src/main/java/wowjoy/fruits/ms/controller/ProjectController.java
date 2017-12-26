@@ -74,7 +74,7 @@ public class ProjectController {
      * @apiVersion 0.1.0
      * @apiGroup project
      */
-    @LogInfo(uuid = "vo.uuid", type = FruitDict.Parents.PROJECT, operateType = FruitDict.LogsDict.ADD)
+    @LogInfo(uuid = "uuid", type = FruitDict.Parents.PROJECT, operateType = FruitDict.LogsDict.ADD)
     @RequestMapping(method = RequestMethod.POST)
     public RestResult insert(@JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
         projectDaoImpl.add(vo);
@@ -86,7 +86,7 @@ public class ProjectController {
      * @apiVersion 0.1.0
      * @apiGroup project
      */
-    @LogInfo(uuid = "uuid", type = FruitDict.Parents.PROJECT, operateType = FruitDict.LogsDict.UPDATE)
+    @LogInfo(uuid = "uuidVo", type = FruitDict.Parents.PROJECT, operateType = FruitDict.LogsDict.UPDATE)
     @RequestMapping(value = "{uuid}", method = RequestMethod.PUT)
     public RestResult update(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
         vo.setUuidVo(uuid);
@@ -99,7 +99,7 @@ public class ProjectController {
      * @apiVersion 0.1.0
      * @apiGroup project
      */
-    @LogInfo(uuid = "uuid", type = FruitDict.Parents.PROJECT, operateType = FruitDict.LogsDict.COMPLETE)
+    @LogInfo(uuid = "uuidVo", type = FruitDict.Parents.PROJECT, operateType = FruitDict.LogsDict.COMPLETE)
     @RequestMapping(value = "/complete/{uuid}", method = RequestMethod.PUT)
     public RestResult updateStatus(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
         vo.setUuidVo(uuid);

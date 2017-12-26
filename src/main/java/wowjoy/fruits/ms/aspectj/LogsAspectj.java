@@ -13,6 +13,7 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.PathVariable;
 import wowjoy.fruits.ms.dao.AbstractDaoChain;
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.dao.logs.AbstractDaoLogs;
@@ -22,9 +23,12 @@ import wowjoy.fruits.ms.module.logs.FruitLogs;
 import wowjoy.fruits.ms.module.logs.FruitLogsVo;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;
 import wowjoy.fruits.ms.util.AsmClassInfo;
+import wowjoy.fruits.ms.util.JsonArgument;
 import wowjoy.fruits.ms.util.RestResult;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.text.MessageFormat;
 import java.util.*;
 
@@ -67,19 +71,55 @@ public class LogsAspectj {
 
     /*记录日志*/
     public void record(ProceedingJoinPoint joinPoint, LogInfo logInfo) {
-        /*获取当前操作方法对应的：参数-数据列表*/
-        Map<String, Object> methodParamValue = methodParamValue(joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName(), joinPoint.getArgs());
         /*提取占位符关键字*/
         /*从当前方法【参数-数据列表】中获取对应的数据*/
         Map<String, Placeholder> placeValues = Maps.newLinkedHashMap();
         /*根据uuid查询数据库中保存数据*/
         AbstractDaoChain daoChain = AbstractDaoChain.newInstance(logInfo.type());
-        AbstractEntity DBData = daoChain.find(setPlaceholder(Placeholder.newComma(logInfo.uuid()), methodParamValue).getValue());
+        AbstractEntity DBData = daoChain.find((String) getValue(joinPoint, Placeholder.newComma(logInfo.uuid())));
         FruitLogsVo vo = logTemplate(DBData, logInfo);
          /*获取对应的uuid*/
         vo.setFruitUuid(DBData.getUuid());
         /*记录日志*/
         logsDao.insert(vo);
+    }
+
+    private Object getValue(ProceedingJoinPoint joinPoint, Placeholder placeholder) {
+        AnnotationValue<JsonArgument> jsonArgumentAnnotationValue = getAnnotation(joinPoint, JsonArgument.class);
+        if (jsonArgumentAnnotationValue != null)
+            return getValue((AbstractEntity) jsonArgumentAnnotationValue.getValue(), jsonArgumentAnnotationValue.getValue().getClass(), placeholder);
+        AnnotationValue<PathVariable> pathVariableAnnotationValue = getAnnotation(joinPoint, PathVariable.class);
+        if (pathVariableAnnotationValue.getAnnotation().value().equals(placeholder.getKey()))
+            return pathVariableAnnotationValue.getValue();
+        return null;
+    }
+
+    private Object getValue(AbstractEntity arg, Class aClass, Placeholder placeholder) {
+        for (Method method : aClass.getDeclaredMethods()) {
+            if (!method.getName().toLowerCase().equals("get" + placeholder.getKey().toLowerCase())) continue;
+            try {
+                return method.invoke(arg, null);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+                throw new CheckException("获取失败");
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+                throw new CheckException("获取失败");
+            }
+        }
+        if (aClass.getSuperclass().getName().equals(Object.class.getName())) return null;
+        return getValue(arg, aClass.getSuperclass(), placeholder);
+    }
+
+    private <T> AnnotationValue getAnnotation(ProceedingJoinPoint joinPoint, Class<T> annotation) {
+        for (Method method : joinPoint.getSignature().getDeclaringType().getMethods()) {
+            if (!method.getName().equals(joinPoint.getSignature().getName())) continue;
+            for (int i = 0; i < method.getParameterAnnotations().length; i++) {
+                if (method.getParameterAnnotations()[i][0].annotationType().getName().equals(annotation.getName()))
+                    return new AnnotationValue((T) method.getParameterAnnotations()[i][0], joinPoint.getArgs()[0]);
+            }
+        }
+        return null;
     }
 
     private FruitLogsVo logTemplate(AbstractEntity dbData, LogInfo logInfo) {
@@ -203,6 +243,24 @@ public class LogsAspectj {
         else if (arg.isJsonNull())
             result = "";
         return result;
+    }
+
+    private static class AnnotationValue<T> {
+        private final T annotation;
+        private final Object value;
+
+        private AnnotationValue(T annotation, Object value) {
+            this.annotation = annotation;
+            this.value = value;
+        }
+
+        public T getAnnotation() {
+            return annotation;
+        }
+
+        public Object getValue() {
+            return value;
+        }
     }
 
     /*占位符对象，包含占位符对应的数据*/

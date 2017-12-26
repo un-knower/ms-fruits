@@ -91,7 +91,7 @@ public class PlanController {
      * @apiVersion 0.1.0
      * @apiGroup plan
      */
-    @LogInfo(uuid = "fruitPlan.uuid", type = FruitDict.Parents.PLAN, operateType = FruitDict.LogsDict.ADD)
+    @LogInfo(uuid = "uuid", type = FruitDict.Parents.PLAN, operateType = FruitDict.LogsDict.ADD)
     @RequestMapping(method = RequestMethod.POST)
     public RestResult addJoinProject(@JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
 
@@ -104,7 +104,7 @@ public class PlanController {
      * @apiVersion 0.1.0
      * @apiGroup plan
      */
-    @LogInfo(uuid = "uuid", type = FruitDict.Parents.PLAN, operateType = FruitDict.LogsDict.UPDATE)
+    @LogInfo(uuid = "uuidVo", type = FruitDict.Parents.PLAN, operateType = FruitDict.LogsDict.UPDATE)
     @RequestMapping(value = "{uuid}", method = RequestMethod.PUT)
     public RestResult update(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
         vo.setUuidVo(uuid);
@@ -117,7 +117,7 @@ public class PlanController {
      * @apiVersion 0.1.0
      * @apiGroup plan
      */
-    @LogInfo(uuid = "uuid", type = FruitDict.Parents.PLAN, operateType = FruitDict.LogsDict.COMPLETE)
+    @LogInfo(uuid = "uuidVo", type = FruitDict.Parents.PLAN, operateType = FruitDict.LogsDict.COMPLETE)
     @RequestMapping(value = "/complete/{uuid}", method = RequestMethod.PUT)
     public RestResult complete(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
         vo.setUuidVo(uuid);
@@ -130,10 +130,9 @@ public class PlanController {
      * @apiVersion 0.1.0
      * @apiGroup plan
      */
-    @LogInfo(uuid = "uuid", type = FruitDict.Parents.PLAN, operateType = FruitDict.LogsDict.END)
+    @LogInfo(uuid = "uuidVo", type = FruitDict.Parents.PLAN, operateType = FruitDict.LogsDict.END)
     @RequestMapping(value = "/end/{uuid}", method = RequestMethod.PUT)
     public RestResult end(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
-
         vo.setUuidVo(uuid);
         dataPlanDao.end(vo);
         return RestResult.getInstance().setData(uuid);

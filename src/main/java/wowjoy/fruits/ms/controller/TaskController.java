@@ -72,7 +72,7 @@ public class TaskController {
      * }
      * }
      */
-    @LogInfo(uuid = "vo.uuid", type = FruitDict.Parents.TASK, operateType = FruitDict.LogsDict.ADD)
+    @LogInfo(uuid = "uuid", type = FruitDict.Parents.TASK, operateType = FruitDict.LogsDict.ADD)
     @RequestMapping(method = RequestMethod.POST)
     public RestResult insert(@JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
         daoTask.insert(vo);
@@ -84,7 +84,7 @@ public class TaskController {
      * @apiVersion 0.1.0
      * @apiGroup task
      */
-    @LogInfo(uuid = "uuid", type = FruitDict.Parents.TASK, operateType = FruitDict.LogsDict.UPDATE)
+    @LogInfo(uuid = "uuidVo", type = FruitDict.Parents.TASK, operateType = FruitDict.LogsDict.UPDATE)
     @RequestMapping(value = "/{uuid}", method = RequestMethod.PUT)
     public RestResult modify(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
         vo.setUuidVo(uuid);
@@ -125,7 +125,7 @@ public class TaskController {
      * @apiVersion 0.1.0
      * @apiGroup task
      */
-    @LogInfo(uuid = "uuid", type = FruitDict.Parents.TASK, operateType = FruitDict.LogsDict.MOVE_TASK)
+    @LogInfo(uuid = "uuidVo", type = FruitDict.Parents.TASK, operateType = FruitDict.LogsDict.MOVE_TASK)
     @RequestMapping(value = "/list/{uuid}", method = RequestMethod.PUT)
     public RestResult changeList(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
         vo.setUuidVo(uuid);
