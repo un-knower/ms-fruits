@@ -4,10 +4,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.InterfaceDao;
+import wowjoy.fruits.ms.dao.logs.LogsTemplate;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.exception.ExceptionSupport;
 import wowjoy.fruits.ms.exception.ServiceException;
 import wowjoy.fruits.ms.module.list.FruitListDao;
+import wowjoy.fruits.ms.module.logs.FruitLogsDao;
 import wowjoy.fruits.ms.module.plan.FruitPlanDao;
 import wowjoy.fruits.ms.module.project.FruitProjectDao;
 import wowjoy.fruits.ms.module.relation.entity.TaskListRelation;
@@ -65,6 +67,8 @@ public abstract class AbstractDaoTask implements InterfaceDao {
     protected abstract List<FruitTaskDao> findPlanJoinProjectByTask(List<String> taskIds);
 
     protected abstract List<FruitTaskDao> findListByTask(List<String> taskIds);
+
+    protected abstract List<FruitTaskDao> findJoinLogsByTask(List<String> taskIds);
 
     protected abstract List<FruitTaskDao> myTask(FruitTaskDao dao);
 
@@ -220,7 +224,8 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         List<String> ids = toIds(tasks);
         DaoThread taskThread = DaoThread.getFixed();
         taskThread.execute(this.plugUser(ids, tasks))
-                .execute(this.plugList(ids,tasks))
+                .execute(this.plugList(ids, tasks))
+                .execute(this.plugLogs(ids, tasks))
                 .execute(this.plugUtil(tasks))
                 .get();
         taskThread.shutdown();
@@ -240,6 +245,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         DaoThread taskThread = DaoThread.getFixed();
         taskThread.execute(this.plugPlan(ids, tasks))
                 .execute(this.plugUser(ids, tasks))
+                .execute(this.plugLogs(ids, tasks))
                 .execute(this.plugUtil(tasks))
                 .get();
         taskThread.shutdown();
@@ -272,6 +278,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
             taskThread
                     .execute(this.plugPlan(ids, tasks))
                     .execute(this.plugUser(ids, tasks))
+                    .execute(this.plugLogs(ids, tasks))
                     .execute(this.plugUtil(tasks));
             list.setTasks(tasks);
             return true;
@@ -305,6 +312,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
             DaoThread thread = DaoThread.getFixed();
             List<String> ids = toIds(tasks);
             thread
+                    .execute(this.plugLogs(ids, tasks))
                     .execute(this.plugProject(ids, tasks))
                     .execute(this.plugPlanJoinProject(ids, tasks))
                     .execute(this.plugUser(ids, tasks))
@@ -321,6 +329,19 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         List<String> taskIds = Lists.newLinkedList();
         tasks.forEach((i) -> taskIds.add(i.getUuid()));
         return taskIds;
+    }
+
+    private Callable plugLogs(List<String> taskIds, List<FruitTaskDao> tasks) {
+        return () -> {
+            Map<String, List<FruitLogsDao>> planLogsMap = Maps.newLinkedHashMap();
+            LogsTemplate logsTemplate = LogsTemplate.newInstance(FruitDict.Parents.TASK);
+            this.findJoinLogsByTask(taskIds).forEach((plan) -> {
+                plan.getLogs().forEach((log) -> log.setMsg(logsTemplate.msg(log)));
+                planLogsMap.put(plan.getUuid(), plan.getLogs());
+            });
+            tasks.forEach((task) -> task.setLogs(planLogsMap.get(task.getUuid())));
+            return true;
+        };
     }
 
     private Callable plugPlan(List<String> taskIds, List<FruitTaskDao> tasks) {

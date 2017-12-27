@@ -69,7 +69,6 @@ public class PlanController {
      */
     @RequestMapping(value = "/project/composite/{uuid}", method = RequestMethod.GET)
     public RestResult findMonthWeek(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
-
         vo.setProjectId(uuid);
         return RestResult.getInstance().setData(dataPlanDao.compositeQuery(vo));
     }

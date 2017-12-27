@@ -26,6 +26,8 @@ public interface FruitTaskMapperExt {
 
     List<FruitTaskDao> selectListByTask(@Param("example") FruitTaskExample example);
 
+    List<FruitTaskDao> selectJoinLogsByTask(@Param("example") FruitTaskExample example);
+
     /************************************************************************************************
      *                                       个人中心专供                                            *
      ************************************************************************************************/

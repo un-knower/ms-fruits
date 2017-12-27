@@ -34,6 +34,8 @@ public class FruitPlanDao extends FruitPlan {
     private List<String> parentIds;
     private String taskId;
     private Integer days;
+    /*因为原days的值不符合日志模板需求，特加一个字段用来存储正整数*/
+    private transient Integer daysTemplate;
 
     public List<FruitLogsDao> getLogs() {
         return logs;
@@ -53,6 +55,11 @@ public class FruitPlanDao extends FruitPlan {
 
     public Integer getDays() {
         return days;
+    }
+
+    public Integer getDaysTemplate() {
+        daysTemplate = Math.abs(days);
+        return daysTemplate;
     }
 
     public String getTaskId() {
@@ -138,7 +145,16 @@ public class FruitPlanDao extends FruitPlan {
         LocalDateTime currentTime = LocalDateTime.parse(new SimpleDateFormat(DateTimeFormat).format(endDate));
         Duration between = Duration.between(currentTime, predictEndTime);
         this.setDays((int) between.toDays());
+        checkPlanStatus();
         return this;
+    }
+
+    private void checkPlanStatus() {
+        if (FruitDict.PlanDict.PENDING.name().equals(this.getPlanStatus()))
+            return;
+        if (FruitDict.PlanDict.COMPLETE.name().equals(this.getPlanStatus()))
+            if (this.getDays() < 0)
+                setPlanStatus(FruitDict.PlanDict.DELAY_COMPLETE.name());
     }
 
 }

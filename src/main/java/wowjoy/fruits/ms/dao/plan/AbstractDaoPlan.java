@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.InterfaceDao;
+import wowjoy.fruits.ms.dao.logs.LogsTemplate;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.exception.ExceptionSupport;
 import wowjoy.fruits.ms.exception.ServiceException;
@@ -85,10 +86,14 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
             return true;
         });
         planThread.execute(() -> {
-            List<FruitPlanDao> logs = this.findLogsByPlanIds(ids);
             LinkedHashMap<String, List<FruitLogsDao>> logsMaps = Maps.newLinkedHashMap();
-            logs.forEach((i) -> logsMaps.put(i.getUuid(), i.getLogs()));
-            planDaoListCopy.forEach((i) -> i.setLogs(logsMaps.get(i.getUuid())));
+            LogsTemplate logsTemplate = LogsTemplate.newInstance(FruitDict.Parents.PLAN);
+            this.findLogsByPlanIds(ids).forEach((logs) -> {
+                logs.getLogs().forEach((log) -> log.setMsg(logsTemplate.msg(log)));
+                logsMaps.put(logs.getUuid(), logs.getLogs());
+
+            });
+            planDaoListCopy.forEach((plan) -> plan.setLogs(logsMaps.get(plan.getUuid())));
             return true;
         });
         /*计算过期时间*/

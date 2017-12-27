@@ -124,7 +124,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
     public List<FruitTaskDao> findByListId(FruitTaskDao dao) {
         final String prefix = "task.";
         final String status = prefix + "task_status desc";
-        PageHelper.startPage(dao.getPageNum(), dao.getPageSize());
+//        PageHelper.startPage(dao.getPageNum(), dao.getPageSize());
         FruitTaskExample example = new FruitTaskExample();
         StringBuffer sort = new StringBuffer();
         String sortConstrue = dao.sortConstrue(prefix);
@@ -192,6 +192,17 @@ public class TaskDaoImpl extends AbstractDaoTask {
         List<FruitTaskDao> data = taskMapper.selectListByTask(example);
         return data;
     }
+
+    @Override
+    protected List<FruitTaskDao> findJoinLogsByTask(List<String> taskIds) {
+        if (taskIds == null || taskIds.isEmpty())
+            return Lists.newLinkedList();
+        FruitTaskExample example = new FruitTaskExample();
+        example.createCriteria().andUuidIn(taskIds).andIsDeletedEqualTo(FruitDict.Systems.N.name());
+        List<FruitTaskDao> data = taskMapper.selectJoinLogsByTask(example);
+        return data;
+    }
+
 
     /**
      * 任务关联信息管理

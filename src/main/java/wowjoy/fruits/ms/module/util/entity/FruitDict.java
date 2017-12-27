@@ -36,10 +36,11 @@ public class FruitDict extends AbstractEntity {
     public String getDictName() {
         return dictName;
     }
+
     /**
      * 系统字典
      */
-    public enum Systems{
+    public enum Systems {
         N("NO"),
 
         Y("YES"),
@@ -69,12 +70,13 @@ public class FruitDict extends AbstractEntity {
         }
     }
 
-    public enum LogsDict{
+    public enum LogsDict {
         DELETE("删除"),
         ADD("添加"),
         UPDATE("修改"),
         MOVE_TASK("移动任务"),
         COMPLETE("完成"),
+        DELAY_COMPLETE("延期完成"),
         START("开始"),
         END("结束");
 
