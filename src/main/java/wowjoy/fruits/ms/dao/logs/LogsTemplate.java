@@ -125,7 +125,7 @@ public abstract class LogsTemplate<T extends AbstractEntity> {
         public T fromJson(FruitLogsDao log) {
             T plan = new Gson().fromJson(new JsonParser().parse(log.getJsonObject()), TypeToken.of(FruitPlanDao.class).getType());
             plan.computeDays();
-            if (plan.getDays() < 0)
+            if (plan.getPlanStatus().equals(FruitDict.PlanDict.DELAY_COMPLETE))
                 log.setOperateType(FruitDict.LogsDict.valueOf(plan.getPlanStatus()));
             return plan;
         }
