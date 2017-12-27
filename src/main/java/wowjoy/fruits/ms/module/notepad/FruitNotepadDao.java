@@ -1,5 +1,6 @@
 package wowjoy.fruits.ms.module.notepad;
 
+import com.google.common.collect.Lists;
 import wowjoy.fruits.ms.module.logs.FruitLogsDao;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
 

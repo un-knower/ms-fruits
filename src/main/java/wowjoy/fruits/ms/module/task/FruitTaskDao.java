@@ -38,7 +38,7 @@ public class FruitTaskDao extends FruitTask {
     private transient Integer pageSize = 10;
 
     private List<FruitLogsDao> logs;
-    private List<FruitUserDao> users;
+    private List<FruitUserDao> users = Lists.newLinkedList();
     private FruitPlanDao plan;
     private FruitProjectDao project;
     private FruitListDao list;

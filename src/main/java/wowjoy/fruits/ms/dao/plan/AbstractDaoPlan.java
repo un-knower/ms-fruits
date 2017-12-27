@@ -93,7 +93,12 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
                 logsMaps.put(logs.getUuid(), logs.getLogs());
 
             });
-            planDaoListCopy.forEach((plan) -> plan.setLogs(logsMaps.get(plan.getUuid())));
+            planDaoListCopy.forEach((plan) -> {
+                if (logsMaps.containsKey(plan.getUuid()))
+                    plan.setLogs(logsMaps.get(plan.getUuid()));
+                else
+                    plan.setLogs(Lists.newLinkedList());
+            });
             return true;
         });
         /*计算过期时间*/
