@@ -116,7 +116,7 @@ public class LogsAspectj {
             if (!method.getName().equals(joinPoint.getSignature().getName())) continue;
             for (int i = 0; i < method.getParameterAnnotations().length; i++) {
                 if (method.getParameterAnnotations()[i][0].annotationType().getName().equals(annotation.getName()))
-                    return new AnnotationValue((T) method.getParameterAnnotations()[i][0], joinPoint.getArgs()[0]);
+                    return new AnnotationValue((T) method.getParameterAnnotations()[i][0], joinPoint.getArgs()[i]);
             }
         }
         return null;

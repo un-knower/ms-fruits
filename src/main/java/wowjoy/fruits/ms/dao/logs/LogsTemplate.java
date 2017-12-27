@@ -88,9 +88,9 @@ public abstract class LogsTemplate<T extends AbstractEntity> {
     protected abstract T fromJson(FruitLogsDao log);
 
     protected static class NotepadTemplate<T extends FruitNotepadDao> extends LogsTemplate {
-        private final String ADD = "{createDateTime}，{user.userName} 添加了日报";
-        private final String UPDATE = "{createDateTime}，{user.userName} 修改了日报";
-        private final String DELETE = "{createDateTime}，{user.userName} 删除了日报（这特码谁给开放的接口）";
+        private final String ADD = "{user.userName} 添加了日报";
+        private final String UPDATE = "{user.userName} 修改了日报";
+        private final String DELETE = "{user.userName} 删除了日报（这特码谁给开放的接口）";
 
         public NotepadTemplate() {
             super.setTemplates(FruitDict.LogsDict.ADD, ADD);
@@ -105,12 +105,12 @@ public abstract class LogsTemplate<T extends AbstractEntity> {
     }
 
     protected static class PlanTemplate<T extends FruitPlanDao> extends LogsTemplate {
-        private final String ADD = "{createDateTime}，{user.userName} 添加了计划";
-        private final String UPDATE = "{createDateTime}，{user.userName} 修改了计划";
-        private final String DELETE = "{createDateTime}，{user.userName} 删除了计划（这特码谁给开放的接口）";
-        private final String COMPLETE = "{createDateTime}，{user.userName} 按时完成了目标";
-        private final String DELAY_COMPLETE = "{createDateTime}，{user.userName} 延期 {daysTemplate} 天完成了目标，延期原因：{statusDescription}";
-        private final String END = "{createDateTime}，{user.userName} 标记目标为已终止，终止理由：{statusDescription}";
+        private final String ADD = "{user.userName} 添加了计划";
+        private final String UPDATE = "{user.userName} 修改了计划";
+        private final String DELETE = "{user.userName} 删除了计划（这特码谁给开放的接口）";
+        private final String COMPLETE = "{user.userName} 按时完成了目标";
+        private final String DELAY_COMPLETE = "{user.userName} 延期 {daysTemplate} 天完成了目标，延期原因：{statusDescription}";
+        private final String END = "{user.userName} 标记目标为已终止，终止理由：{statusDescription}";
 
         public PlanTemplate() {
             super.setTemplates(FruitDict.LogsDict.ADD, ADD);
@@ -132,12 +132,12 @@ public abstract class LogsTemplate<T extends AbstractEntity> {
     }
 
     protected static class TaskTemplate<T extends FruitTaskDao> extends LogsTemplate {
-        private final String ADD = "{createDateTime}，{user.userName} 添加了任务";
-        private final String UPDATE = "{createDateTime}，{user.userName} 修改了任务";
-        private final String DELETE = "{createDateTime}，{user.userName} 删除了任务（这特码谁给开放的接口）";
-        private final String MOVE_TASK = "{createDateTime}，{user.userName} 改变了任务所在列表";
-        private final String START = "{createDateTime}，{user.userName} 启动了任务";
-        private final String END = "{createDateTime}，{user.userName} 结束了任务";
+        private final String ADD = "{user.userName} 添加了任务";
+        private final String UPDATE = "{user.userName} 修改了任务";
+        private final String DELETE = "{user.userName} 删除了任务（这特码谁给开放的接口）";
+        private final String MOVE_TASK = "{user.userName} 改变了任务所在列表";
+        private final String START = "{user.userName} 启动了任务";
+        private final String END = "{user.userName} 结束了任务";
 
         public TaskTemplate() {
             super.setTemplates(FruitDict.LogsDict.ADD, ADD);
