@@ -339,7 +339,12 @@ public abstract class AbstractDaoTask implements InterfaceDao {
                 plan.getLogs().forEach((log) -> log.setMsg(logsTemplate.msg(log)));
                 planLogsMap.put(plan.getUuid(), plan.getLogs());
             });
-            tasks.forEach((task) -> task.setLogs(planLogsMap.get(task.getUuid())));
+            tasks.forEach((task) -> {
+                if (planLogsMap.containsKey(task.getUuid()))
+                    task.setLogs(planLogsMap.get(task.getUuid()));
+                else
+                    task.setLogs(Lists.newLinkedList());
+            });
             return true;
         };
     }

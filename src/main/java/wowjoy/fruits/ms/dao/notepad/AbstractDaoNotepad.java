@@ -1,5 +1,6 @@
 package wowjoy.fruits.ms.dao.notepad;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.InterfaceDao;
@@ -13,7 +14,6 @@ import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;
 
-import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -114,6 +114,8 @@ public abstract class AbstractDaoNotepad implements InterfaceDao {
             notepads.forEach((notepad) -> {
                 if (keyValue.containsKey(notepad.getUuid()))
                     notepad.setLogs(keyValue.get(notepad.getUuid()));
+                else
+                    notepad.setLogs(Lists.newLinkedList());
             });
             return true;
         };
