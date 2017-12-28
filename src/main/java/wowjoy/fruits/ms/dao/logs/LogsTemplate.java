@@ -74,7 +74,9 @@ public abstract class LogsTemplate<T extends AbstractEntity> {
             for (Method method : aClass.getDeclaredMethods()) {
                 if (!method.getName().toLowerCase().equals("get" + field.getName().toLowerCase())) continue;
                 try {
-                    msg = msg.replace(position, new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create().toJsonTree(method.invoke(obj, null)).getAsString());
+                    Object methodResult = method.invoke(obj, null);
+                    if (methodResult != null)
+                        msg = msg.replace(position, new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create().toJsonTree(methodResult).getAsString());
                 } catch (Exception e) {
                     e.printStackTrace();
                     throw new CheckException("获取占位值错误");
