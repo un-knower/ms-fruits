@@ -16,7 +16,9 @@ import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;
 import wowjoy.fruits.ms.util.DateUtils;
 
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 
@@ -318,9 +320,9 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
             /*必须填写延期说明*/
             if (StringUtils.isBlank(vo.getStatusDescription()))
                 throw new CheckException("计划延期完成，需要填写延期说明");
-            /*允许不改变预计结束时间*/
-            if (vo.getEstimatedEndDate() != null)
-                vo.setEstimatedEndDate(vo.getEstimatedEndDate());
+            if (vo.getEndDate() != null && Duration.between(LocalDate.now(), LocalDateTime.ofInstant(vo.getEndDate().toInstant(), ZoneId.systemDefault())).toDays() > 0)
+                throw new CheckException("实际结束时间不能大约今天");
+
         }
         try {
             vo.setPlanStatus(FruitDict.PlanDict.COMPLETE.name());
@@ -349,7 +351,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         FruitPlanDao dao = FruitPlan.getDao();
         dao.setUuid(vo.getUuidVo());
         dao.setPlanStatus(vo.getPlanStatus());
-        dao.setEndDate(LocalDate.now());
+        dao.setEndDate(vo.getEndDate() == null ? LocalDate.now() : LocalDateTime.ofInstant(vo.getEndDate().toInstant(), ZoneId.systemDefault()).toLocalDate());
         dao.setStatusDescription(vo.getStatusDescription());
         this.update(dao);
     }

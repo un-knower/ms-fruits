@@ -12,13 +12,8 @@ import java.util.TimeZone;
 public class LocalDateTime1 {
     @Test
     public void localDate() throws Exception {
-//        final LocalDate of = LocalDate.of(2017, 1, 1);
-//        System.out.println(of.toEpochDay());
-//        System.out.println(java.time.LocalDateTime.now().compareTo(java.time.LocalDateTime.now().plusHours(1)));
-        StringBuffer string = new StringBuffer();
-        string.append("1111");
-        string.insert(0, "2222");
-        System.out.println(string.toString());
+        LocalDateTime of = LocalDateTime.of(2017, 12, 28, 0, 0, 0);
+        System.out.println(Duration.between(LocalDateTime.now(), of).toDays());
     }
 
     /**
@@ -106,6 +101,7 @@ public class LocalDateTime1 {
         LocalDateTime now = LocalDateTime.now().plusDays(1);
         now = LocalDateTime.of(now.getYear(), now.getMonth(), now.getDayOfMonth(), 23, 59, 59);
         LocalDateTime start = LocalDateTime.now();
+
         System.out.println(now.toString());
         System.out.println(start.toString());
         System.out.println(Duration.between(now, start).toHours());
