@@ -4,6 +4,7 @@ import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.exception.CheckException;
@@ -75,8 +76,8 @@ public abstract class LogsTemplate<T extends AbstractEntity> {
                 if (!method.getName().toLowerCase().equals("get" + field.getName().toLowerCase())) continue;
                 try {
                     Object methodResult = method.invoke(obj, null);
-                    String asString = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create().toJsonTree(methodResult).getAsString();
-                    msg = msg.replace(position, StringUtils.isNotBlank(asString) ? asString : "");
+                    JsonElement asString = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create().toJsonTree(methodResult);
+                    msg = msg.replace(position, asString.isJsonNull() ? "" : asString.toString());
                 } catch (Exception e) {
                     e.printStackTrace();
                     throw new CheckException("获取占位值错误");
