@@ -46,13 +46,13 @@ public class FruitNotepad extends AbstractEntity {
     public Date getEstimatedSubmitDate() {
         return estimatedSubmitDate;
     }
-
-    public void setEstimatedSubmitDate(Date estimatedSubmitDate) {
-        if (estimatedSubmitDate == null)
-            throw new CheckException("必须提供日报预计结束时间");
-        this.estimatedSubmitDate = Date.from(LocalDateTime.ofInstant(estimatedSubmitDate.toInstant(), ZoneId.systemDefault()).toLocalDate().atTime(0, 0, 0).atZone(ZoneId.systemDefault()).toInstant());
-        selectState();
-    }
+//
+//    public void setEstimatedSubmitDate(Date estimatedSubmitDate) {
+//        if (estimatedSubmitDate == null)
+//            throw new CheckException("必须提供日报预计结束时间");
+//        this.estimatedSubmitDate = Date.from(LocalDateTime.ofInstant(estimatedSubmitDate.toInstant(), ZoneId.systemDefault()).toLocalDate().atTime(0, 0, 0).atZone(ZoneId.systemDefault()).toInstant());
+//        selectState();
+//    }
 
     private void selectState() {
         LocalDateTime notepadDateTime = LocalDateTime.ofInstant(estimatedSubmitDate.toInstant(), ZoneId.systemDefault());
