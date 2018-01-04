@@ -103,7 +103,7 @@
       This element was generated on Fri Oct 20 10:13:55 CST 2017.
     -->
     uuid, title, plan_status, status_description, percent, estimated_start_date, estimated_end_date, 
-    end_date, parent_id, modify_date_time, create_date_time, is_deleted
+    end_date, parent_id, modify_date_time, create_date_time, is_deleted,description
   </sql>
   <sql id="Blob_Column_List">
     <!--

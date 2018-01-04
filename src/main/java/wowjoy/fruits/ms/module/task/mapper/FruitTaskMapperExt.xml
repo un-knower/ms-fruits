@@ -143,6 +143,11 @@
         ${replace}.is_deleted as ${prefix}is_deleted
     </sql>
 
+    <sql id="user_Base_Column_List">
+        uuid, user_id, user_name, birthday, user_email, user_sex, job_title, description,
+        modify_date_time, create_date_time, is_deleted
+    </sql>
+
     <sql id="Plan_Column_List">
         ${replace}.uuid as ${prefix}uuid,
         ${replace}.title as ${prefix}title,
@@ -159,6 +164,11 @@
         ${replace}.description as ${prefix}description
     </sql>
 
+    <sql id="plan_Base_Column_List">
+        uuid, title, plan_status, status_description, percent, estimated_start_date, estimated_end_date,
+        end_date, parent_id, modify_date_time, create_date_time, is_deleted,description
+    </sql>
+
     <sql id="Project_Column_List">
         ${replace}.uuid as ${prefix}uuid,
         ${replace}.title as ${prefix}title,
@@ -171,6 +181,11 @@
         ${replace}.modify_date_time as ${prefix}modify_date_time,
         ${replace}.create_date_time as ${prefix}create_date_time,
         ${replace}.is_deleted as ${prefix}is_deleted
+    </sql>
+
+    <sql id="Project_Base_Column_List">
+        uuid, title, project_status, status_description, predict_start_date, predict_end_date,
+        end_date, description, modify_date_time, create_date_time, is_deleted
     </sql>
 
     <sql id="List_Column_List">
@@ -194,6 +209,43 @@
         ${replace}.is_deleted as ${prefix}is_deleted
     </sql>
 
+    <sql id="selectTest">
+        SELECT
+        <include refid="Base_Column_List">
+            <property name="replace" value="task"/>
+        </include>
+        FROM
+        fruits_task task
+        left join
+        (
+        select task_id,user_id from task_user_relation
+        where
+        is_deleted='N' and user_id = #{userId}
+        ) userRelation on userRelation.task_id = task.uuid
+        left join (select task_id,project_id from task_project_relation where is_deleted='N') projectJoin on task.uuid = projectJoin.task_id
+        left join (select task_id,plan_id from task_plan_relation where is_deleted='N') planJoin on planJoin.task_id = task.uuid
+        left join (select plan_id,project_id from plan_project_relation where is_deleted='N') planProjectRelation on planProjectRelation.plan_id = planJoin.plan_id
+        left join
+        (
+        select uuid from fruits_project
+        where
+        is_deleted='N'
+        <if test="projectId != null">
+            and uuid = #{projectId}
+        </if>
+        ) fproject on fproject.uuid = planProjectRelation.project_id or fproject.uuid = projectJoin.project_id
+        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
+            <where>
+                <include refid="Base_Example_Where_Clause">
+                    <property name="replace" value="task"/>
+                </include>
+            </where>
+        </trim>
+        <if test="example.orderByClause != null">
+            order by ${example.orderByClause}
+        </if>
+    </sql>
+
     <select id="selectByTaskList" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List">
@@ -202,16 +254,20 @@
         ,
         listRelation.list_id
         from fruits_task task
-        left join task_list_relation listRelation on listRelation.task_id = task.uuid
+        left join
+        (
+          select task_id from task_list_relation
+          where
+            is_deleted = 'N'
+            <if test="id != null">
+                AND list_id = #{id}
+            </if>
+        ) listRelation on listRelation.task_id = task.uuid
         <trim prefixOverrides="ADN | OR" suffixOverrides="ADN | OR">
             <where>
                 <include refid="Base_Example_Where_Clause">
                     <property name="replace" value="task"/>
                 </include>
-                <if test="id != null">
-                    AND listRelation.list_id = #{id}
-                    AND listRelation.is_deleted = 'N'
-                </if>
                 AND task.is_deleted = 'N'
             </where>
         </trim>
@@ -226,13 +282,16 @@
             <property name="replace" value="task"/>
         </include>
         from fruits_task task
-        left join task_plan_relation planRelation on planRelation.task_id = task.uuid
+        left join
+        (
+            select task_id from task_plan_relation
+            where is_deleted = 'N'
+            <if test="id != null">
+                AND plan_id = #{id}
+            </if>
+        ) planRelation on planRelation.task_id = task.uuid
         <trim prefixOverrides="ADN | OR" suffixOverrides="ADN | OR">
             <where>
-                <if test="id != null">
-                    AND planRelation.plan_id = #{id}
-                    AND planRelation.is_deleted = 'N'
-                </if>
                 AND task.is_deleted = 'N'
             </where>
         </trim>
@@ -250,15 +309,13 @@
             <property name="prefix" value="user_"/>
         </include>
         from fruits_task task
-        RIGHT join task_user_relation userRelation on userRelation.task_id = task.uuid
-        RIGHT join fruits_user fuser on fuser.user_id = userRelation.user_id
+        RIGHT join (select task_id,user_id from task_user_relation where is_deleted='N') userRelation on userRelation.task_id = task.uuid
+        RIGHT join (select <include refid="user_Base_Column_List"/> from fruits_user where is_deleted = 'N') fuser on fuser.user_id = userRelation.user_id
         <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
             <where>
                 <include refid="Base_Example_Where_Clause">
                     <property name="replace" value="task"/>
                 </include>
-                and userRelation.is_deleted = 'N'
-                and fuser.is_deleted = 'N'
             </where>
         </trim>
     </select>
@@ -274,15 +331,13 @@
             <property name="prefix" value="plan_"/>
         </include>
         from fruits_task task
-        RIGHT join task_plan_relation planRelation on planRelation.task_id = task.uuid
-        RIGHT join fruits_plan plan on planRelation.plan_id = plan.uuid
+        RIGHT join (select task_id,plan_id from task_plan_relation where is_deleted = 'N') planRelation on planRelation.task_id = task.uuid
+        RIGHT join (select <include refid="plan_Base_Column_List"/> from fruits_plan where is_deleted = 'N') plan on planRelation.plan_id = plan.uuid
         <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
             <where>
                 <include refid="Base_Example_Where_Clause">
                     <property name="replace" value="task"/>
                 </include>
-                and planRelation.is_deleted = 'N'
-                and plan.is_deleted = 'N'
             </where>
         </trim>
     </select>
@@ -299,15 +354,13 @@
             <property name="prefix" value="project_"/>
         </include>
         from fruits_task task
-        RIGHT join task_project_relation projectRelation on projectRelation.task_id = task.uuid
-        RIGHT join fruits_project project on project.uuid = projectRelation.project_id
+        RIGHT join (select task_id,project_id from task_project_relation where is_deleted = 'N') projectRelation on projectRelation.task_id = task.uuid
+        RIGHT join (select <include refid="Project_Base_Column_List"/> from fruits_project where is_deleted = 'N') project on project.uuid = projectRelation.project_id
         <trim suffixOverrides="AND | OR" prefixOverrides="AND | OR ">
             <where>
                 <include refid="Base_Example_Where_Clause">
                     <property name="replace" value="task"/>
                 </include>
-                and projectRelation.is_deleted = 'N'
-                and project.is_deleted = 'N'
             </where>
         </trim>
     </select>
@@ -324,16 +377,14 @@
             <property name="prefix" value="project_"/>
         </include>
         from fruits_task task
-        RIGHT join task_plan_relation planRelation on planRelation.task_id = task.uuid
-        RIGHT join plan_project_relation projectRelation on projectRelation.plan_id = planRelation.plan_id
-        RIGHT join fruits_project project on project.uuid = projectRelation.project_id
+        RIGHT join (select task_id,plan_id from task_plan_relation where is_deleted = 'N') planRelation on planRelation.task_id = task.uuid
+        RIGHT join (select plan_id,project_id from plan_project_relation where is_deleted = 'N') projectRelation on projectRelation.plan_id = planRelation.plan_id
+        RIGHT join (select <include refid="Project_Base_Column_List"/> from fruits_project where is_deleted = 'N') project on project.uuid = projectRelation.project_id
         <trim suffixOverrides="AND | OR" prefixOverrides="AND | OR ">
             <where>
                 <include refid="Base_Example_Where_Clause">
                     <property name="replace" value="task"/>
                 </include>
-                and projectRelation.is_deleted = 'N'
-                and project.is_deleted = 'N'
             </where>
         </trim>
     </select>
@@ -374,15 +425,13 @@
             <property name="prefix" value="list_"/>
         </include>
         from fruits_task task
-        left join task_list_relation listJoin on listJoin.task_id = task.uuid
-        left join fruits_list flist on flist.uuid = listJoin.list_id
+        left join (select task_id,list_id from task_list_relation where is_deleted = 'N') listJoin on listJoin.task_id = task.uuid
+        left join (select uuid, title, l_type, description, modify_date_time, create_date_time, is_deleted from fruits_list where is_deleted = 'N') flist on flist.uuid = listJoin.list_id
         <trim suffixOverrides="AND | OR" prefixOverrides="AND | OR ">
             <where>
                 <include refid="Base_Example_Where_Clause">
                     <property name="replace" value="task"/>
                 </include>
-                and listJoin.is_deleted = 'N'
-                and flist.is_deleted = 'N'
             </where>
         </trim>
     </select>
@@ -399,23 +448,28 @@
         </include>
         FROM
         fruits_task task
-        left join task_user_relation userRelation on userRelation.task_id = task.uuid
-        left join task_project_relation projectJoin on task.uuid = projectJoin.task_id
-        left join task_plan_relation planJoin on planJoin.task_id = task.uuid
-        left join plan_project_relation planProjectRelation on planProjectRelation.plan_id = planJoin.plan_id
-        left join fruits_project fproject on fproject.uuid = planProjectRelation.project_id or fproject.uuid = projectJoin.project_id
-        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
+        left join
+        (
+            select task_id,user_id from task_user_relation
+            where
+              is_deleted='N' and user_id = #{userId}
+        ) userRelation on userRelation.task_id = task.uuid
+        left join (select task_id,project_id from task_project_relation where is_deleted='N') projectJoin on task.uuid = projectJoin.task_id
+        left join (select task_id,plan_id from task_plan_relation where is_deleted='N') planJoin on planJoin.task_id = task.uuid
+        left join (select plan_id,project_id from plan_project_relation where is_deleted='N') planProjectRelation on planProjectRelation.plan_id = planJoin.plan_id
+        left join
+        (
+          select uuid from fruits_project
+          where
+            is_deleted='N'
+            <if test="projectId != null">
+                and uuid = #{projectId}
+            </if>
+        ) fproject on fproject.uuid = planProjectRelation.project_id or fproject.uuid = projectJoin.project_id        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
             <where>
                 <include refid="Base_Example_Where_Clause">
                     <property name="replace" value="task"/>
                 </include>
-                <if test="projectId != null">
-                    and fproject.uuid = #{projectId}
-                </if>
-                and userRelation.user_id = #{userId}
-                and userRelation.is_deleted = 'N'
-                and (projectJoin.is_deleted = 'N' or (planJoin.is_deleted = 'N' and planProjectRelation.is_deleted = 'N'))
-                and fproject.is_deleted = 'N'
             </where>
         </trim>
         <if test="example.orderByClause != null">

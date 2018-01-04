@@ -13,7 +13,7 @@ import java.util.concurrent.*;
  */
 public interface InterfaceDao {
     Logger logger = LoggerFactory.getLogger(InterfaceDao.class);
-    Integer processorCount = Runtime.getRuntime().availableProcessors() + 1;
+    Integer processorCount = Runtime.getRuntime().availableProcessors() * 2;
 
     class DaoThread {
         private final ExecutorService executorService;

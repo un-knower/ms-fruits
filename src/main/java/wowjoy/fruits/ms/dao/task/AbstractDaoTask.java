@@ -3,6 +3,7 @@ package wowjoy.fruits.ms.dao.task;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
+import org.assertj.core.util.Sets;
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.dao.logs.LogsTemplate;
 import wowjoy.fruits.ms.exception.CheckException;
@@ -306,8 +307,16 @@ public abstract class AbstractDaoTask implements InterfaceDao {
     }
 
     public LinkedList<TaskTemplate.EndTasks> myTaskByEnd(FruitTaskVo vo) {
+        long start = System.currentTimeMillis();
         vo.setTaskStatus(FruitDict.TaskDict.END.name());
-        return TaskTemplate.formatByEndDate(myTask(vo));
+        List<FruitTaskDao> fruitTaskDaos = myTask(vo);
+        long end = System.currentTimeMillis();
+        logger.info(String.valueOf(end - start));
+        start = System.currentTimeMillis();
+        LinkedList<TaskTemplate.EndTasks> endTasks = TaskTemplate.formatByEndDate(fruitTaskDaos);
+        end = System.currentTimeMillis();
+        logger.info(String.valueOf(end - start));
+        return endTasks;
     }
 
     public List<FruitTaskDao> myCreateTask(FruitTaskVo vo) {
@@ -335,9 +344,9 @@ public abstract class AbstractDaoTask implements InterfaceDao {
     }
 
     private List<String> toIds(List<FruitTaskDao> tasks) {
-        List<String> taskIds = Lists.newLinkedList();
+        Set<String> taskIds = Sets.newLinkedHashSet();
         tasks.forEach((i) -> taskIds.add(i.getUuid()));
-        return taskIds;
+        return Lists.newArrayList(taskIds.toArray(new String[taskIds.size()]));
     }
 
     private Callable plugLogs(List<String> taskIds, List<FruitTaskDao> tasks) {
