@@ -256,7 +256,7 @@
         from fruits_task task
         left join
         (
-          select task_id from task_list_relation
+          select task_id,list_id from task_list_relation
           where
             is_deleted = 'N'
             <if test="id != null">
