@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.InterfaceEntity;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,6 +16,10 @@ import java.util.concurrent.ConcurrentMap;
 public class DateUtils {
 
     private static final ConcurrentMap<Integer, List<Month<Week.WeekChinese>>> yearMap = new ConcurrentMapCustom(new ConcurrentHashMap());
+
+    public static String dayOfWeekChinese(int dayOfWeek){
+        return Week.WeekChinese.WeekOneDay(dayOfWeek);
+    }
 
     public static List<Month<Week.WeekChinese>> getWeekByYear(Integer year) {
         if (yearMap.containsKey(year))
@@ -37,14 +42,6 @@ public class DateUtils {
         return getWeekByYear(Integer.valueOf(year));
     }
 
-    private static void checkYear(String year) {
-        try {
-            Integer.valueOf(year);
-        } catch (Exception ex) {
-            throw new CheckException("年份必须是整数");
-        }
-    }
-
     public static Month<Week.WeekChinese> getMonthByYearMonth(Integer year, Integer month) {
         List<Month<Week.WeekChinese>> weekByYear = getWeekByYear(year);
         for (Month<Week.WeekChinese> m : weekByYear) {
@@ -53,6 +50,14 @@ public class DateUtils {
 
         }
         return Month.getEmpty();
+    }
+
+    private static void checkYear(String year) {
+        try {
+            Integer.valueOf(year);
+        } catch (Exception ex) {
+            throw new CheckException("年份必须是整数");
+        }
     }
 
     private static class ConcurrentMapCustom<K, V> extends ConcurrentHashMap<K, V> {
@@ -424,6 +429,28 @@ public class DateUtils {
                         break;
                 }
             }
+
+            public static String WeekOneDay(Integer dayOfWeek) {
+                switch (dayOfWeek) {
+                    case 1:
+                        return "周一";
+                    case 2:
+                        return "周二";
+                    case 3:
+                        return "周三";
+                    case 4:
+                        return "周四";
+                    case 5:
+                        return "周五";
+                    case 6:
+                        return "周六";
+                    case 7:
+                        return "周日";
+                    default:
+                        return "";
+                }
+            }
+
         }
 
     }

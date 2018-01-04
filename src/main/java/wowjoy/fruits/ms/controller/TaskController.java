@@ -203,6 +203,16 @@ public class TaskController {
     }
 
     /**
+     * @api {get} /v1/task/currente/end 查询当前登录用户，所有已完成的任务列表
+     * @apiVersion 0.1.0
+     * @apiGroup task
+     */
+    @RequestMapping(value = "/current/end", method = RequestMethod.GET)
+    public RestResult myTaskByEnd(@JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
+        return RestResult.getInstance().setData(daoTask.myTaskByEnd(vo));
+    }
+
+    /**
      * @api {get} /v1/task/current_create 查询当前登录用户创建的任务
      * @apiVersion 0.1.0
      * @apiGroup task

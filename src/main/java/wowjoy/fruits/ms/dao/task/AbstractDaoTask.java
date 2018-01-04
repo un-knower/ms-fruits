@@ -20,10 +20,14 @@ import wowjoy.fruits.ms.module.task.FruitTaskDao;
 import wowjoy.fruits.ms.module.task.FruitTaskVo;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
+import wowjoy.fruits.ms.util.DateUtils;
 
+import java.text.MessageFormat;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 public abstract class AbstractDaoTask implements InterfaceDao {
@@ -301,6 +305,11 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         return tasks;
     }
 
+    public LinkedList<TaskTemplate.EndTasks> myTaskByEnd(FruitTaskVo vo) {
+        vo.setTaskStatus(FruitDict.TaskDict.END.name());
+        return TaskTemplate.formatByEndDate(myTask(vo));
+    }
+
     public List<FruitTaskDao> myCreateTask(FruitTaskVo vo) {
         List<FruitTaskDao> task = this.myCreateTask(TaskTemplate.newInstance(vo).findTemplate());
         myTaskPlug(task);
@@ -548,6 +557,48 @@ public abstract class AbstractDaoTask implements InterfaceDao {
             dao.setAsc(vo.getAsc());
             dao.setDesc(vo.getDesc());
             return dao;
+        }
+
+        public static LinkedList<EndTasks> formatByEndDate(List<FruitTaskDao> tasks) {
+            LinkedList<EndTasks> endTaskList = Lists.newLinkedList();
+            tasksToEndMap(tasks).forEach((endDate, taskList) -> endTaskList.add(new EndTasks(endDate, taskList)));
+            endTaskList.sort((o1, o2) -> o2.getEndDate().compareTo(o1.getEndDate()));
+            return endTaskList;
+        }
+
+        private static LinkedHashMap<LocalDateTime, List<FruitTaskDao>> tasksToEndMap(List<FruitTaskDao> tasks) {
+            LinkedHashMap<LocalDateTime, List<FruitTaskDao>> endTaskMap = Maps.newLinkedHashMap();
+            LocalDateTime endDate;
+            for (FruitTaskDao task : tasks) {
+                endDate = LocalDateTime.ofInstant(task.getEndDate().toInstant(), ZoneId.systemDefault());
+                if (!endTaskMap.containsKey(endDate)) {
+                    LinkedList<FruitTaskDao> lists = Lists.newLinkedList();
+                    lists.add(task);
+                    endTaskMap.put(endDate, lists);
+                } else
+                    endTaskMap.get(endDate).add(task);
+            }
+            return endTaskMap;
+        }
+
+        private static class EndTasks {
+            private transient final LocalDateTime endDate;
+            private final String key;
+            private final List<FruitTaskDao> tasks;
+
+            public LocalDateTime getEndDate() {
+                return endDate;
+            }
+
+            private EndTasks(LocalDateTime endDate, List<FruitTaskDao> tasks) {
+                this.endDate = endDate;
+                this.key = MessageFormat.format(
+                        "{0}（{1}）",
+                        endDate.format(DateTimeFormatter.ISO_DATE),
+                        DateUtils.dayOfWeekChinese(endDate.getDayOfWeek().getValue())
+                );
+                this.tasks = tasks;
+            }
         }
 
     }
