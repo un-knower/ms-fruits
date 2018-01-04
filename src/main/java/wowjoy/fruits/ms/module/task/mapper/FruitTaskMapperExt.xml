@@ -209,43 +209,6 @@
         ${replace}.is_deleted as ${prefix}is_deleted
     </sql>
 
-    <sql id="selectTest">
-        SELECT
-        <include refid="Base_Column_List">
-            <property name="replace" value="task"/>
-        </include>
-        FROM
-        fruits_task task
-        left join
-        (
-        select task_id,user_id from task_user_relation
-        where
-        is_deleted='N' and user_id = #{userId}
-        ) userRelation on userRelation.task_id = task.uuid
-        left join (select task_id,project_id from task_project_relation where is_deleted='N') projectJoin on task.uuid = projectJoin.task_id
-        left join (select task_id,plan_id from task_plan_relation where is_deleted='N') planJoin on planJoin.task_id = task.uuid
-        left join (select plan_id,project_id from plan_project_relation where is_deleted='N') planProjectRelation on planProjectRelation.plan_id = planJoin.plan_id
-        left join
-        (
-        select uuid from fruits_project
-        where
-        is_deleted='N'
-        <if test="projectId != null">
-            and uuid = #{projectId}
-        </if>
-        ) fproject on fproject.uuid = planProjectRelation.project_id or fproject.uuid = projectJoin.project_id
-        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
-            <where>
-                <include refid="Base_Example_Where_Clause">
-                    <property name="replace" value="task"/>
-                </include>
-            </where>
-        </trim>
-        <if test="example.orderByClause != null">
-            order by ${example.orderByClause}
-        </if>
-    </sql>
-
     <select id="selectByTaskList" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List">
@@ -465,11 +428,13 @@
             <if test="projectId != null">
                 and uuid = #{projectId}
             </if>
-        ) fproject on fproject.uuid = planProjectRelation.project_id or fproject.uuid = projectJoin.project_id        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
+        ) fproject on fproject.uuid = planProjectRelation.project_id or fproject.uuid = projectJoin.project_id
+        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
             <where>
                 <include refid="Base_Example_Where_Clause">
                     <property name="replace" value="task"/>
                 </include>
+                fproject.uuid is not null
             </where>
         </trim>
         <if test="example.orderByClause != null">
