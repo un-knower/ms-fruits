@@ -46,7 +46,7 @@ public abstract class AbstractDaoNotepad implements InterfaceDao {
         FruitNotepadDao dao = FruitNotepad.getDao();
         dao.setUuid(vo.getUuid());
         dao.setContent(vo.getContent());
-        dao.setEstimatedSubmitDate(vo.getEstimatedSubmitDate());
+        dao.setEstimatedSubmitDateAndState(vo.getEstimatedSubmitDate());
         dao.setUserId(ApplicationContextUtils.getCurrentUser().getUserId());
         this.insertCheckNotepad(dao);
         this.insert(dao);
