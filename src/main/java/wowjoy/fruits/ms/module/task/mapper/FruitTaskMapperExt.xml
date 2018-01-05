@@ -411,7 +411,7 @@
         </include>
         FROM
         fruits_task task
-        left join
+        RIGHT join
         (
             select task_id,user_id from task_user_relation
             where
@@ -449,7 +449,7 @@
         </include>
         FROM
         fruits_task task
-        inner join
+        RIGHT join
         (select `user_id`,`fruit_uuid` from fruits_logs
         where fruit_type = 'TASK' and `operate_type` = 'ADD' and is_deleted = 'N'
         AND user_id = #{userId}) flogs on flogs.fruit_uuid = task.uuid
@@ -458,6 +458,7 @@
                 <include refid="Base_Example_Where_Clause">
                     <property name="replace" value="task"/>
                 </include>
+                AND task.uuid is not null
             </where>
         </trim>
         <if test="example.orderByClause != null">
