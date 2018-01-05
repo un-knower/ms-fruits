@@ -217,7 +217,7 @@
         ,
         listRelation.list_id
         from fruits_task task
-        left join
+        right join
         (
           select task_id,list_id from task_list_relation
           where
@@ -434,7 +434,7 @@
                 <include refid="Base_Example_Where_Clause">
                     <property name="replace" value="task"/>
                 </include>
-                fproject.uuid is not null
+                and fproject.uuid is not null
             </where>
         </trim>
         <if test="example.orderByClause != null">
