@@ -223,6 +223,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
             dao.setUserRelation(vo.getUserRelation());
             dao.setProjectRelation(vo.getProjectRelation());
             this.addCheckJoinProject(dao);
+            if(this.findByUUID(vo.getUuid()).isNotEmpty()) throw new CheckException("违规的操作，添加不需要传入uuid");
             this.insert(dao);
         } catch (ExceptionSupport ex) {
             throw ex;
