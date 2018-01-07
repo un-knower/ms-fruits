@@ -136,10 +136,10 @@ public class FruitPlanDao extends FruitPlan {
             this.setDays(999999999);
             return this;
         }
-        if (FruitDict.PlanDict.PENDING.name().equals(this.getPlanStatus()) && this.getEndDate() == null) {
-            endDate = new Date();
-        } else {
+        if (this.getEndDate() != null && !FruitDict.PlanDict.PENDING.name().equals(this.getPlanStatus())) {
             endDate = this.getEndDate();
+        } else {
+            endDate = new Date();
         }
         LocalDateTime predictEndTime = LocalDateTime.parse(new SimpleDateFormat(DateTimeFormat).format(this.getEstimatedEndDate()));
         LocalDateTime currentTime = LocalDateTime.parse(new SimpleDateFormat(DateTimeFormat).format(endDate));

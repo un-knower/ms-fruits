@@ -77,7 +77,7 @@ public abstract class LogsTemplate<T extends AbstractEntity> {
                 try {
                     Object methodResult = method.invoke(obj, null);
                     JsonElement asString = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create().toJsonTree(methodResult);
-                    msg = msg.replace(position, asString.isJsonNull() ? "" : asString.toString());
+                    msg = msg.replace(position, asString.isJsonNull() ? "" : asString.getAsString());
                 } catch (Exception e) {
                     e.printStackTrace();
                     throw new CheckException("获取占位值错误");

@@ -116,14 +116,18 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         planDaoListSource.forEach((plan) -> {
             plan.setWeeks(Lists.newLinkedList());
             planThread.execute(() -> {
-                FruitPlanVo childVo = FruitPlan.getVo();
-                childVo.setParentId(plan.getUuid());
-                childVo.setDesc(vo.getDesc());
-                childVo.setAsc(vo.getAsc());
-                childVo.setPlanStatus(vo.getPlanStatus());
-                plan.getWeeks().addAll(this.findTree(childVo, currentUser, false));
-                if (StringUtils.isNotBlank(vo.getPlanStatus()) && !plan.getPlanStatus().equals(vo.getPlanStatus()) && plan.getWeeks().isEmpty())
-                    planDaoListCopy.remove(plan);
+                try {
+                    FruitPlanVo childVo = FruitPlan.getVo();
+                    childVo.setParentId(plan.getUuid());
+                    childVo.setDesc(vo.getDesc());
+                    childVo.setAsc(vo.getAsc());
+                    childVo.setPlanStatus(vo.getPlanStatus());
+                    plan.getWeeks().addAll(this.findTree(childVo, currentUser, false));
+                    if (StringUtils.isNotBlank(vo.getPlanStatus()) && !plan.getPlanStatus().equals(vo.getPlanStatus()) && plan.getWeeks().isEmpty())
+                        planDaoListCopy.remove(plan);
+                }catch (Exception ex){
+                    ex.printStackTrace();
+                }
                 return true;
             });
         });
