@@ -3,12 +3,11 @@ package wowjoy.fruits.ms.dao.task;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.AbstractDaoChain;
 import wowjoy.fruits.ms.module.AbstractEntity;
-import wowjoy.fruits.ms.module.project.FruitProject;
-import wowjoy.fruits.ms.module.project.FruitProjectDao;
-import wowjoy.fruits.ms.module.task.FruitTask;
 import wowjoy.fruits.ms.module.task.FruitTaskDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;
+
+import java.util.List;
 
 /**
  * Created by wangziwen on 2017/11/27.
@@ -26,10 +25,8 @@ public class TaskDaoNode extends AbstractDaoChain {
             return super.getNext().find(uuid);
         if (StringUtils.isBlank(uuid))
             return null;
-        FruitTaskDao dao = FruitTask.getDao();
-        dao.setUuid(uuid);
-        FruitTask result = taskDao.find(dao);
-        if (!result.isNotEmpty()) return null;
-        return result;
+        List<FruitTaskDao> taskDaos = taskDao.find(example -> example.createCriteria().andUuidEqualTo(uuid).andIsDeletedEqualTo(FruitDict.Systems.N.name()));
+        if (taskDaos == null || taskDaos.isEmpty()) return null;
+        return taskDaos.get(0);
     }
 }

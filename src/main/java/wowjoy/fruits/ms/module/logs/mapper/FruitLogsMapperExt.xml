@@ -10,10 +10,11 @@
         <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
-        <association property="user" resultMap="UserResultMap" columnPrefix="flogs_"/>
+        <association property="user" resultMap="UserResultMap" columnPrefix="fuser_"/>
     </resultMap>
-    <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="wowjoy.fruits.ms.module.logs.FruitLogs">
+    <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="wowjoy.fruits.ms.module.logs.FruitLogsDao">
         <result column="json_object" jdbcType="LONGVARCHAR" property="jsonObject"/>
+        <result column="vo_object" jdbcType="LONGVARCHAR" property="voObject"/>
     </resultMap>
     <resultMap id="UserResultMap" type="wowjoy.fruits.ms.module.user.FruitUser">
         <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
@@ -35,16 +36,16 @@
                     <foreach collection="criteria.criteria" item="criterion">
                         <choose>
                             <when test="criterion.noValue">
-                                and ${criterion.condition}
+                                and ${replace}.${criterion.condition}
                             </when>
                             <when test="criterion.singleValue">
-                                and ${criterion.condition} #{criterion.value}
+                                and ${replace}.${criterion.condition} #{criterion.value}
                             </when>
                             <when test="criterion.betweenValue">
-                                and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                                and ${replace}.${criterion.condition} #{criterion.value} and #{criterion.secondValue}
                             </when>
                             <when test="criterion.listValue">
-                                and ${criterion.condition}
+                                and ${replace}.${criterion.condition}
                                 <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
                                     #{listItem}
                                 </foreach>
@@ -57,15 +58,16 @@
     </sql>
 
     <sql id="Base_Column_List">
-        ${replace}.uuid as ${prefix}uuid,
-        ${replace}.user_id as ${prefix}user_id,
-        ${replace}.fruit_uuid as ${prefix}fruit_uuid,
-        ${replace}.fruit_type as ${prefix}fruit_type,
-        ${replace}.operate_type as ${prefix}operate_type,
-        ${replace}.modify_date_time as ${prefix}modify_date_time,
-        ${replace}.create_date_time as ${prefix}create_date_time,
-        ${replace}.is_deleted as ${prefix}is_deleted,
-        ${replace}.json_object as ${prefix}json_object
+        ${replace}.uuid as uuid,
+        ${replace}.user_id as user_id,
+        ${replace}.fruit_uuid as fruit_uuid,
+        ${replace}.fruit_type as fruit_type,
+        ${replace}.operate_type as operate_type,
+        ${replace}.modify_date_time as modify_date_time,
+        ${replace}.create_date_time as create_date_time,
+        ${replace}.is_deleted as is_deleted,
+        ${replace}.json_object as json_object,
+        ${replace}.vo_object as vo_object
     </sql>
 
     <sql id="User_Column_List">
@@ -82,11 +84,10 @@
         ${replace}.is_deleted as ${prefix}is_deleted
     </sql>
 
-    <select id="selectUserByExample" resultMap="ResultMapWithBLOBs">
+    <select id="joinUserByExample" resultMap="ResultMapWithBLOBs">
         SELECT
         <include refid="Base_Column_List">
             <property name="replace" value="flogs"/>
-            <property name="prefix" value="flogs_"/>
         </include>
         ,
         <include refid="User_Column_List">
@@ -94,6 +95,18 @@
             <property name="prefix" value="fuser_"/>
         </include>
         FROM
-        fruits_
+        fruits_logs flogs
+        left join fruits_user fuser on fuser.user_id = flogs.user_id
+        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
+            <where>
+                <include refid="Example_Where_Clause">
+                    <property name="replace" value="flogs"/>
+                </include>
+                AND flogs.is_deleted = 'N'
+            </where>
+        </trim>
+        <if test="orderByClause != null">
+            order by ${orderByClause}
+        </if>
     </select>
 </mapper>

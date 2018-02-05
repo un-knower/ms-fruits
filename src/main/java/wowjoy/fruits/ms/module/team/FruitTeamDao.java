@@ -7,7 +7,6 @@ import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Created by wangziwen on 2017/9/14.
@@ -39,17 +38,8 @@ public class FruitTeamDao extends FruitTeam {
      *
      * @return
      */
-    public boolean searchLeader() {
-        if (Objects.isNull(users) && users.isEmpty())
-            return false;
-        for (FruitUserDao user : this.getUsers()) {
-            if (FruitDict.UserTeamDict.LEADER.name().equals(user.getTeamRole())) {
-                this.getUsers().remove(user);
-                leader = user;
-                return true;
-            }
-        }
-        return false;
+    public void searchLeader() {
+        this.setLeader(this.getUsers().parallelStream().filter(user -> FruitDict.UserTeamDict.LEADER.name().equals(user.getTeamRole())).findAny().get());
     }
 
     public String getProjectRole() {

@@ -17,8 +17,11 @@ import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * Created by wangziwen on 2017/9/6.
@@ -252,7 +255,15 @@ public abstract class AbstractDaoProject implements InterfaceDao {
         List<FruitProjectDao> result = findUserByProjectIds(projectId);
         if (result.isEmpty())
             throw new CheckException("未查到项目关联用户");
-        return result.get(0).getUsers();
+        List<FruitUserDao> users = result.get(0).getUsers();
+        HashMap<String, String> echoUser = Maps.newHashMapWithExpectedSize(users.size());
+        return users.stream().filter(user -> {
+            if (!echoUser.containsKey(user.getUserId())) {
+                echoUser.put(user.getUserId(), user.getUserId());
+                return true;
+            }
+            return false;
+        }).collect(toList());
     }
 
 }

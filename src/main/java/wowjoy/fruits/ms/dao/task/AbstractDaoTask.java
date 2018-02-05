@@ -3,13 +3,12 @@ package wowjoy.fruits.ms.dao.task;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
-import org.assertj.core.util.Sets;
 import wowjoy.fruits.ms.dao.InterfaceDao;
-import wowjoy.fruits.ms.dao.logs.LogsTemplate;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.exception.ExceptionSupport;
 import wowjoy.fruits.ms.exception.ServiceException;
 import wowjoy.fruits.ms.module.list.FruitListDao;
+import wowjoy.fruits.ms.module.list.FruitListExample;
 import wowjoy.fruits.ms.module.logs.FruitLogsDao;
 import wowjoy.fruits.ms.module.plan.FruitPlanDao;
 import wowjoy.fruits.ms.module.project.FruitProjectDao;
@@ -18,18 +17,21 @@ import wowjoy.fruits.ms.module.relation.entity.TaskPlanRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskProjectRelation;
 import wowjoy.fruits.ms.module.task.FruitTask;
 import wowjoy.fruits.ms.module.task.FruitTaskDao;
+import wowjoy.fruits.ms.module.task.FruitTaskExample;
 import wowjoy.fruits.ms.module.task.FruitTaskVo;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.DateUtils;
 
 import java.text.MessageFormat;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.function.Consumer;
+
+import static java.util.stream.Collectors.*;
 
 public abstract class AbstractDaoTask implements InterfaceDao {
     /*********************************************************************************
@@ -41,27 +43,21 @@ public abstract class AbstractDaoTask implements InterfaceDao {
      * 1、添加任务
      * 2、添加关联计划
      * 3、添加关联项目
-     *
-     * @param dao
      */
     protected abstract void insert(FruitTaskDao dao);
 
-    protected abstract List<FruitTaskDao> finds(FruitTaskDao dao);
+    protected abstract List<FruitTaskDao> find(Consumer<FruitTaskExample> consumerExample);
 
-    protected abstract FruitTask find(FruitTaskDao dao);
-
-    protected abstract void update(FruitTaskDao dao);
+    protected abstract void update(Consumer<FruitTaskDao> daoConsumer, Consumer<FruitTaskExample> taskExampleConsumer);
 
     protected abstract void delete(FruitTaskDao dao);
 
     /**
      * 查询关联项目的任务列表
      */
-    protected abstract List<FruitTaskDao> findByPlanId(FruitTaskDao dao);
+    protected abstract List<FruitTaskDao> findByListId(Consumer<FruitTaskExample> exampleUnaryOperator, List<String> listId);
 
-    protected abstract List<FruitTaskDao> findByListId(FruitTaskDao dao);
-
-    protected abstract List<FruitListDao> findProjectList(List<String> projectId);
+    protected abstract List<FruitListDao> findProjectList(String projectId, Consumer<FruitListExample> listExampleConsumer);
 
     protected abstract List<FruitTaskDao> findUserByTaskIds(List<String> taskIds);
 
@@ -73,7 +69,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
 
     protected abstract List<FruitTaskDao> findListByTask(List<String> taskIds);
 
-    protected abstract List<FruitTaskDao> findJoinLogsByTask(List<String> taskIds);
+    protected abstract Map<String, LinkedList<FruitLogsDao>> findJoinLogsByTask(List<String> taskIds);
 
     protected abstract List<FruitTaskDao> myTask(FruitTaskDao dao);
 
@@ -106,30 +102,31 @@ public abstract class AbstractDaoTask implements InterfaceDao {
 
     public final void modify(FruitTaskVo vo) {
         try {
-            if (!this.findByUUID(vo).isNotEmpty())
-                throw new CheckException("任务不存在，不允许修改。");
-            this.update(TaskTemplate.newInstance(vo)
-                    .modifyTemplate()
-                    .modifyCheckJoinPlan()
-                    .modifyCheckJoinProject()
-                    .checkModify()
-                    .queryModifyResult());
+            this.findTask(vo.getUuidVo());
+            this.update(
+                    dao -> TaskTemplate.newInstance(vo, dao)
+                            .modifyTemplate()
+                            .modifyCheckJoinPlan()
+                            .modifyCheckJoinProject()
+                            .checkModify(), taskExample -> taskExample.createCriteria().andUuidEqualTo(vo.getUuidVo())
+            );
         } catch (ExceptionSupport ex) {
             throw ex;
         } catch (RuntimeException ex) {
             ex.printStackTrace();
-            throw new CheckException("修改任务时，发生未处理异常，联系 Boss 严");
+            throw new CheckException("修改任务时，发生未处理异常");
         }
 
     }
 
     public final void changeStatusToEnd(FruitTaskVo vo) {
         try {
-            final FruitTaskDao dao = changeTemplate(vo);
-            if (FruitDict.TaskDict.END.name().equals(dao.getTaskStatus()))
-                throw new CheckException("任务已结束");
-            dao.setTaskStatus(FruitDict.TaskDict.END.name());
-            update(dao);
+            changeTemplate(vo);
+            update(dao -> {
+                dao.setTaskStatus(FruitDict.TaskDict.END.name());
+                dao.setStatusDescription(vo.getStatusDescription());
+                dao.setEndDate(new Date());
+            }, taskExample -> taskExample.createCriteria().andUuidEqualTo(vo.getUuidVo()));
         } catch (ExceptionSupport ex) {
             throw ex;
         } catch (RuntimeException ex) {
@@ -140,11 +137,11 @@ public abstract class AbstractDaoTask implements InterfaceDao {
 
     public final void changeStatusToStart(FruitTaskVo vo) {
         try {
-            final FruitTaskDao dao = changeTemplate(vo);
-            if (FruitDict.TaskDict.START.name().equals(dao.getTaskStatus()))
-                throw new CheckException("任务已开始");
-            dao.setTaskStatus(FruitDict.TaskDict.START.name());
-            update(dao);
+            changeTemplate(vo);
+            update(dao -> {
+                dao.setTaskStatus(FruitDict.TaskDict.START.name());
+                dao.setStatusDescription(vo.getStatusDescription());
+            }, taskExample -> taskExample.createCriteria().andUuidEqualTo(vo.getUuidVo()));
         } catch (ExceptionSupport ex) {
             throw ex;
         } catch (RuntimeException ex) {
@@ -153,15 +150,31 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         }
     }
 
+    public final void changeStatusToClose(FruitTaskVo vo) {
+        try {
+            changeTemplate(vo);
+            if (StringUtils.isBlank(vo.getStatusDescription()))
+                throw new CheckException("必须填写关闭描述");
+            update(dao -> {
+                dao.setTaskStatus(FruitDict.TaskDict.CLOSE.name());
+                dao.setStatusDescription(vo.getStatusDescription());
+                dao.setEndDate(new Date());
+            }, taskExample -> taskExample.createCriteria().andUuidEqualTo(vo.getUuidVo()));
+        } catch (ExceptionSupport ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            throw new ServiceException("关闭任务时发生错误");
+        }
+    }
+
     public final void changeList(FruitTaskVo vo) {
         try {
-            if (!this.findByUUID(vo).isNotEmpty())
-                throw new CheckException("任务不存在，不允许操作。");
-            FruitTaskDao dao = FruitTask.getDao();
-            dao.setUuid(vo.getUuidVo());
-            dao.setListRelation(vo.getListRelation());
-            this.checkChangeList(dao);
-            this.update(dao);
+            changeTemplate(vo);
+            this.update(dao -> {
+                dao.setListRelation(vo.getListRelation());
+                checkChangeList(dao);
+            }, taskExample -> taskExample.createCriteria().andUuidEqualTo(vo.getUuidVo()));
         } catch (ExceptionSupport ex) {
             throw ex;
         } catch (RuntimeException ex) {
@@ -178,16 +191,9 @@ public abstract class AbstractDaoTask implements InterfaceDao {
 
     }
 
-    private FruitTaskDao changeTemplate(FruitTaskVo vo) {
-        final FruitTask task = this.findByUUID(vo);
-        if (!task.isNotEmpty())
-            throw new CheckException("任务不存在，不予修改。");
-        final FruitTaskDao dao = FruitTask.getDao();
-        dao.setUuid(vo.getUuidVo());
-        dao.setStatusDescription(vo.getStatusDescription());
-        dao.setEndDate(LocalDate.now());
-        dao.setTaskStatus(task.getTaskStatus());
-        return dao;
+    private void changeTemplate(FruitTaskVo vo) {
+        if (StringUtils.isBlank(vo.getUuidVo()))
+            throw new CheckException("uuid不能为空");
     }
 
     public final void delete(FruitTaskVo vo) {
@@ -206,57 +212,18 @@ public abstract class AbstractDaoTask implements InterfaceDao {
     /**
      * 操作任务前的任务检查
      */
-    private FruitTask findByUUID(FruitTaskVo vo) {
-        if (StringUtils.isBlank(vo.getUuidVo()))
+    private FruitTaskDao findTask(String uuid) {
+        if (StringUtils.isBlank(uuid))
             throw new CheckException("查询标识不存在");
         final FruitTaskDao dao = FruitTask.getDao();
-        dao.setUuid(vo.getUuidVo());
-        List<FruitTaskDao> data = this.finds(dao);
-        if (data.isEmpty() || data.size() > 1)
-            return FruitTask.getEmpty();
+        dao.setUuid(uuid);
+        List<FruitTaskDao> data = this.find(example -> example.createCriteria()
+                .andIsDeletedEqualTo(FruitDict.Systems.N.name())
+                .andUuidEqualTo(uuid));
+        if (data == null || data.isEmpty())
+            throw new CheckException("任务不存在");
         return data.get(0);
     }
-
-    /**
-     * 查询指定计划下的所有任务
-     */
-    public List<FruitTaskDao> findByPlanId(FruitTaskVo vo) {
-        if (StringUtils.isBlank(vo.getPlanId()))
-            throw new CheckException("需要指定要查询的计划");
-        FruitTaskDao dao = FruitTask.getDao();
-        dao.setPlanId(vo.getPlanId());
-        List<FruitTaskDao> tasks = this.findByPlanId(dao);
-        List<String> ids = toIds(tasks);
-        DaoThread taskThread = DaoThread.getFixed();
-        taskThread.execute(this.plugUser(ids, tasks))
-                .execute(this.plugList(ids, tasks))
-                .execute(this.plugLogs(ids, tasks))
-                .execute(this.plugUtil(tasks))
-                .get();
-        taskThread.shutdown();
-        return tasks;
-    }
-
-    /**
-     * 查询指定列表的任务信息
-     */
-    public List<FruitTaskDao> findByListId(FruitTaskVo vo) {
-        if (StringUtils.isBlank(vo.getListId()))
-            throw new CheckException("需要指定要查询的列表");
-        FruitTaskDao dao = TaskTemplate.newInstance(vo).findTemplate();
-        dao.setListId(vo.getListId());
-        List<FruitTaskDao> tasks = this.findByListId(dao);
-        List<String> ids = toIds(tasks);
-        DaoThread taskThread = DaoThread.getFixed();
-        taskThread.execute(this.plugPlan(ids, tasks))
-                .execute(this.plugUser(ids, tasks))
-                .execute(this.plugLogs(ids, tasks))
-                .execute(this.plugUtil(tasks))
-                .get();
-        taskThread.shutdown();
-        return tasks;
-    }
-
 
     /**
      * 查询指定项目下所有关联任务
@@ -266,35 +233,42 @@ public abstract class AbstractDaoTask implements InterfaceDao {
      * 2、查询每个列表对应的任务集合
      * 3、组合每个任务的详细信息，例如计划信息、用户信息
      */
-    public List<FruitListDao> findJoinProjects(FruitTaskVo vo) {
-        if (vo.getProjectIds() == null || vo.getProjectIds().isEmpty())
-            throw new CheckException("项目id不能为空！");
-        FruitTaskDao dao = TaskTemplate.newInstance(vo).findTemplate();
-        dao.setProjectIds(vo.getProjectIds());
-        List<FruitListDao> lists = this.findProjectList(dao.getProjectIds());
-        DaoThread listThread = DaoThread.getFixed();
+    public List<FruitListDao> findJoinProjects(String projectId, final FruitTaskVo vo) {
+        if (StringUtils.isBlank(projectId)) throw new CheckException("项目id不能为空");
+        List<FruitListDao> lists = this.findProjectList(projectId, listExample -> {
+            if (StringUtils.isNotBlank(vo.getListTitle()))
+                listExample.createCriteria().andTitleLike(MessageFormat.format("%{0}%", vo.getListTitle()));
+        });
+        if (lists.isEmpty()) return Lists.newLinkedList();
+        List<FruitTaskDao> tasks = this.findByListId((taskExample) -> {
+            if (StringUtils.isNotBlank(vo.getTitle()))
+                taskExample.createCriteria().andTitleLike(MessageFormat.format("%{0}%", vo.getTitle()));
+        }, lists.stream().map(FruitListDao::getUuid).collect(toList())).stream().collect(toList());
         DaoThread taskThread = DaoThread.getFixed();
-        long start = System.currentTimeMillis();
-        lists.forEach((list) -> listThread.execute(() -> {
-            FruitTaskDao taskDao = FruitTask.getDao();
-            taskDao.setListId(list.getUuid());
-            List<FruitTaskDao> tasks = this.findByListId(taskDao);
-            List<String> ids = toIds(tasks);
-            taskThread
-                    .execute(this.plugPlan(ids, tasks))
-                    .execute(this.plugUser(ids, tasks))
-                    .execute(this.plugLogs(ids, tasks))
-                    .execute(this.plugUtil(tasks));
-            list.setTasks(tasks);
-            return true;
-        }));
-        long end = System.currentTimeMillis();
-        logger.info("---------" + (end - start));
-        listThread.get();
-        taskThread.get();
-        listThread.shutdown();
-        taskThread.shutdown();
+        if (tasks.isEmpty()) return lists;
+        taskThread
+                .execute(this.plugPlan(tasks))
+                .execute(this.plugUser(tasks))
+                .execute(this.plugLogs(tasks))
+                .execute(this.plugUtil(tasks));
+        Map<String, List<FruitTaskDao>> listMap = tasks.stream().collect(groupingBy(FruitTaskDao::getListId));
+        lists.parallelStream().forEach(list -> list.setTasks(listMap.get(list.getUuid())));
+        taskThread.get().shutdown();
         return lists;
+    }
+
+    public FruitTaskDao findTaskInfo(String uuid) {
+        FruitTaskDao taskInfo = this.findTask(uuid);
+        DaoThread taskThread = DaoThread.getFixed();
+        taskThread
+                .execute(this.plugLogs(Lists.newArrayList(taskInfo)))
+                .execute(this.plugPlan(Lists.newArrayList(taskInfo)))
+                .execute(this.plugUtil(Lists.newArrayList(taskInfo)))
+                .execute(this.plugUser(Lists.newArrayList(taskInfo)))
+                .execute(this.plugList(Lists.newArrayList(taskInfo)))
+                .get();
+        return taskInfo;
+
     }
 
     /************************************************************************************************
@@ -327,15 +301,15 @@ public abstract class AbstractDaoTask implements InterfaceDao {
 
     private void myTaskPlug(List<FruitTaskDao> tasks) {
         try {
+            if (tasks == null || tasks.isEmpty()) return;
             DaoThread thread = DaoThread.getFixed();
-            List<String> ids = toIds(tasks);
             thread
-                    .execute(this.plugLogs(ids, tasks))
-                    .execute(this.plugProject(ids, tasks))
-                    .execute(this.plugPlanJoinProject(ids, tasks))
-                    .execute(this.plugUser(ids, tasks))
-                    .execute(this.plugList(ids, tasks))
-                    .execute(this.plugPlan(ids, tasks))
+                    .execute(this.plugLogs(tasks))
+                    .execute(this.plugProject(tasks))
+                    .execute(this.plugPlanJoinProject(tasks))
+                    .execute(this.plugUser(tasks))
+                    .execute(this.plugList(tasks))
+                    .execute(this.plugPlan(tasks))
                     .execute(this.plugUtil(tasks)).get();
             thread.shutdown();
         } catch (Exception e) {
@@ -343,23 +317,13 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         }
     }
 
-    private List<String> toIds(List<FruitTaskDao> tasks) {
-        Set<String> taskIds = Sets.newLinkedHashSet();
-        tasks.forEach((i) -> taskIds.add(i.getUuid()));
-        return Lists.newArrayList(taskIds.toArray(new String[taskIds.size()]));
-    }
-
-    private Callable plugLogs(List<String> taskIds, List<FruitTaskDao> tasks) {
+    private Callable plugLogs(final List<FruitTaskDao> tasks) {
         return () -> {
-            Map<String, List<FruitLogsDao>> planLogsMap = Maps.newLinkedHashMap();
-            LogsTemplate logsTemplate = LogsTemplate.newInstance(FruitDict.Parents.TASK);
-            this.findJoinLogsByTask(taskIds).forEach((plan) -> {
-                plan.getLogs().forEach((log) -> log.setMsg(logsTemplate.msg(log)));
-                planLogsMap.put(plan.getUuid(), plan.getLogs());
-            });
-            tasks.forEach((task) -> {
-                if (planLogsMap.containsKey(task.getUuid()))
-                    task.setLogs(planLogsMap.get(task.getUuid()));
+            if (tasks == null || tasks.isEmpty()) return false;
+            Map<String, LinkedList<FruitLogsDao>> logs = this.findJoinLogsByTask(tasks.parallelStream().map(FruitTaskDao::getUuid).collect(toList()));
+            tasks.stream().forEach(task -> {
+                if (logs.containsKey(task.getUuid()))
+                    task.setLogs(logs.get(task.getUuid()));
                 else
                     task.setLogs(Lists.newLinkedList());
             });
@@ -367,54 +331,68 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         };
     }
 
-    private Callable plugPlan(List<String> taskIds, List<FruitTaskDao> tasks) {
+    private Callable plugPlan(final List<FruitTaskDao> tasks) {
         return () -> {
-            Map<String, FruitPlanDao> planDaoMap = Maps.newLinkedHashMap();
-            this.findPlanByTaskIds(taskIds).forEach((i) -> planDaoMap.put(i.getUuid(), i.getPlan()));
-            tasks.forEach((task) -> task.setPlan(planDaoMap.get(task.getUuid())));
+            if (tasks == null || tasks.isEmpty()) return false;
+            Map<String, FruitPlanDao> planMap = this.findPlanByTaskIds(tasks.parallelStream().map(FruitTaskDao::getUuid).collect(toList()))
+                    .stream().collect(toMap(FruitTaskDao::getUuid, FruitTaskDao::getPlan));
+            tasks.forEach((task) -> task.setPlan(planMap.get(task.getUuid())));
             return true;
         };
     }
 
-    private Callable plugProject(List<String> taskIds, List<FruitTaskDao> tasks) {
+    private Callable plugProject(final List<FruitTaskDao> tasks) {
         return () -> {
-            Map<String, FruitProjectDao> projectDaoMap = Maps.newLinkedHashMap();
-            this.findProjectByTask(taskIds).forEach((i) -> projectDaoMap.put(i.getUuid(), i.getProject()));
-            tasks.forEach((task) -> task.setProject(projectDaoMap.get(task.getUuid()) != null ? projectDaoMap.get(task.getUuid()) : task.getProject()));
+            if (tasks == null || tasks.isEmpty()) return false;
+            Map<String, FruitProjectDao> projectMap = this.findProjectByTask(tasks.parallelStream().map(FruitTaskDao::getUuid).collect(toList()))
+                    .stream().collect(toMap(FruitTaskDao::getUuid, FruitTaskDao::getProject));
+            tasks.forEach((task) -> task.setProject(projectMap.containsKey(task.getUuid()) ? projectMap.get(task.getUuid()) : task.getProject()));
             return true;
         };
     }
 
-    private Callable plugPlanJoinProject(List<String> taskIds, List<FruitTaskDao> tasks) {
+    private Callable plugPlanJoinProject(final List<FruitTaskDao> tasks) {
         return () -> {
-            Map<String, FruitProjectDao> projectDaoMap = Maps.newLinkedHashMap();
-            this.findPlanJoinProjectByTask(taskIds).forEach((i) -> projectDaoMap.put(i.getUuid(), i.getProject()));
-            tasks.forEach((task) -> task.setProject(projectDaoMap.get(task.getUuid()) != null ? projectDaoMap.get(task.getUuid()) : task.getProject()));
+            if (tasks == null || tasks.isEmpty()) return false;
+            Map<String, FruitProjectDao> projectMap = this.findPlanJoinProjectByTask(tasks.parallelStream().map(FruitTaskDao::getUuid).collect(toList()))
+                    .stream()
+                    .collect(toMap(FruitTaskDao::getUuid, FruitTaskDao::getProject));
+            tasks.forEach((task) -> task.setProject(projectMap.containsKey(task.getUuid()) ? projectMap.get(task.getUuid()) : task.getProject()));
             return true;
         };
     }
 
-    private Callable plugList(List<String> taskIds, List<FruitTaskDao> tasks) {
+    private Callable plugList(final List<FruitTaskDao> tasks) {
         return () -> {
-            Map<String, FruitListDao> listDaoMap = Maps.newLinkedHashMap();
-            this.findListByTask(taskIds).forEach((i) -> listDaoMap.put(i.getUuid(), i.getList()));
+            if (tasks == null || tasks.isEmpty()) return false;
+            Map<String, FruitListDao> listDaoMap = this.findListByTask(tasks.parallelStream().map(FruitTaskDao::getUuid).collect(toList())).stream().collect(toMap(FruitTaskDao::getUuid, FruitTaskDao::getList));
             tasks.forEach((task) -> task.setList(listDaoMap.get(task.getUuid())));
             return true;
         };
     }
 
-    private Callable plugUser(List<String> taskIds, List<FruitTaskDao> tasks) {
+    private Callable plugUser(final List<FruitTaskDao> tasks) {
         return () -> {
-            Map<String, List<FruitUserDao>> userDaoMap = Maps.newLinkedHashMap();
-            this.findUserByTaskIds(taskIds).forEach((i) -> userDaoMap.put(i.getUuid(), i.getUsers()));
-            tasks.forEach((task) -> task.setUsers(userDaoMap.get(task.getUuid())));
+            if (tasks == null || tasks.isEmpty()) return false;
+            Map<String, LinkedList<FruitUserDao>> userMap = this.findUserByTaskIds(tasks.parallelStream().map(FruitTaskDao::getUuid).collect(toList()))
+                    .stream()
+                    .collect(toMap(FruitTaskDao::getUuid, task -> {
+                        LinkedList<FruitUserDao> userList = Lists.newLinkedList();
+                        userList.addAll(task.getUsers());
+                        return userList;
+                    }, (l, r) -> {
+                        r.addAll(l);
+                        return r;
+                    }));
+            tasks.forEach((task) -> task.setUsers(userMap.get(task.getUuid())));
             return true;
         };
     }
 
     private Callable plugUtil(List<FruitTaskDao> tasks) {
         return () -> {
-            tasks.forEach((i) -> i.computeDays());
+            if (tasks == null || tasks.isEmpty()) return false;
+            tasks.forEach(FruitTaskDao::computeDays);
             return true;
         };
     }
@@ -426,14 +404,19 @@ public abstract class AbstractDaoTask implements InterfaceDao {
      */
     private static class TaskTemplate {
         private final FruitTaskVo vo;
-        private final FruitTaskDao dao = new FruitTaskDao();
+        private final FruitTaskDao dao;
 
-        private TaskTemplate(final FruitTaskVo vo) {
+        private TaskTemplate(final FruitTaskVo vo, final FruitTaskDao dao) {
             this.vo = vo;
+            this.dao = dao;
+        }
+
+        public static TaskTemplate newInstance(FruitTaskVo vo, FruitTaskDao dao) {
+            return new TaskTemplate(vo, dao);
         }
 
         public static TaskTemplate newInstance(FruitTaskVo vo) {
-            return new TaskTemplate(vo);
+            return new TaskTemplate(vo, FruitTask.getDao());
         }
 
         /**
@@ -450,7 +433,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
             if (dao.getPlanRelation(FruitDict.Systems.ADD).isEmpty() && dao.getProjectRelation(FruitDict.Systems.ADD).isEmpty())
                 throw new CheckException("未检测到任务所关联的元素");
             if (!dao.getPlanRelation(FruitDict.Systems.ADD).isEmpty() && !dao.getProjectRelation(FruitDict.Systems.ADD).isEmpty())
-                throw new CheckException("检测到关联多个元素，这是不合法的");
+                throw new CheckException("检测到关联多个元素");
             return this;
         }
 
@@ -461,7 +444,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
             try {
                 if (!vo.getProjectRelation(FruitDict.Systems.ADD).isEmpty()) {
                     if (vo.getProjectRelation(FruitDict.Systems.ADD).size() > 1)
-                        throw new CheckException("必须关联项目，且只能关联一个项目");
+                        throw new CheckException("只能关联一个项目");
                     dao.setProjectRelation(vo.getProjectRelation());
                 }
                 return this;
@@ -481,7 +464,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
             try {
                 if (!vo.getPlanRelation(FruitDict.Systems.ADD).isEmpty()) {
                     if (vo.getPlanRelation(FruitDict.Systems.ADD).size() > 1)
-                        throw new CheckException("必须关联计划，且只能关联一个计划");
+                        throw new CheckException("只能关联一个计划");
                     dao.setPlanRelation(vo.getPlanRelation());
                 }
                 return this;
@@ -506,7 +489,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
             dao.setUserRelation(vo.getUserRelation());
             dao.setListRelation(vo.getListRelation());
             if (StringUtils.isBlank(dao.getTitle()))
-                throw new CheckException("标题不能为空（前端难道没有校验吗！！）");
+                throw new CheckException("标题不能为空");
             if (dao.getListRelation(FruitDict.Systems.ADD).isEmpty())
                 throw new CheckException("必须关联列表");
             if (dao.getListRelation(FruitDict.Systems.ADD).size() > 1)
@@ -559,7 +542,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
             return this;
         }
 
-        public FruitTaskDao findTemplate() {
+        FruitTaskDao findTemplate() {
             dao.setTitle(vo.getTitle());
             dao.setTaskStatus(vo.getTaskStatus());
             dao.setProjectIds(vo.getProjectIds());
@@ -568,7 +551,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
             return dao;
         }
 
-        public static LinkedList<EndTasks> formatByEndDate(List<FruitTaskDao> tasks) {
+        static LinkedList<EndTasks> formatByEndDate(List<FruitTaskDao> tasks) {
             LinkedList<EndTasks> endTaskList = Lists.newLinkedList();
             tasksToEndMap(tasks).forEach((endDate, taskList) -> endTaskList.add(new EndTasks(endDate, taskList)));
             endTaskList.sort((o1, o2) -> o2.getEndDate().compareTo(o1.getEndDate()));

@@ -7,16 +7,15 @@ import org.springframework.transaction.annotation.Transactional;
 import wowjoy.fruits.ms.dao.relation.impl.UserTeamDaoImpl;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.relation.entity.UserTeamRelation;
+import wowjoy.fruits.ms.module.relation.example.UserTeamRelationExample;
 import wowjoy.fruits.ms.module.team.FruitTeam;
 import wowjoy.fruits.ms.module.team.FruitTeamDao;
 import wowjoy.fruits.ms.module.team.FruitTeamExample;
 import wowjoy.fruits.ms.module.team.mapper.FruitTeamMapper;
-import wowjoy.fruits.ms.module.user.FruitUserDao;
-import wowjoy.fruits.ms.module.user.example.FruitUserExample;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
-import java.text.MessageFormat;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Created by wangziwen on 2017/9/5.
@@ -28,31 +27,28 @@ public class TeamDaoImpl extends AbstractDaoTeam {
     @Autowired
     private FruitTeamMapper mapper;
     @Autowired
-    private UserTeamDaoImpl dao;
+    private UserTeamDaoImpl<UserTeamRelation> dao;
 
     @Override
-    public List<FruitTeamDao> findRelation(FruitTeamDao dao, FruitUserDao userDao) {
+    public List<FruitTeamDao> findUserByTeamIds(List<String> teamIds) {
+        return mapper.selectUserByTeamId(teamIds);
+    }
+
+    @Override
+    public List<FruitTeamDao> findTeamByExample(Consumer<FruitTeamExample> teamExampleConsumer) {
         final FruitTeamExample example = new FruitTeamExample();
-        final FruitTeamExample.Criteria criteria = example.createCriteria();
-        if (StringUtils.isNotBlank(dao.getUuid()))
-            criteria.andUuidEqualTo(dao.getUuid());
-        if (StringUtils.isNotBlank(dao.getTitle()))
-            criteria.andTitleLike(MessageFormat.format("%{0}%", dao.getTitle()));
-        criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
-        String sort = dao.sortConstrue();
-        if (StringUtils.isNotBlank(sort))
-            example.setOrderByClause(sort);
-        else
-            example.setOrderByClause("create_date_time desc");
-        FruitUserExample exampleUser = new FruitUserExample();
-        FruitUserExample.Criteria criteriaUser = exampleUser.createCriteria();
-        criteriaUser.andIsDeletedEqualTo(FruitDict.Systems.N.name());
-        criteriaUser.andUserIdIsNotNull();
-        if (StringUtils.isNotBlank(userDao.getUserName()))
-            criteriaUser.andUserNameLike(MessageFormat.format("%{0}%", userDao.getUserName()));
-        if (StringUtils.isNotBlank(userDao.getUserId()))
-            criteriaUser.andUserIdEqualTo(userDao.getUserId());
-        return mapper.selectRelationByExample(example, exampleUser);
+        teamExampleConsumer.accept(example);
+        return mapper.selectByExample(example);
+    }
+
+    @Override
+    public List<UserTeamRelation> findUserTeam(String userId) {
+        return dao.finds(example -> {
+            UserTeamRelationExample.Criteria criteria = example.createCriteria();
+            if (StringUtils.isNotBlank(userId))
+                criteria.andUserIdEqualTo(userId);
+            criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
+        });
     }
 
     @Override

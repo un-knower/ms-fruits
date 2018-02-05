@@ -66,6 +66,7 @@ public class PlanController {
      * @api {get} /v1/plan/project/composite/{uuid} 计划综合查询【项目查询】
      * @apiVersion 0.1.0
      * @apiGroup plan
+     * @apiParam title String 根据目标名称查询，前后模糊查询
      */
     @RequestMapping(value = "/project/composite/{uuid}", method = RequestMethod.GET)
     public RestResult findMonthWeek(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
@@ -74,26 +75,37 @@ public class PlanController {
     }
 
     /**
-     * @api {get} /v1/plan/project/{uuid} 列出所有计划，非综合查询【项目查询】
+     * @api {get} /v1/plan/project/{uuid} 列出所有计划，非综合查询【项目查询】【<span style="color:red;">未来版本移除</>】
      * @apiVersion 0.1.0
      * @apiGroup plan
      */
     @RequestMapping(value = "/project/{uuid}", method = RequestMethod.GET)
     public RestResult findsByProjectId(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
-
         vo.setProjectId(uuid);
         return RestResult.getInstance().setData(dataPlanDao.findByProjectId(vo));
     }
 
     /**
-     * @api {post} /v1/plan/project/{uuid} 【项目】计划添加
+     * @api {post} /v1/plan 【项目】计划添加
      * @apiVersion 0.1.0
      * @apiGroup plan
+     * @apiParamExample {json} 计划添加:
+     * {
+     * "title":"汪梓文测试专用2018",
+     * "description":"测试描述",
+     * "estimatedStartDate":"2018-1-11 12:12:12",
+     * "estimatedEndDate":"2018-1-11 12:12:12",
+     * "userRelation":{
+     * "ADD":["8401e45249434eafb7654447e02397a2"]
+     * },
+     * "projectRelation":{
+     * "ADD":["e41e0c03ee704b31b56f2ec1076609b5"]
+     * }
+     * }
      */
     @LogInfo(uuid = "uuid", type = FruitDict.Parents.PLAN, operateType = FruitDict.LogsDict.ADD)
     @RequestMapping(method = RequestMethod.POST)
     public RestResult addJoinProject(@JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
-
         dataPlanDao.addJoinProject(vo);
         return RestResult.getInstance().setData(vo.getUuid());
     }
@@ -115,6 +127,9 @@ public class PlanController {
      * @api {put} /v1/plan/complete/{uuid} 修改状态【完成】
      * @apiVersion 0.1.0
      * @apiGroup plan
+     * @apiParam startDate Date 待执行直接跳转到已完成，需要填写实际开始时间
+     * @apiParam statusDescription String 若目标延期，需要填写延期说明
+     * @apiParam endDate Date 若目标延期，可选择更新实际结束时间，不能大于当前。若不填写，默认当前时间
      */
     @LogInfo(uuid = "uuidVo", type = FruitDict.Parents.PLAN, operateType = FruitDict.LogsDict.COMPLETE)
     @RequestMapping(value = "/complete/{uuid}", method = RequestMethod.PUT)
@@ -128,12 +143,27 @@ public class PlanController {
      * @api {put} /v1/plan/end/{uuid} 修改状态【终止】
      * @apiVersion 0.1.0
      * @apiGroup plan
+     * @apiParam statusDescription String 终止理由，后台为限制必填，前端根据产品需求决定
      */
     @LogInfo(uuid = "uuidVo", type = FruitDict.Parents.PLAN, operateType = FruitDict.LogsDict.END)
     @RequestMapping(value = "/end/{uuid}", method = RequestMethod.PUT)
     public RestResult end(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
         vo.setUuidVo(uuid);
         dataPlanDao.end(vo);
+        return RestResult.getInstance().setData(uuid);
+    }
+
+    /**
+     * @api {put} /v1/plan/pending/{uuid} 修改状态【进行中】
+     * @apiVersion 0.1.0
+     * @apiGroup plan
+     * @apiDescription 只能将待执行状态切换至进行中
+     */
+    @LogInfo(uuid = "uuidVo", type = FruitDict.Parents.PLAN, operateType = FruitDict.LogsDict.PENDING)
+    @RequestMapping(value = "/pending/{uuid}", method = RequestMethod.PUT)
+    public RestResult pending(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
+        vo.setUuidVo(uuid);
+        dataPlanDao.pending(vo);
         return RestResult.getInstance().setData(uuid);
     }
 

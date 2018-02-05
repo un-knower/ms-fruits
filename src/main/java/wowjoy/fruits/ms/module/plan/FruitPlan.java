@@ -5,6 +5,7 @@ import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.module.AbstractEntity;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 
@@ -16,11 +17,19 @@ public class FruitPlan extends AbstractEntity {
     private int percent;
     private Date estimatedStartDate;
     private Date estimatedEndDate;
+    private Date startDate;
     private Date endDate;
     private String planStatus;
     private String statusDescription;
     private String parentId;
 
+    public Date getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(Date startDate) {
+        this.startDate = startDate;
+    }
 
     public Date getEstimatedStartDate() {
         return estimatedStartDate;
@@ -87,8 +96,8 @@ public class FruitPlan extends AbstractEntity {
         return planStatus;
     }
 
-    public void setEndDate(LocalDate endDate) {
-        this.setEndDate(Date.from(endDate.atStartOfDay(ZoneId.systemDefault()).toInstant()));
+    public void setEndDate(LocalDateTime endDate) {
+        this.setEndDate(Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant()));
     }
 
     /********

@@ -2,6 +2,7 @@ package wowjoy.fruits.ms.dao.list;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wowjoy.fruits.ms.dao.relation.impl.ProjectListDaoImpl;
@@ -14,6 +15,9 @@ import wowjoy.fruits.ms.module.relation.entity.ProjectListRelation;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 /**
  * Created by wangziwen on 2017/10/17.
@@ -25,6 +29,12 @@ public class ListDaoImpl extends AbstractDaoList {
     private FruitListMapper mapper;
     @Autowired
     private ProjectListDaoImpl listDao;
+    private final static Consumer<FruitListExample> afterExample = (listExample) -> {
+        if (listExample.getOredCriteria().isEmpty())
+            listExample.getOredCriteria().forEach((criteria) -> criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name()));
+        else
+            listExample.createCriteria().andIsDeletedEqualTo(FruitDict.Systems.N.name());
+    };
 
     /**
      * 添加列表，并维护关联列表
@@ -84,10 +94,11 @@ public class ListDaoImpl extends AbstractDaoList {
         Relation.newProject(listDao, dao).removeProjects();
     }
 
-    public List<FruitListDao> findByProjectId(List<String> projectIds) {
+    public List<FruitListDao> findByProjectId(String projectId, Consumer<FruitListExample> unaryOperator) {
         FruitListExample example = new FruitListExample();
-        example.createCriteria().andIsDeletedEqualTo(FruitDict.Systems.N.name());
-        return mapper.selectByProjectId(example, projectIds);
+        unaryOperator.accept(example);
+        afterExample.accept(example);
+        return mapper.selectByProjectId(example, projectId);
     }
 
     private static class Relation {

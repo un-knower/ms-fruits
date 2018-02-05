@@ -8,6 +8,7 @@ import java.text.MessageFormat;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.UUID;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,7 +19,7 @@ public abstract class AbstractEntity implements InterfaceEntity {
     protected transient final String DateTimeFormat = "yyyy-MM-dd'T'23:59:59";
 
     protected AbstractEntity() {
-        /*利大于弊，我选 择保留，如果有更好的方法，可以尝试*/
+        /*利大于弊，我选择保留，如果有更好的方法，可以尝试*/
         this.setUuid(UUID());
         this.setIsDeleted(FruitDict.Systems.N.name());
     }
@@ -35,6 +36,16 @@ public abstract class AbstractEntity implements InterfaceEntity {
 
     private String desc;
     private String asc;
+
+    private transient Supplier<FruitDict.LogsDict> operateTypeSupplier;
+
+    public Supplier<FruitDict.LogsDict> getOperateTypeSupplier() {
+        return operateTypeSupplier;
+    }
+
+    public void setOperateTypeSupplier(Supplier<FruitDict.LogsDict> operateTypeSupplier) {
+        this.operateTypeSupplier = operateTypeSupplier;
+    }
 
     public String getDesc() {
         return desc;

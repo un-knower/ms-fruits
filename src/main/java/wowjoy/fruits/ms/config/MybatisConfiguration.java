@@ -22,7 +22,7 @@ public class MybatisConfiguration {
     private Environment environment;
     /**
      * 采用hikari连接池
-     *C
+     *
      * @return
      */
     @Bean

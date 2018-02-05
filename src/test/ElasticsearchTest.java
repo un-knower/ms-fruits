@@ -1,15 +1,16 @@
+import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import org.elasticsearch.client.transport.TransportClient;
 import org.junit.Test;
-import wowjoy.fruits.ms.module.logs.FruitLogs;
-import wowjoy.fruits.ms.module.logs.FruitLogsVo;
 import wowjoy.fruits.ms.module.project.FruitProject;
-import wowjoy.fruits.ms.module.util.entity.FruitDict;
+import wowjoy.fruits.ms.util.DateUtils;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -20,6 +21,14 @@ public class ElasticsearchTest {
 
     public ElasticsearchTest() throws UnknownHostException {
 //        esClient = new PreBuiltTransportClient(Settings.EMPTY).addTransportAddresses(new InetSocketTransportAddress(InetAddress.getByName("effiy.cn"), 9300));
+    }
+
+    @Test
+    public void dateUtils() throws Exception {
+        DateUtils.Month<DateUtils.Week.WeekChinese> monthByYearMonth = DateUtils.getMonthByYearMonth(2018, 2);
+        System.out.println(monthByYearMonth.getStartDate());
+        System.out.println(monthByYearMonth.getEndDate());
+
     }
 
     @Test
@@ -37,8 +46,23 @@ public class ElasticsearchTest {
 
     @Test
     public void test() {
-        FruitLogsVo vo = FruitLogs.getVo();
-        System.out.println(vo.getClass().getName().equals(FruitLogsVo.class.getName()));
+        LinkedList<String> objects = Lists.newLinkedList();
+        objects.add("1");
+        objects.add("1");
+        objects.add("1");
+        objects.add("1");
+        objects.add("1");
+        objects.add("1");
+        objects.add("1");
+        objects.add("1");
+        objects.add("1");
+        objects.add("1");
+        objects.add("1");
+        objects.add("1");
+        objects.add("1");
+        Optional<String> reduce = objects.stream().reduce((old, news) -> old + news);
+        System.out.println(reduce);
+        System.out.println(reduce.get());
     }
 
 }

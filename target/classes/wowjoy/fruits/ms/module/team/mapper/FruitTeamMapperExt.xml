@@ -55,33 +55,6 @@
             </if>
         </foreach>
     </sql>
-    <sql id="User_Where_Clause">
-        <foreach collection="exampleUser.oredCriteria" item="criteria" separator="or">
-            <if test="criteria.valid">
-                <trim prefix="and (" prefixOverrides="and" suffix=")">
-                    <foreach collection="criteria.criteria" item="criterion">
-                        <choose>
-                            <when test="criterion.noValue">
-                                and ${prefix}.${criterion.condition}
-                            </when>
-                            <when test="criterion.singleValue">
-                                and ${prefix}.${criterion.condition} #{criterion.value}
-                            </when>
-                            <when test="criterion.betweenValue">
-                                and ${prefix}.${criterion.condition} #{criterion.value} and #{criterion.secondValue}
-                            </when>
-                            <when test="criterion.listValue">
-                                and ${prefix}.${criterion.condition}
-                                <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
-                                    #{listItem}
-                                </foreach>
-                            </when>
-                        </choose>
-                    </foreach>
-                </trim>
-            </if>
-        </foreach>
-    </sql>
     <sql id="Base_Column_List">
         ${replace}.uuid,
         ${replace}.title,
@@ -103,41 +76,32 @@
         ${replace}.create_date_time as ${prefix}create_date_time,
         ${replace}.is_deleted as ${prefix}is_deleted
     </sql>
+    <sql id="User_Base_Column_List">
+        uuid, user_id, user_name, birthday, user_email, user_sex, job_title, description,
+        modify_date_time, create_date_time, is_deleted
+    </sql>
 
-    <select id="selectRelationByExample" resultMap="BaseResultMap">
+    <select id="selectUserByTeamId" resultMap="BaseResultMap">
         SELECT
         <include refid="User_Column_List">
             <property name="replace" value="fuser"/>
             <property name="prefix" value="user_"/>
         </include>
         ,
-        <include refid="Base_Column_List">
-            <property name="replace" value="fteam"/>
-        </include>
+        fteam.uuid
         ,
         utr.ut_role as user_ut_role
         FROM
         fruits_team fteam
-        LEFT JOIN user_team_relation utr on fteam.uuid = utr.`team_id`
-        LEFT JOIN fruits_user fuser on fuser.user_id = utr.user_id
-        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
-            <where>
-                <if test="example != null">
-                    <include refid="Example_Where_Clause">
-                        <property name="prefix" value="fteam"/>
-                    </include>
-                </if>
-                <if test="exampleUser != null">
-                    <include refid="User_Where_Clause">
-                        <property name="prefix" value="fuser"/>
-                    </include>
-                </if>
-                and utr.is_deleted = 'N'
-            </where>
-        </trim>
-
-        <if test="example.orderByClause != null">
-            order by fteam.${example.orderByClause}
-        </if>
+        RIGHT JOIN (
+        select team_id,user_id,ut_role from user_team_relation WHERE is_deleted = 'N' and
+        team_id in
+        <foreach collection="ids" open="(" close=")" separator="," item="id">
+            #{id}
+        </foreach>
+        ) utr on fteam.uuid = utr.`team_id`
+        LEFT JOIN (select
+        <include refid="User_Base_Column_List"/>
+        from fruits_user where is_deleted = 'N') fuser on fuser.user_id = utr.user_id
     </select>
 </mapper>

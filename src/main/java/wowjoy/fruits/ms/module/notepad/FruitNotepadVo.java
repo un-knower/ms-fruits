@@ -12,6 +12,14 @@ public class FruitNotepadVo extends FruitNotepad {
     private Date startDate;
     private Date endDate;
 
+    public void setStartDate(Date startDate) {
+        this.startDate = startDate;
+    }
+
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
+    }
+
     public String getUuidVo() {
         return uuidVo;
     }
@@ -20,12 +28,20 @@ public class FruitNotepadVo extends FruitNotepad {
         this.uuidVo = uuidVo;
     }
 
-    public LocalDateTime getStartDate() {
+    public LocalDateTime getStartLocalDateTime() {
         if (startDate == null) return null;
         return LocalDateTime.ofInstant(startDate.toInstant(), ZoneId.systemDefault());
     }
 
-    public LocalDateTime getEndDate() {
+    public Date getStartDate() {
+        return startDate;
+    }
+
+    public Date getEndDate() {
+        return endDate;
+    }
+
+    public LocalDateTime getEndLocalDateTime() {
         if (endDate == null) return null;
         return LocalDateTime.ofInstant(endDate.toInstant(), ZoneId.systemDefault());
     }

@@ -12,7 +12,7 @@ public class FruitLogsDao extends FruitLogs {
 
     private String msg;
 
-    private FruitUser user;
+    private transient FruitUser user;
 
     public FruitUser getUser() {
         return user;

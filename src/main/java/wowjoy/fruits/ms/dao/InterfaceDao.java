@@ -32,7 +32,11 @@ public interface InterfaceDao {
             return this;
         }
 
-        public void get() {
+        public <V> Future<V> executeFuture(Callable<V> callable) {
+            return executorService.submit(callable);
+        }
+
+        public DaoThread get() {
             try {
                 for (Future future : futures) future.get();
             } catch (InterruptedException e) {
@@ -44,13 +48,14 @@ public interface InterfaceDao {
                 e.printStackTrace();
                 throw new CheckException("获取线程数据异常，线程已终止");
             }
+            return this;
         }
 
         public void shutdown() {
             try {
                 executorService.shutdown();
                 if (!executorService.awaitTermination(60, TimeUnit.SECONDS))
-                    throw new CheckException("关闭线程超时，请重试");
+                    throw new CheckException("超时，主动关闭线程，请重试");
             } catch (InterruptedException e) {
                 executorService.shutdownNow();
                 throw new CheckException("等待关闭时，被提前终止");

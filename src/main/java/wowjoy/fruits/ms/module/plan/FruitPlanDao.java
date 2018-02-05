@@ -2,6 +2,7 @@ package wowjoy.fruits.ms.module.plan;
 
 import com.google.common.collect.Lists;
 import wowjoy.fruits.ms.module.logs.FruitLogsDao;
+import wowjoy.fruits.ms.module.task.FruitTaskDao;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
@@ -26,6 +27,7 @@ public class FruitPlanDao extends FruitPlan {
 
     private List<FruitUserDao> users;
     private List<FruitLogsDao> logs;
+    private List<FruitTaskDao> tasks;
 
     private Map<FruitDict.Systems, List<String>> userRelation;
     private Map<FruitDict.Systems, List<String>> projectRelation;
@@ -36,6 +38,14 @@ public class FruitPlanDao extends FruitPlan {
     private Integer days;
     /*因为原days的值不符合日志模板需求，特加一个字段用来存储正整数*/
     private transient Integer daysTemplate;
+
+    public List<FruitTaskDao> getTasks() {
+        return tasks;
+    }
+
+    public void setTasks(List<FruitTaskDao> tasks) {
+        this.tasks = tasks;
+    }
 
     public List<FruitLogsDao> getLogs() {
         return logs;

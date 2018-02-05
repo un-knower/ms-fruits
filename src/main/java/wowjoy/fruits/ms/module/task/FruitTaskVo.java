@@ -24,8 +24,15 @@ public class FruitTaskVo extends FruitTask {
     private Map<FruitDict.Systems, List<TaskUserRelation>> userRelation;
     private Map<FruitDict.Systems, List<TaskListRelation>> listRelation;
     private String projectIds;
-    private String planId;
-    private String listId;
+    private String listTitle;
+
+    public String getListTitle() {
+        return listTitle;
+    }
+
+    public void setListTitle(String listTitle) {
+        this.listTitle = listTitle;
+    }
 
     public Integer getPageNum() {
         return pageNum;
@@ -51,28 +58,12 @@ public class FruitTaskVo extends FruitTask {
         this.projectIds = projectIds;
     }
 
-    public void setPlanId(String planId) {
-        this.planId = planId;
-    }
-
-    public String getPlanId() {
-        return planId;
-    }
-
     private List<String> split(String ids) {
         try {
             return Arrays.asList(ids.split(","));
         } catch (NullPointerException ex) {
             return null;
         }
-    }
-
-    public String getListId() {
-        return listId;
-    }
-
-    public void setListId(String listId) {
-        this.listId = listId;
     }
 
     public String getUuidVo() {
@@ -122,4 +113,5 @@ public class FruitTaskVo extends FruitTask {
     public void setListRelation(Map<FruitDict.Systems, List<TaskListRelation>> listRelation) {
         this.listRelation = listRelation;
     }
+
 }

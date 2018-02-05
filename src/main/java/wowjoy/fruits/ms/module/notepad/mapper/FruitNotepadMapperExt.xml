@@ -124,26 +124,6 @@
         ${replace}.create_date_time as ${prefix}create_date_time,
         ${replace}.is_deleted as ${prefix}is_deleted
     </sql>
-    <select id="selectByCurrentUser" resultMap="BaseResultMap">
-        SELECT
-        <include refid="Base_Column_List">
-            <property name="replace" value="notepad"/>
-        </include>
-        FROM
-        fruits_notepad notepad
-        left join fruits_user fuser on fuser.user_id = notepad.user_id
-        <trim suffixOverrides="AND | OR" prefixOverrides="AND | OR">
-            <where>
-                <include refid="Example_Where_Clause">
-                    <property name="replace" value="notepad"/>
-                </include>
-                AND fuser.is_deleted = 'N'
-            </where>
-        </trim>
-        <if test="example.orderByClause != null">
-            order by ${example.orderByClause}
-        </if>
-    </select>
 
     <select id="selectByTeamIds" resultMap="BaseResultMap">
         SELECT
@@ -168,56 +148,5 @@
         <if test="example.orderByClause != null">
             order by ${example.orderByClause}
         </if>
-    </select>
-
-    <select id="selectJoinLogsByNotepadIds" resultMap="BaseResultMap">
-        SELECT
-        <include refid="Base_Column_List">
-            <property name="replace" value="notepad"/>
-        </include>
-        ,
-        <include refid="Logs_Column_List">
-            <property name="replace" value="flogs"/>
-            <property name="prefix" value="flogs_"/>
-        </include>
-        FROM
-        fruits_notepad notepad
-        right join
-        (select uuid, user_id, fruit_uuid, json_object, fruit_type, operate_type, modify_date_time, create_date_time,
-        is_deleted from fruits_logs where fruit_type = 'NOTEPAD' and is_deleted = 'N') flogs on flogs.fruit_uuid =
-        notepad.uuid
-        <trim suffixOverrides="AND | OR" prefixOverrides="AND | OR">
-            <where>
-                notepad.uuid in
-                <foreach collection="notepadIds" close=")" open="(" item="id" separator=",">
-                    #{id}
-                </foreach>
-            </where>
-        </trim>
-        ORDER BY flogs.create_date_time desc
-    </select>
-
-    <select id="selectJoinUserByNotepadIds" resultMap="BaseResultMap">
-        SELECT
-        <include refid="Base_Column_List">
-            <property name="replace" value="notepad"/>
-        </include>
-        ,
-        <include refid="User_Column_List">
-            <property name="replace" value="fuser"/>
-            <property name="prefix" value="fuser_"/>
-        </include>
-        FROM
-        fruits_notepad notepad
-        right join fruits_user fuser on fuser.user_id = notepad.user_id
-        <trim suffixOverrides="AND | OR" prefixOverrides="AND | OR">
-            <where>
-                notepad.uuid in
-                <foreach collection="notepadIds" close=")" open="(" item="id" separator=",">
-                    #{id}
-                </foreach>
-                and fuser.is_deleted = 'N'
-            </where>
-        </trim>
     </select>
 </mapper>

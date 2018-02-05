@@ -15,6 +15,16 @@ public class FruitLogs extends AbstractEntity {
 
     private transient String jsonObject;
 
+    private transient String voObject;
+
+    public String getVoObject() {
+        return voObject;
+    }
+
+    public void setVoObject(String voObject) {
+        this.voObject = voObject;
+    }
+
     public String getJsonObject() {
         return jsonObject;
     }

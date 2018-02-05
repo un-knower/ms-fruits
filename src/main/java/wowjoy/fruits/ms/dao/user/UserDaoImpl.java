@@ -3,7 +3,7 @@ package wowjoy.fruits.ms.dao.user;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import wowjoy.fruits.ms.exception.CheckException;
+import org.springframework.transaction.annotation.Transactional;
 import wowjoy.fruits.ms.module.user.FruitUser;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.user.example.FruitUserExample;
@@ -13,10 +13,12 @@ import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Created by wangziwen on 2017/8/31.
  */
+@Transactional
 @Service
 public class UserDaoImpl extends AbstractDaoUser {
 
@@ -53,6 +55,12 @@ public class UserDaoImpl extends AbstractDaoUser {
         FruitUserExample example = new FruitUserExample();
         example.createCriteria().andIsDeletedEqualTo(FruitDict.Systems.N.name());
         return mapper.selectByAccount(example, dao.getPrincipal());
+    }
+
+    public List<FruitUserDao> findExample(Consumer<FruitUserExample> exampleConsumer) {
+        FruitUserExample example = new FruitUserExample();
+        exampleConsumer.accept(example);
+        return mapper.selectByExample(example);
     }
 
 }

@@ -36,7 +36,7 @@ public class TaskUserDaoImpl<T extends TaskUserRelation> extends AbstractDaoRela
     }
 
     private TaskUserRelationExample removeTemplate(TaskUserRelation relation) {
-        final TaskUserRelationExample example = new TaskUserRelationExample();
+        final TaskUserRelationExample example =  new TaskUserRelationExample();
         final TaskUserRelationExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(relation.getTaskId()))
             criteria.andTaskIdEqualTo(relation.getTaskId());

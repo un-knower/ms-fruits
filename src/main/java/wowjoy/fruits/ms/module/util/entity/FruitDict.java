@@ -75,10 +75,13 @@ public class FruitDict extends AbstractEntity {
         ADD("添加"),
         UPDATE("修改"),
         MOVE_TASK("移动任务"),
+        PENDING("进行中"),
         COMPLETE("完成"),
         DELAY_COMPLETE("延期完成"),
         START("开始"),
-        END("结束");
+        END("结束"),
+        CLOSE("关闭"),
+        HANDOVER("交接");
 
         private String parentCode;
         private String value;
@@ -147,6 +150,8 @@ public class FruitDict extends AbstractEntity {
      * plan 状态管理
      */
     public enum PlanDict {
+        /*待进行*/
+        STAY_PENDING("待执行"),
         //进行中
         PENDING("进行中"),
         //已完成
@@ -232,7 +237,9 @@ public class FruitDict extends AbstractEntity {
          * 任务状态
          */
         START("进行中"),
-        END("结束");
+        END("结束"),
+        CLOSE("关闭");
+
 
         private String parentCode;
         private String value;

@@ -7,6 +7,6 @@ import wowjoy.fruits.ms.module.list.FruitListExample;
 import java.util.List;
 
 public interface FruitListMapperExt {
-    List<FruitListDao> selectByProjectId(@Param("example") FruitListExample example, @Param("projectIds") List<String> projectId);
+    List<FruitListDao> selectByProjectId(@Param("example") FruitListExample example, @Param("projectId") String projectId);
 
 }

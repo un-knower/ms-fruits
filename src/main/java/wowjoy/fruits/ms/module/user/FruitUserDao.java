@@ -1,6 +1,7 @@
 package wowjoy.fruits.ms.module.user;
 
 import com.google.common.collect.Lists;
+import wowjoy.fruits.ms.module.notepad.FruitNotepadDao;
 
 import java.util.List;
 
@@ -22,11 +23,21 @@ public class FruitUserDao extends FruitUser {
     /**
      * 团队角色
      */
-    private String teamRole;
+    private transient String teamRole;
 
     private String principal;
 
     private String taskId;
+
+    private List<FruitNotepadDao> notepadDaos;
+
+    public List<FruitNotepadDao> getNotepadDaos() {
+        return notepadDaos;
+    }
+
+    public void setNotepadDaos(List<FruitNotepadDao> notepadDaos) {
+        this.notepadDaos = notepadDaos;
+    }
 
     public String getTaskId() {
         return taskId;

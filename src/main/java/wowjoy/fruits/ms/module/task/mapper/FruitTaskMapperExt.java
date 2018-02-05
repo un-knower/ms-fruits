@@ -12,21 +12,17 @@ import java.util.List;
  */
 @Mapper
 public interface FruitTaskMapperExt {
-    List<FruitTaskDao> selectByTaskList(@Param("example") FruitTaskExample example, @Param("id") String id);
+    List<FruitTaskDao> selectByTaskList(@Param("example") FruitTaskExample example, @Param("listIds") List<String> listIds);
 
-    List<FruitTaskDao> selectByTaskPlan(@Param("id") String id);
-
-    List<FruitTaskDao> selectUserByTask(@Param("example") FruitTaskExample example);
+    List<FruitTaskDao> selectUserByTask(@Param("ids") List<String> example);
 
     List<FruitTaskDao> selectPlanByTask(@Param("example") FruitTaskExample example);
 
     List<FruitTaskDao> selectProjectByTask(@Param("example") FruitTaskExample example);
 
-    List<FruitTaskDao> selectPlanJoinProjectByTask(@Param("example") FruitTaskExample example);
+    List<FruitTaskDao> selectPlanJoinProjectByTask(@Param("taskIds") List<String> taskIds);
 
     List<FruitTaskDao> selectListByTask(@Param("example") FruitTaskExample example);
-
-    List<FruitTaskDao> selectJoinLogsByTask(@Param("example") FruitTaskExample example);
 
     /************************************************************************************************
      *                                       个人中心专供                                            *

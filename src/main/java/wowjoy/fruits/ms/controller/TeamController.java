@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import wowjoy.fruits.ms.dao.team.AbstractDaoTeam;
-import wowjoy.fruits.ms.module.task.FruitTask;
 import wowjoy.fruits.ms.module.team.FruitTeam;
 import wowjoy.fruits.ms.module.team.FruitTeamVo;
 import wowjoy.fruits.ms.util.JsonArgument;
@@ -31,7 +30,7 @@ public class TeamController {
      */
     @RequestMapping(value = "/relation", method = RequestMethod.GET)
     public RestResult findRelation(@JsonArgument(type = FruitTeamVo.class) FruitTeamVo vo) {
-        return RestResult.getInstance().setData(teamDao.findRelation(vo));
+        return RestResult.getInstance().setData(teamDao.findTeams(vo));
     }
 
     /**
@@ -40,8 +39,8 @@ public class TeamController {
      * @apiGroup team
      */
     @RequestMapping(value = "/current", method = RequestMethod.GET)
-    public RestResult findCurrent(@JsonArgument(type = FruitTeamVo.class) FruitTeamVo vo) {
-        return RestResult.getInstance().setData(teamDao.findCurrent(vo));
+    public RestResult findCurrent() {
+        return RestResult.getInstance().setData(teamDao.findCurrent());
     }
 
     /**
@@ -51,9 +50,7 @@ public class TeamController {
      */
     @RequestMapping(value = "/{uuid}", method = RequestMethod.GET)
     public RestResult findRelation(@PathVariable("uuid") String uuid) {
-        FruitTeamVo vo = FruitTeam.getVo();
-        vo.setUuidVo(uuid);
-        return RestResult.getInstance().setData(teamDao.find(vo));
+        return RestResult.getInstance().setData(teamDao.findInfo(uuid));
     }
 
     /**

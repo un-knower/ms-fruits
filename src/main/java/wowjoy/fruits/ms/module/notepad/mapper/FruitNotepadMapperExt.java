@@ -11,12 +11,6 @@ import java.util.List;
  */
 public interface FruitNotepadMapperExt {
 
-    List<FruitNotepadDao> selectByCurrentUser(@Param("example") FruitNotepadExample example);
-
     List<FruitNotepadDao> selectByTeamIds(@Param("example") FruitNotepadExample example, @Param("teamIds") String... teamIds);
-
-    List<FruitNotepadDao> selectJoinLogsByNotepadIds(@Param("notepadIds") String... notepadIds);
-
-    List<FruitNotepadDao> selectJoinUserByNotepadIds(@Param("notepadIds") String... notepadIds);
 
 }

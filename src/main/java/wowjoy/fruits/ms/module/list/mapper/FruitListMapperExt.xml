@@ -53,20 +53,15 @@
             <property name="replace" value="list"/>
         </include>
         from fruits_list list
-        inner join project_list_relation projectRelation on list.uuid = projectRelation.list_id
+        inner join
+        (select list_id from project_list_relation where project_id = #{projectId} and is_deleted = 'N')
+        projectRelation on list.uuid = projectRelation.list_id
         <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
             <where>
                 <if test="example != null">
                     <include refid="Example_Where_Clause">
                         <property name="replace" value="list"/>
                     </include>
-                </if>
-                <if test="projectIds != null">
-                    and projectRelation.project_id in
-                    <foreach collection="projectIds" item="id" open="(" close=")" separator=",">
-                        #{id}
-                    </foreach>
-                    and projectRelation.is_deleted = 'N'
                 </if>
             </where>
         </trim>

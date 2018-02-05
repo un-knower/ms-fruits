@@ -1,8 +1,11 @@
 package wowjoy.fruits.ms.aspectj;
 
+import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.lang.annotation.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Created by wangziwen on 2017/11/21.
@@ -22,4 +25,5 @@ public @interface LogInfo {
 
     /*日志操作类型*/
     FruitDict.LogsDict operateType();
+
 }

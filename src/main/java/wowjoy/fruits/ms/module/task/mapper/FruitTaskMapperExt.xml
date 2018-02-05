@@ -219,12 +219,11 @@
         from fruits_task task
         right join
         (
-          select task_id,list_id from task_list_relation
-          where
-            is_deleted = 'N'
-            <if test="id != null">
-                AND list_id = #{id}
-            </if>
+            select task_id,list_id from task_list_relation
+            where is_deleted = 'N' AND list_id in
+            <foreach collection="listIds" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
         ) listRelation on listRelation.task_id = task.uuid
         <trim prefixOverrides="ADN | OR" suffixOverrides="ADN | OR">
             <where>
@@ -239,28 +238,6 @@
         </if>
     </select>
 
-    <select id="selectByTaskPlan" resultMap="BaseResultMap">
-        select
-        <include refid="Base_Column_List">
-            <property name="replace" value="task"/>
-        </include>
-        from fruits_task task
-        left join
-        (
-            select task_id from task_plan_relation
-            where is_deleted = 'N'
-            <if test="id != null">
-                AND plan_id = #{id}
-            </if>
-        ) planRelation on planRelation.task_id = task.uuid
-        <trim prefixOverrides="ADN | OR" suffixOverrides="ADN | OR">
-            <where>
-                AND task.is_deleted = 'N'
-            </where>
-        </trim>
-        order by task.create_date_time desc
-    </select>
-
     <select id="selectUserByTask" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List">
@@ -272,13 +249,17 @@
             <property name="prefix" value="user_"/>
         </include>
         from fruits_task task
-        RIGHT join (select task_id,user_id from task_user_relation where is_deleted='N') userRelation on userRelation.task_id = task.uuid
-        RIGHT join (select <include refid="user_Base_Column_List"/> from fruits_user where is_deleted = 'N') fuser on fuser.user_id = userRelation.user_id
+        right join (
+          select task_id,user_id from task_user_relation where is_deleted='N' and
+          task_id in
+          <foreach collection="ids" open="(" close=")" item="id" separator=",">
+              #{id}
+          </foreach>
+        ) userRelation on userRelation.task_id = task.uuid
+        left join (select <include refid="user_Base_Column_List"/> from fruits_user where is_deleted = 'N') fuser on fuser.user_id = userRelation.user_id
         <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
             <where>
-                <include refid="Base_Example_Where_Clause">
-                    <property name="replace" value="task"/>
-                </include>
+                task.is_deleted = 'N'
             </where>
         </trim>
     </select>
@@ -340,40 +321,18 @@
             <property name="prefix" value="project_"/>
         </include>
         from fruits_task task
-        RIGHT join (select task_id,plan_id from task_plan_relation where is_deleted = 'N') planRelation on planRelation.task_id = task.uuid
+        RIGHT join (select task_id,plan_id from task_plan_relation where
+        task_id in
+        <foreach collection="taskIds" item="id" close=")" open="(" separator=",">
+          #{id}
+        </foreach> and is_deleted = 'N') planRelation on planRelation.task_id = task.uuid
         RIGHT join (select plan_id,project_id from plan_project_relation where is_deleted = 'N') projectRelation on projectRelation.plan_id = planRelation.plan_id
         RIGHT join (select <include refid="Project_Base_Column_List"/> from fruits_project where is_deleted = 'N') project on project.uuid = projectRelation.project_id
         <trim suffixOverrides="AND | OR" prefixOverrides="AND | OR ">
             <where>
-                <include refid="Base_Example_Where_Clause">
-                    <property name="replace" value="task"/>
-                </include>
+                task.is_deleted = 'N'
             </where>
         </trim>
-    </select>
-
-    <select id="selectJoinLogsByTask" resultMap="BaseResultMap">
-        SELECT
-        <include refid="Base_Column_List">
-            <property name="replace" value="task"/>
-        </include>
-        ,
-        <include refid="Logs_Column_List">
-            <property name="replace" value="flogs"/>
-            <property name="prefix" value="flogs_"/>
-        </include>
-        FROM
-        fruits_task task
-        right join (select uuid, user_id, fruit_uuid, json_object, fruit_type, operate_type, modify_date_time, create_date_time,
-        is_deleted from fruits_logs where fruit_type = 'TASK' and is_deleted = 'N') flogs on flogs.fruit_uuid = task.uuid
-        <trim suffixOverrides="AND | OR" prefixOverrides="AND | OR ">
-            <where>
-                <include refid="Base_Example_Where_Clause">
-                    <property name="replace" value="task"/>
-                </include>
-            </where>
-        </trim>
-        ORDER by flogs.create_date_time DESC
     </select>
 
     <!--根据任务查询列表-->

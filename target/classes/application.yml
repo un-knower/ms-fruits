@@ -13,3 +13,11 @@ security:
   basic:
     enabled: false
 #debug: true
+
+tomcat:
+  jdbc:
+    pool:
+      uri: jdbc:mysql://effiy.cn:3306/fruits?useUnicode=true&characterEncoding=utf8
+      password: Yi19911024!@#
+      username: root
+      driverClassName: com.mysql.cj.jdbc.Driver

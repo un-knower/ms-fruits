@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.RestController;
 import wowjoy.fruits.ms.aspectj.LogInfo;
 import wowjoy.fruits.ms.dao.task.AbstractDaoTask;
 import wowjoy.fruits.ms.dao.task.TaskDaoImpl;
-import wowjoy.fruits.ms.module.project.FruitProject;
 import wowjoy.fruits.ms.module.task.FruitTask;
 import wowjoy.fruits.ms.module.task.FruitTaskVo;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
@@ -15,6 +14,7 @@ import wowjoy.fruits.ms.util.JsonArgument;
 import wowjoy.fruits.ms.util.RestResult;
 
 import javax.annotation.Resource;
+import java.util.function.Predicate;
 
 /**
  * Created by wangziwen on 2017/8/30.
@@ -88,6 +88,13 @@ public class TaskController {
     @RequestMapping(value = "/{uuid}", method = RequestMethod.PUT)
     public RestResult modify(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
         vo.setUuidVo(uuid);
+        /*若变更记录中包含人员变更，将日志状态改为 HANDOVER*/
+        vo.setOperateTypeSupplier(() -> {
+            Predicate<FruitDict.Systems> userPredicate = (o) -> vo.getUserRelation().containsKey(o) && !vo.getUserRelation().get(o).isEmpty();
+            if (vo.getUserRelation() != null && (userPredicate.test(FruitDict.Systems.ADD) || userPredicate.test(FruitDict.Systems.DELETE)))
+                return FruitDict.LogsDict.HANDOVER;
+            return FruitDict.LogsDict.UPDATE;
+        });
         daoTask.modify(vo);
         return RestResult.getInstance().setData(vo.getUuidVo());
     }
@@ -117,6 +124,19 @@ public class TaskController {
         FruitTaskVo vo = FruitTask.getVo();
         vo.setUuidVo(uuid);
         daoTask.changeStatusToStart(vo);
+        return RestResult.getInstance().setData(vo.getUuidVo());
+    }
+
+    /**
+     * @api {put} /v1/task/close/{uuid} 变更任务状态【关闭】
+     * @apiVersion 0.1.0
+     * @apiGroup task
+     */
+    @LogInfo(uuid = "uuidVo", type = FruitDict.Parents.TASK, operateType = FruitDict.LogsDict.CLOSE)
+    @RequestMapping(value = "/close/{uuid}", method = RequestMethod.PUT)
+    public RestResult changeStatusToClose(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
+        vo.setUuidVo(uuid);
+        daoTask.changeStatusToClose(vo);
         return RestResult.getInstance().setData(vo.getUuidVo());
     }
 
@@ -156,36 +176,23 @@ public class TaskController {
      * @api {get} /v1/task/project/{uuid} 根据指定项目id查询对应的任务列表
      * @apiVersion 0.1.0
      * @apiGroup task
+     * @apiParam {String} listTitle 列表名称查询，支持前后模糊
+     * @apiParam {String} title 任务名称查询，支持前后模糊
      */
     @RequestMapping(value = "/project/{uuid}", method = RequestMethod.GET)
-    public RestResult findJoinProject(@PathVariable("uuid") String uuid) {
-        FruitTaskVo vo = FruitTask.getVo();
-        vo.setProjectIds(uuid);
-        return RestResult.getInstance().setData(daoTask.findJoinProjects(vo));
+    public RestResult findJoinProject(@PathVariable("uuid") String uuid,
+                                      @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
+        return RestResult.getInstance().setData(daoTask.findJoinProjects(uuid, vo));
     }
 
     /**
-     * @api {get} /v1/task/list/{uuid} 根据指定列表id，查询对应的任务列表下所有任务
+     * @api {get} /v1/task/{uuid} 根据任务UUID查询任务详情
      * @apiVersion 0.1.0
      * @apiGroup task
      */
-    @RequestMapping(value = "/list/{uuid}", method = RequestMethod.GET)
-    public RestResult findByListId(@PathVariable("uuid") String uuid) {
-        FruitTaskVo vo = FruitTask.getVo();
-        vo.setListId(uuid);
-        return RestResult.getInstance().setData(daoTask.findByListId(vo));
-    }
-
-    /**
-     * @api {get} /v1/task/plan/{uuid} 根据指定的计划id，查询计划对应的任务
-     * @apiVersion 0.1.0
-     * @apiGroup task
-     */
-    @RequestMapping(value = "/plan/{uuid}", method = RequestMethod.GET)
-    public RestResult findByPlan(@PathVariable("uuid") String uuid) {
-        FruitTaskVo vo = FruitTask.getVo();
-        vo.setPlanId(uuid);
-        return RestResult.getInstance().setData(daoTask.findByPlanId(vo));
+    @RequestMapping(value = "{uuid}", method = RequestMethod.GET)
+    public RestResult findTaskInfo(@PathVariable("uuid") String uuid) {
+        return RestResult.getInstance().setData(daoTask.findTaskInfo(uuid));
     }
 
     /************************************************************************************************

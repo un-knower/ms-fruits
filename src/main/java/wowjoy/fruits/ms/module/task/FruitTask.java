@@ -6,7 +6,7 @@ import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 
@@ -55,16 +55,12 @@ public class FruitTask extends AbstractEntity {
         this.endDate = endDate;
     }
 
-    public void setEndDate(LocalDate endDate) {
-        this.setEndDate(Date.from(endDate.atStartOfDay(ZoneId.systemDefault()).toInstant()));
+    public void setEndDate(LocalDateTime endDate) {
+        this.setEndDate(Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant()));
     }
 
     public void setTaskLevel(String taskLevel) {
-        try {
-            this.taskLevel = FruitDict.TaskDict.valueOf(taskLevel).name();
-        } catch (IllegalArgumentException ex) {
-            throw new CheckException("无效的任务等级：" + ex.getMessage());
-        }
+        this.taskLevel = taskLevel;
     }
 
     public String getTitle() {

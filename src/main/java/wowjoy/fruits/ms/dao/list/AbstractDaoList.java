@@ -7,10 +7,13 @@ import wowjoy.fruits.ms.exception.ExceptionSupport;
 import wowjoy.fruits.ms.exception.ServiceException;
 import wowjoy.fruits.ms.module.list.FruitList;
 import wowjoy.fruits.ms.module.list.FruitListDao;
+import wowjoy.fruits.ms.module.list.FruitListExample;
 import wowjoy.fruits.ms.module.list.FruitListVo;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 /**
  * Created by wangziwen on 2017/10/17.
@@ -28,7 +31,7 @@ public abstract class AbstractDaoList implements InterfaceDao {
 
     protected abstract void delete(FruitListDao dao);
 
-    protected abstract List<FruitListDao> findByProjectId(List<String> projectIds);
+    protected abstract List<FruitListDao> findByProjectId(String projectId, Consumer<FruitListExample> unaryOperator);
 
     public final void insertProject(FruitListVo vo) {
         try {

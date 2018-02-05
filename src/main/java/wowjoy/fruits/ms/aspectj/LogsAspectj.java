@@ -21,6 +21,8 @@ import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.logs.FruitLogs;
 import wowjoy.fruits.ms.module.logs.FruitLogsVo;
+import wowjoy.fruits.ms.module.user.FruitUser;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;
 import wowjoy.fruits.ms.util.AsmClassInfo;
 import wowjoy.fruits.ms.util.JsonArgument;
@@ -31,6 +33,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.function.Supplier;
 
 /**
  * Created by wangziwen on 2017/11/16.
@@ -41,7 +44,6 @@ import java.util.*;
 @Order(1)
 public class LogsAspectj {
 
-    //    @Qualifier("LogsDaoImpl")
     @Autowired
     private AbstractDaoLogs logsDao;
 
@@ -57,11 +59,13 @@ public class LogsAspectj {
     public Object around(ProceedingJoinPoint joinPoint, LogInfo annotation) {
         try {
             Object result = joinPoint.proceed();
-            if (((RestResult) result).getSuccess())
+            if (((RestResult) result).getSuccess()) {
+                FruitUser currentUser = ApplicationContextUtils.getCurrentUser();
                 daoThread.execute(() -> {
-                    record(joinPoint, annotation);
+                    record(joinPoint, annotation, currentUser);
                     return true;
                 });
+            }
             return result;
         } catch (Throwable throwable) {
             throwable.printStackTrace();
@@ -70,27 +74,47 @@ public class LogsAspectj {
     }
 
     /*记录日志*/
-    public void record(ProceedingJoinPoint joinPoint, LogInfo logInfo) {
-        /*提取占位符关键字*/
-        /*从当前方法【参数-数据列表】中获取对应的数据*/
-        Map<String, Placeholder> placeValues = Maps.newLinkedHashMap();
+    public void record(ProceedingJoinPoint joinPoint, LogInfo logInfo, FruitUser currentUser) {
         /*根据uuid查询数据库中保存数据*/
         AbstractDaoChain daoChain = AbstractDaoChain.newInstance(logInfo.type());
-        AbstractEntity DBData = daoChain.find((String) getValue(joinPoint, Placeholder.newComma(logInfo.uuid())));
-        FruitLogsVo vo = logTemplate(DBData, logInfo);
-         /*获取对应的uuid*/
+        Supplier<AnnotationValue> annotationSupplier = () -> {
+            AnnotationValue annotation = getAnnotation(joinPoint, JsonArgument.class);
+            if (annotation != null) return annotation;
+            annotation = getAnnotation(joinPoint, PathVariable.class);
+            if (annotation != null) return annotation;
+            throw new CheckException("未找到日志需要的参数");
+        };
+        AbstractEntity DBData = daoChain.find((String) getValue(annotationSupplier, Placeholder.newComma(logInfo.uuid())));
+        if (Objects.isNull(DBData)) return;
+        Gson gson = new Gson();
+        JsonElement jsonDB = gson.toJsonTree(DBData);
+        JsonElement jsonVO = gson.toJsonTree(annotationSupplier.get().getValue());
+        FruitLogsVo vo = FruitLogs.getVo();
+        vo.setJsonObject(!jsonDB.isJsonNull() ? jsonDB.toString() : null);
+        vo.setVoObject(!jsonVO.isJsonNull() ? jsonVO.toString() : null);
+        vo.setFruitType(logInfo.type());
+        vo.setOperateType(operateType(annotationSupplier, logInfo));
+        vo.setUserId(currentUser.getUserId());
+        /*获取对应的uuid*/
         vo.setFruitUuid(DBData.getUuid());
         /*记录日志*/
         logsDao.insert(vo);
     }
 
-    private Object getValue(ProceedingJoinPoint joinPoint, Placeholder placeholder) {
-        AnnotationValue<JsonArgument> jsonArgumentAnnotationValue = getAnnotation(joinPoint, JsonArgument.class);
-        if (jsonArgumentAnnotationValue != null)
-            return getValue((AbstractEntity) jsonArgumentAnnotationValue.getValue(), jsonArgumentAnnotationValue.getValue().getClass(), placeholder);
-        AnnotationValue<PathVariable> pathVariableAnnotationValue = getAnnotation(joinPoint, PathVariable.class);
-        if (pathVariableAnnotationValue.getAnnotation().value().equals(placeholder.getKey()))
-            return pathVariableAnnotationValue.getValue();
+    public FruitDict.LogsDict operateType(Supplier<AnnotationValue> supplier, LogInfo logInfo) {
+        AnnotationValue annotationValue = supplier.get();
+        if (!(annotationValue.getAnnotation() instanceof JsonArgument) || ((AbstractEntity) annotationValue.getValue()).getOperateTypeSupplier() == null)
+            return logInfo.operateType();
+        return ((AbstractEntity) annotationValue.getValue()).getOperateTypeSupplier().get();
+    }
+
+    private Object getValue(Supplier<AnnotationValue> supplier, Placeholder placeholder) {
+        AnnotationValue annotationValue = supplier.get();
+        if (annotationValue.getAnnotation() instanceof JsonArgument)
+            return getValue((AbstractEntity) annotationValue.getValue(), annotationValue.getValue().getClass(), placeholder);
+        if (annotationValue.getAnnotation() instanceof PathVariable
+                && ((AnnotationValue<PathVariable>) annotationValue).getAnnotation().value().equals(placeholder.getKey()))
+            return annotationValue.getValue();
         return null;
     }
 
@@ -120,16 +144,6 @@ public class LogsAspectj {
             }
         }
         return null;
-    }
-
-    private FruitLogsVo logTemplate(AbstractEntity dbData, LogInfo logInfo) {
-        FruitLogsVo vo = FruitLogs.getVo();
-        JsonElement jsonObject = new Gson().toJsonTree(dbData);
-        vo.setJsonObject(!jsonObject.isJsonNull() ? jsonObject.toString() : null);
-        vo.setFruitType(logInfo.type());
-        vo.setOperateType(logInfo.operateType());
-        vo.setUserId(ApplicationContextUtils.getCurrentUser().getUserId());
-        return vo;
     }
 
     /*替换字符串中占位符部分*/

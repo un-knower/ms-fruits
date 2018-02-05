@@ -4,17 +4,23 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import wowjoy.fruits.ms.dao.logs.AbstractDaoLogs;
+import wowjoy.fruits.ms.dao.team.AbstractDaoTeam;
+import wowjoy.fruits.ms.dao.user.UserDaoImpl;
 import wowjoy.fruits.ms.exception.CheckException;
+import wowjoy.fruits.ms.module.logs.FruitLogsDao;
 import wowjoy.fruits.ms.module.notepad.FruitNotepad;
 import wowjoy.fruits.ms.module.notepad.FruitNotepadDao;
 import wowjoy.fruits.ms.module.notepad.FruitNotepadExample;
 import wowjoy.fruits.ms.module.notepad.mapper.FruitNotepadMapper;
+import wowjoy.fruits.ms.module.team.FruitTeamDao;
+import wowjoy.fruits.ms.module.user.FruitUserDao;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * Created by wangziwen on 2017/8/25.
@@ -24,6 +30,12 @@ import java.util.List;
 public class NotepadDaoImpl extends AbstractDaoNotepad {
     @Autowired
     private FruitNotepadMapper mapper;
+    @Autowired
+    private AbstractDaoLogs daoLogs;
+    @Autowired
+    private UserDaoImpl userDaoImpl;
+    @Autowired
+    private AbstractDaoTeam daoTeamImpl;
 
     @Override
     public FruitNotepad find(FruitNotepadDao dao) {
@@ -67,38 +79,28 @@ public class NotepadDaoImpl extends AbstractDaoNotepad {
     }
 
     @Override
-    protected List<FruitNotepadDao> findsByCurrentIds(FruitNotepadDao dao) {
-        return mapper.selectByCurrentUser(this.findsTemplate(dao));
+    protected List<FruitNotepadDao> findsByExample(Consumer<FruitNotepadExample> exampleConsumer) {
+        FruitNotepadExample notepadExample = new FruitNotepadExample();
+        exampleConsumer.accept(notepadExample);
+        return mapper.selectByExample(notepadExample);
     }
 
     @Override
-    protected List<FruitNotepadDao> findsByTeamIds(FruitNotepadDao dao, String... teamIds) {
-        return mapper.selectByTeamIds(this.findsTemplate(dao), teamIds);
+    protected Map<String, LinkedList<FruitLogsDao>> joinLogs(LinkedList<String> ids) {
+        return daoLogs.findLogs(example -> {
+            example.createCriteria().andFruitTypeEqualTo(FruitDict.Parents.NOTEPAD.name()).andFruitUuidIn(ids);
+            example.setOrderByClause("flogs.create_date_time desc");
+        }, FruitDict.Parents.NOTEPAD);
     }
 
     @Override
-    protected List<FruitNotepadDao> joinLogs(LinkedList<String> ids) {
-        return mapper.selectJoinLogsByNotepadIds(ids.toArray(new String[ids.size()]));
+    protected List<FruitUserDao> joinUser(LinkedList<String> ids) {
+        return userDaoImpl.findExample(example -> example.createCriteria().andUserIdIn(ids).andIsDeletedEqualTo(FruitDict.Systems.N.name()));
     }
 
     @Override
-    protected List<FruitNotepadDao> joinUser(LinkedList<String> ids) {
-        return mapper.selectJoinUserByNotepadIds(ids.toArray(new String[ids.size()]));
-    }
-
-    private FruitNotepadExample findsTemplate(FruitNotepadDao dao) {
-        FruitNotepadExample example = new FruitNotepadExample();
-        FruitNotepadExample.Criteria criteria = example.createCriteria();
-        if (dao.getStartDate() != null && dao.getEndDate() != null)
-            criteria.andEstimatedSubmitDateBetween(dao.getStartDate(), dao.getEndDate());
-        if (StringUtils.isNotBlank(dao.getState()))
-            criteria.andStateEqualTo(dao.getState());
-        if (StringUtils.isNotBlank(dao.getUuid()))
-            criteria.andUuidEqualTo(dao.getUuid());
-        if (StringUtils.isNotBlank(dao.getUserId()))
-            criteria.andUserIdEqualTo(dao.getUserId());
-        example.setOrderByClause("notepad.estimated_submit_date desc,notepad.create_date_time desc");
-        return example;
+    public FruitTeamDao findTeamInfo(String teamId) {
+        return daoTeamImpl.findInfo(teamId);
     }
 
     private void checkUuid(String uuid) {

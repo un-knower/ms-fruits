@@ -10,24 +10,36 @@ import wowjoy.fruits.ms.exception.ServiceException;
 import wowjoy.fruits.ms.module.relation.entity.UserTeamRelation;
 import wowjoy.fruits.ms.module.team.FruitTeam;
 import wowjoy.fruits.ms.module.team.FruitTeamDao;
+import wowjoy.fruits.ms.module.team.FruitTeamExample;
 import wowjoy.fruits.ms.module.team.FruitTeamVo;
-import wowjoy.fruits.ms.module.user.FruitUser;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;
 
+import java.text.MessageFormat;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.function.Consumer;
+
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
 /**
  * Created by wangziwen on 2017/9/6.
  */
 public abstract class AbstractDaoTeam implements InterfaceDao {
+
     /*********************************************************************************
      * 抽象接口，私有，因为对外的公共接口用来书写业务层，发布api必须在自己的控制范围内，不发布无用的接口。*
      *********************************************************************************/
 
-    public abstract List<FruitTeamDao> findRelation(FruitTeamDao dao, FruitUserDao userDao);
+    public abstract List<FruitTeamDao> findUserByTeamIds(List<String> teamIds);
+
+    public abstract List<FruitTeamDao> findTeamByExample(Consumer<FruitTeamExample> teamExampleConsumer);
+
+    public abstract List<UserTeamRelation> findUserTeam(String userId);
 
     protected abstract void insert(FruitTeamDao dao);
 
@@ -40,40 +52,69 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
      * 尽量保证规范，不直接调用dao接口 *
      *******************************/
 
-    public final List<FruitTeamDao> findRelation(FruitTeamVo vo) {
-        FruitTeamDao dao = FruitTeam.getDao();
-        dao.setTitle(vo.getTitle());
-        dao.setUuid(vo.getUuidVo());
-        FruitUserDao user = FruitUser.getDao();
-        if (StringUtils.isNotBlank(vo.getUserName()))
-            user.setUserName(vo.getUserName());
-        List<FruitTeamDao> result = this.findRelation(dao, user);
-        /*检索团队leader*/
-        result.forEach((i) -> i.searchLeader());
-        return result;
+    public final List<FruitTeamDao> findTeams(FruitTeamVo vo) {
+        List<FruitTeamDao> teamDaoList = this.findTeamByExample(fruitTeamExample -> {
+            FruitTeamExample.Criteria criteria = fruitTeamExample.createCriteria();
+            if (StringUtils.isNotBlank(vo.getTitle()))
+                criteria.andTitleLike(MessageFormat.format("%{0}%", vo.getTitle()));
+            if (StringUtils.isNotBlank(vo.getUuidVo()))
+                criteria.andUuidEqualTo(vo.getUuidVo());
+            criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
+            String sort = vo.sortConstrue();
+            if (StringUtils.isNotBlank(sort))
+                fruitTeamExample.setOrderByClause(sort);
+            else
+                fruitTeamExample.setOrderByClause("create_date_time desc");
+        });
+        try {
+            this.plugUser(teamDaoList).call();
+        } catch (Exception e) {
+            throw new CheckException("获取用户信息异常");
+        }
+        return teamDaoList;
     }
 
-    public final List<FruitTeamDao> findCurrent(FruitTeamVo vo) {
-        FruitTeamDao dao = FruitTeam.getDao();
-        dao.setTitle(vo.getTitle());
-        dao.setUuid(vo.getUuidVo());
-        FruitUserDao user = FruitUser.getDao();
-        user.setUserId(ApplicationContextUtils.getCurrentUser().getUserId());
-        if (StringUtils.isNotBlank(vo.getUserName()))
-            user.setUserName(vo.getUserName());
-        List<FruitTeamDao> result = this.findRelation(dao, user);
-        /*检索团队leader*/
-        result.forEach((i) -> i.searchLeader());
-        return result;
+    private Callable plugUser(List<FruitTeamDao> teamDaoList) {
+        return () -> {
+            Map<String, LinkedList<FruitUserDao>> userMap = this.findUserByTeamIds(teamDaoList.parallelStream().map(FruitTeamDao::getUuid).collect(toList()))
+                    .parallelStream().collect(toMap(FruitTeamDao::getUuid, team -> {
+                        LinkedList<FruitUserDao> userList = Lists.newLinkedList();
+                        userList.addAll(team.getUsers());
+                        return userList;
+                    }, (l, r) -> {
+                        r.addAll(l);
+                        return r;
+                    }));
+            teamDaoList.parallelStream().forEach(fruitTeamDao -> {
+                fruitTeamDao.setUsers(userMap.get(fruitTeamDao.getUuid()));
+                fruitTeamDao.searchLeader();
+            });
+            return true;
+        };
     }
 
-    public final FruitTeamDao find(FruitTeamVo vo) {
-        FruitTeamDao dao = FruitTeam.getDao();
-        dao.setUuid(vo.getUuidVo());
-        List<FruitTeamDao> result = this.findRelation(dao, FruitUser.getDao());
+    public final List<FruitTeamDao> findCurrent() {
+        List<UserTeamRelation> userTeamList = this.findUserTeam(ApplicationContextUtils.getCurrentUser().getUserId());
+        if (userTeamList.isEmpty()) return Lists.newLinkedList();
+        return this.findTeamByExample(fruitTeamExample -> fruitTeamExample.createCriteria().andUuidIn(userTeamList.parallelStream().map(UserTeamRelation::getUuid).collect(toList())));
+    }
+
+    public final FruitTeamDao findInfo(String uuid) {
+        if (StringUtils.isBlank(uuid))
+            throw new CheckException("团队id不能为空");
+        List<FruitTeamDao> result = this.findTeamByExample(fruitTeamExample -> {
+            FruitTeamExample.Criteria criteria = fruitTeamExample.createCriteria();
+            if (StringUtils.isNotBlank(uuid))
+                criteria.andUuidEqualTo(uuid);
+            criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
+        });
         if (result.isEmpty())
             throw new CheckException("未找到指定团队");
-        result.forEach((i) -> i.searchLeader());
+        try {
+            this.plugUser(result).call();
+        } catch (Exception e) {
+            throw new CheckException("获取团队用户信息失败");
+        }
         return result.get(0);
     }
 

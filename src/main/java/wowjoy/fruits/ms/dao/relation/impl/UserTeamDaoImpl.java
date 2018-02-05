@@ -13,6 +13,7 @@ import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.text.MessageFormat;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Created by wangziwen on 2017/9/12.
@@ -49,15 +50,9 @@ public class UserTeamDaoImpl<T extends UserTeamRelation> extends AbstractDaoRela
         return example;
     }
 
-    public List<UserTeamRelation> finds(UserTeamRelation relation) {
+    public List<UserTeamRelation> finds(Consumer<UserTeamRelationExample> teamRelationExampleConsumer) {
         UserTeamRelationExample example = new UserTeamRelationExample();
-        UserTeamRelationExample.Criteria criteria = example.createCriteria();
-        if (StringUtils.isNotBlank(relation.getTeamId()))
-            criteria.andTeamIdEqualTo(relation.getTeamId());
-        if (StringUtils.isNotBlank(relation.getUserId()))
-            criteria.andUserIdEqualTo(relation.getUserId());
-        if (StringUtils.isNotBlank(relation.getUtRole()))
-            criteria.andUtRoleEqualTo(relation.getUtRole());
+        teamRelationExampleConsumer.accept(example);
         return mapper.selectByExample(example);
     }
 

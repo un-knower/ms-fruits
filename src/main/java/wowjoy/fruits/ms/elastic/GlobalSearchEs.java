@@ -23,7 +23,6 @@ import wowjoy.fruits.ms.module.elastic.GlobalSearchDao;
 import wowjoy.fruits.ms.module.elastic.GlobalSearchVo;
 import wowjoy.fruits.ms.module.project.FruitProject;
 import wowjoy.fruits.ms.module.project.FruitProjectDao;
-import wowjoy.fruits.ms.module.team.FruitTeam;
 import wowjoy.fruits.ms.module.team.FruitTeamDao;
 import wowjoy.fruits.ms.module.user.FruitUser;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
@@ -130,9 +129,7 @@ public class GlobalSearchEs extends AbstractElastic {
 
         public LinkedList<GlobalSearch> execute() {
             LinkedList<GlobalSearch> result = Lists.newLinkedList();
-            types.forEach((type) -> {
-                initESExecutor.submit(callables.get(type));
-            });
+            types.forEach((type) -> initESExecutor.submit(callables.get(type)));
             types.forEach((i) -> {
                 try {
                     result.addAll(initESExecutor.take().get());
@@ -168,7 +165,7 @@ public class GlobalSearchEs extends AbstractElastic {
         private final Callable extractTeam = () -> {
             final LinkedList<GlobalSearch> result = Lists.newLinkedList();
             TeamDaoImpl dao = ApplicationContextUtils.getContext().getBean(TeamDaoImpl.class);
-            List<FruitTeamDao> teams = dao.findRelation(FruitTeam.getVo());
+            List<FruitTeamDao> teams = dao.findTeamByExample(null);
             teams.forEach((i) -> {
                 GlobalSearch global = GlobalSearch.getInstance(FruitTeamDao.class);
                 global.setTitle(i.getTitle());
