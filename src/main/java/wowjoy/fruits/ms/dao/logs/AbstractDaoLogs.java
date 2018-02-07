@@ -24,7 +24,7 @@ public abstract class AbstractDaoLogs implements InterfaceDao {
     /*********************************************************************************
      * 抽象接口，私有，因为对外的公共接口用来书写业务层，发布api必须在自己的控制范围内，不发布无用的接口。*
      *********************************************************************************/
-    protected abstract void insert(FruitLogsDao dao);
+    protected abstract void insert(Consumer<FruitLogsDao> daoConsumer);
 
     public abstract List<FruitLogsDao> findExample(Consumer<FruitLogsExample> exampleUnaryOperator);
 
@@ -33,16 +33,18 @@ public abstract class AbstractDaoLogs implements InterfaceDao {
      * 尽量保证规范，不直接调用dao接口 *
      *******************************/
 
-    public void insert(FruitLogsVo vo) {
-        FruitLogsDao dao = FruitLogs.getDao();
-        dao.setUuid(vo.getUuid());
-        dao.setUserId(vo.getUserId());
-        dao.setFruitUuid(vo.getFruitUuid());
-        dao.setFruitType(vo.getFruitType());
-        dao.setOperateType(vo.getOperateType());
-        dao.setJsonObject(vo.getJsonObject());
-        dao.setVoObject(vo.getVoObject());
-        this.insert(dao);
+    public void insertVo(Consumer<FruitLogsVo> voConsumer) {
+        FruitLogsVo vo = FruitLogs.getVo();
+        voConsumer.accept(vo);
+        this.insert(dao -> {
+            dao.setUuid(vo.getUuid());
+            dao.setUserId(vo.getUserId());
+            dao.setFruitUuid(vo.getFruitUuid());
+            dao.setFruitType(vo.getFruitType());
+            dao.setOperateType(vo.getOperateType());
+            dao.setJsonObject(vo.getJsonObject());
+            dao.setVoObject(vo.getVoObject());
+        });
     }
 
     public Map<String, LinkedList<FruitLogsDao>> findLogs(Consumer<FruitLogsExample> exampleConsumer, FruitDict.Parents parents) {

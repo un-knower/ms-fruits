@@ -13,6 +13,7 @@ import wowjoy.fruits.ms.dao.relation.impl.PlanUserDaoImpl;
 import wowjoy.fruits.ms.dao.task.TaskDaoImpl;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.logs.FruitLogsDao;
+import wowjoy.fruits.ms.module.logs.FruitLogsVo;
 import wowjoy.fruits.ms.module.plan.FruitPlan;
 import wowjoy.fruits.ms.module.plan.FruitPlanDao;
 import wowjoy.fruits.ms.module.plan.FruitPlanSummary;
@@ -76,6 +77,13 @@ public class PlanDaoImpl extends AbstractDaoPlan {
     }
 
     @Override
+    public List<FruitPlanDao> findByExample(Consumer<FruitPlanExample> exampleConsumer) {
+        FruitPlanExample example = new FruitPlanExample();
+        exampleConsumer.accept(example);
+        return mapper.selectByExample(example);
+    }
+
+    @Override
     protected List<FruitPlanDao> findByProjectId(FruitPlanDao dao) {
         return mapper.selectByProjectId(this.findTemplate(dao), dao.getProjectId());
     }
@@ -113,6 +121,11 @@ public class PlanDaoImpl extends AbstractDaoPlan {
                     .andFruitTypeEqualTo(FruitDict.Parents.PLAN.name());
             example.setOrderByClause("flogs.create_date_time desc");
         }, FruitDict.Parents.PLAN);
+    }
+
+    @Override
+    public void insertLogs(Consumer<FruitLogsVo> vo) {
+        logsDaoImpl.insertVo(vo);
     }
 
     @Override
@@ -188,6 +201,20 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         Relation.getInstance(userRelation, projectDao, dao)
                 .removeUser().removeProject()
                 .insertUser().insertProject();
+    }
+
+    @Override
+    public List<FruitPlanDao> batchUpdateStatusAndReturnResult(Consumer<FruitPlanDao> planDaoConsumer, Consumer<FruitPlanExample> fruitPlanExampleConsumer) {
+        List<FruitPlanDao> planDaoList = this.findByExample(fruitPlanExampleConsumer);
+        FruitPlanExample fruitPlanExample = new FruitPlanExample();
+        fruitPlanExampleConsumer.accept(fruitPlanExample);
+        if (fruitPlanExample.getOredCriteria().isEmpty())
+            throw new CheckException("必须携带条件");
+        if (planDaoList.isEmpty())
+            return planDaoList;
+        fruitPlanExample.getOredCriteria().get(0).andUuidIn(planDaoList.stream().map(FruitPlanDao::getUuid).collect(toList()));
+        this.update(planDaoConsumer, fruitPlanExampleConsumer);
+        return planDaoList;
     }
 
     @Override

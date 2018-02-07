@@ -2,12 +2,15 @@ package wowjoy.fruits.ms.dao.plan;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.exception.ExceptionSupport;
 import wowjoy.fruits.ms.exception.ServiceException;
 import wowjoy.fruits.ms.module.logs.FruitLogsDao;
+import wowjoy.fruits.ms.module.logs.FruitLogsVo;
 import wowjoy.fruits.ms.module.plan.*;
 import wowjoy.fruits.ms.module.plan.example.FruitPlanExample;
 import wowjoy.fruits.ms.module.task.FruitTaskDao;
@@ -45,6 +48,8 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
 
     protected abstract List<FruitPlanDao> findByProjectId(Consumer<FruitPlanExample> exampleConsumer, String projectId, Integer pageNum, Integer pageSize, boolean isPage);
 
+    protected abstract List<FruitPlanDao> findByExample(Consumer<FruitPlanExample> exampleConsumer);
+
     protected abstract List<FruitPlanDao> findByProjectId(FruitPlanDao dao);
 
     protected abstract List<FruitPlanDao> findUserByPlanIds(List<String> planIds, String currentUserId);
@@ -53,6 +58,8 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
 
     protected abstract Map<String, LinkedList<FruitLogsDao>> findLogsByPlanIds(List<String> planIds);
 
+    protected abstract void insertLogs(Consumer<FruitLogsVo> vo);
+
     protected abstract FruitPlan find(FruitPlanDao dao);
 
     protected abstract FruitPlan findByUUID(String uuid);
@@ -60,6 +67,8 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
     protected abstract void insert(FruitPlanDao dao);
 
     protected abstract void update(Consumer<FruitPlanDao> planDaoConsumer, Consumer<FruitPlanExample> exampleConsumer);
+
+    public abstract List<FruitPlanDao> batchUpdateStatusAndReturnResult(Consumer<FruitPlanDao> planDaoConsumer, Consumer<FruitPlanExample> fruitPlanExampleConsumer);
 
     protected abstract void delete(String uuid);
 
@@ -87,32 +96,32 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
      * @param isPage
      * @return
      */
+
     private final List<FruitPlanDao> findTree(FruitPlanVo vo, FruitUser currentUser, boolean isPage) {
         DaoThread planThread = DaoThread.getFixed();
-        List<FruitPlanDao> planDaoListSource = findByProjectId(example -> {
-            FruitPlanExample.Criteria criteria = example.createCriteria();
-            criteria.andParentIdIsNull();
-            example.setOrderByClause("create_date_time desc");
-            if (StringUtils.isNotBlank(vo.sortConstrue()))
-                example.setOrderByClause(vo.sortConstrue());
-        }, vo.getProjectId(), vo.getPageNum(), vo.getPageSize(), isPage);
+        List<FruitPlanDao> planDaoListSource = this.findByProjectId(this.findParent(vo), vo.getProjectId(), vo.getPageNum(), vo.getPageSize(), isPage);
 
         if (planDaoListSource.isEmpty()) return planDaoListSource;
 
-        planThread
-                .execute(this.plugUser(planDaoListSource, currentUser));
-        Future<List<FruitPlanDao>> weekFuture = planThread.executeFuture(() -> this.findByProjectId(example -> {
-            FruitPlanExample.Criteria criteria = example.createCriteria();
-            if (StringUtils.isNotBlank(vo.getTitle()))
-                criteria.andTitleLike(MessageFormat.format("%{0}%", vo.getTitle()));
-            if (StringUtils.isNotBlank(vo.getPlanStatus()))
-                criteria.andPlanStatusEqualTo(vo.getPlanStatus());
-            criteria.andParentIdIsNotNull();
-            criteria.andParentIdIn(planDaoListSource.stream().map(FruitPlanDao::getUuid).collect(toList()));
-            example.setOrderByClause("create_date_time desc");
-            if (StringUtils.isNotBlank(vo.sortConstrue()))
-                example.setOrderByClause(vo.sortConstrue());
-        }, vo.getProjectId(), vo.getPageNum(), vo.getPageSize(), false));
+        planThread.execute(this.plugUser(planDaoListSource, currentUser));
+        Future<List<FruitPlanDao>> weekFuture = planThread.executeFuture(() -> this.findByProjectId(
+                example -> {
+                    FruitPlanExample.Criteria criteria = example.createCriteria();
+                    if (StringUtils.isNotBlank(vo.getTitle()))
+                        criteria.andTitleLike(MessageFormat.format("%{0}%", vo.getTitle()));
+                    if (StringUtils.isNotBlank(vo.getPlanStatus()))
+                        criteria.andPlanStatusEqualTo(vo.getPlanStatus());
+                    criteria.andParentIdIsNotNull();
+                    criteria.andParentIdIn(planDaoListSource.stream().map(FruitPlanDao::getUuid).collect(toList()));
+                    example.setOrderByClause("create_date_time desc");
+                    if (StringUtils.isNotBlank(vo.sortConstrue()))
+                        example.setOrderByClause(vo.sortConstrue());
+                },
+                vo.getProjectId(),
+                vo.getPageNum(),
+                vo.getPageSize(),
+                false)
+        );
         try {
             planThread
                     .execute(this.plugUser(weekFuture.get(), currentUser));
@@ -128,6 +137,16 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         planThread.get();
         planThread.shutdown();
         return wherePlan(planDaoListSource, vo);
+    }
+
+    private Consumer<FruitPlanExample> findParent(FruitPlanVo vo) {
+        return example -> {
+            FruitPlanExample.Criteria criteria = example.createCriteria();
+            criteria.andParentIdIsNull();
+            example.setOrderByClause("create_date_time desc");
+            if (StringUtils.isNotBlank(vo.sortConstrue()))
+                example.setOrderByClause(vo.sortConstrue());
+        };
     }
 
     protected List<FruitPlanDao> wherePlan(List<FruitPlanDao> planDaoListSource, FruitPlanVo vo) {
@@ -357,14 +376,43 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
     public final void end(FruitPlanVo vo) {
         if (checkPlan(vo))
             throw new CheckException("计划不存在");
-        this.update(dao -> {
-            dao.setUuid(vo.getUuidVo());
-            dao.setPlanStatus(FruitDict.PlanDict.END.name());
-            dao.setEndDate(LocalDateTime.now());
-            dao.setStatusDescription(vo.getStatusDescription());
-        }, fruitPlanExample -> fruitPlanExample.createCriteria().andUuidEqualTo(vo.getUuidVo()));
-    }
+        if (StringUtils.isBlank(vo.getStatusDescription()))
+            throw new CheckException("状态描述不能为空");
+        /*校验是否是批量终止*/
+        final FruitUser currentUser = ApplicationContextUtils.getCurrentUser();
+        final LocalDateTime endDate = LocalDateTime.now();
+        final Gson gson = new Gson();
+        List<FruitPlanDao> nodes = this.batchUpdateStatusAndReturnResult(dao -> {
+                    dao.setPlanStatus(FruitDict.PlanDict.END.name());
+                    dao.setEndDate(endDate);
+                    dao.setStatusDescription(vo.getStatusDescription());
+                }, fruitPlanExample -> fruitPlanExample.createCriteria()
+                        .andParentIdEqualTo(vo.getUuidVo())
+                        .andIsDeletedEqualTo(FruitDict.Systems.N.name())
+                        .andPlanStatusIn(Lists.newArrayList(FruitDict.PlanDict.STAY_PENDING.name(), FruitDict.PlanDict.PENDING.name()))
+        );
+        nodes.stream().forEach(plan -> this.insertLogs(logsVo -> {
+            logsVo.setUserId(currentUser.getUserId());
+            logsVo.setFruitUuid(plan.getUuid());
+            logsVo.setFruitType(FruitDict.Parents.PLAN);
+            logsVo.setOperateType(FruitDict.LogsDict.END);
 
+            plan.setStatusDescription(vo.getStatusDescription());
+            plan.setEndDate(endDate);
+            logsVo.setJsonObject(gson.toJsonTree(plan).toString());
+
+            JsonObject jsonVo = gson.toJsonTree(vo).getAsJsonObject();
+            jsonVo.addProperty("uuidVo", plan.getUuid());
+            logsVo.setVoObject(jsonVo.toString());
+        }));
+        this.update(dao -> {
+            dao.setPlanStatus(FruitDict.PlanDict.END.name());
+            dao.setEndDate(endDate);
+            dao.setStatusDescription(vo.getStatusDescription());
+        }, fruitPlanExample -> fruitPlanExample.createCriteria()
+                .andUuidEqualTo(vo.getUuidVo())
+                .andPlanStatusIn(Lists.newArrayList(FruitDict.PlanDict.STAY_PENDING.name(), FruitDict.PlanDict.PENDING.name())));
+    }
 
     /**
      * 完成计划

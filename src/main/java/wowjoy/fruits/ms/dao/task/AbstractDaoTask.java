@@ -253,6 +253,8 @@ public abstract class AbstractDaoTask implements InterfaceDao {
                 .execute(this.plugUtil(tasks));
         Map<String, List<FruitTaskDao>> listMap = tasks.stream().collect(groupingBy(FruitTaskDao::getListId));
         lists.parallelStream().forEach(list -> list.setTasks(listMap.get(list.getUuid())));
+        if (StringUtils.isNotBlank(vo.getTitle()))
+            lists = lists.stream().filter(list -> list.getTasks() != null && !list.getTasks().isEmpty()).collect(toList());
         taskThread.get().shutdown();
         return lists;
     }

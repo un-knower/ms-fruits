@@ -19,8 +19,6 @@ import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.dao.logs.AbstractDaoLogs;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.AbstractEntity;
-import wowjoy.fruits.ms.module.logs.FruitLogs;
-import wowjoy.fruits.ms.module.logs.FruitLogsVo;
 import wowjoy.fruits.ms.module.user.FruitUser;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;
@@ -89,16 +87,16 @@ public class LogsAspectj {
         Gson gson = new Gson();
         JsonElement jsonDB = gson.toJsonTree(DBData);
         JsonElement jsonVO = gson.toJsonTree(annotationSupplier.get().getValue());
-        FruitLogsVo vo = FruitLogs.getVo();
-        vo.setJsonObject(!jsonDB.isJsonNull() ? jsonDB.toString() : null);
-        vo.setVoObject(!jsonVO.isJsonNull() ? jsonVO.toString() : null);
-        vo.setFruitType(logInfo.type());
-        vo.setOperateType(operateType(annotationSupplier, logInfo));
-        vo.setUserId(currentUser.getUserId());
-        /*获取对应的uuid*/
-        vo.setFruitUuid(DBData.getUuid());
         /*记录日志*/
-        logsDao.insert(vo);
+        logsDao.insertVo(vo -> {
+            vo.setJsonObject(!jsonDB.isJsonNull() ? jsonDB.toString() : null);
+            vo.setVoObject(!jsonVO.isJsonNull() ? jsonVO.toString() : null);
+            vo.setFruitType(logInfo.type());
+            vo.setOperateType(operateType(annotationSupplier, logInfo));
+            vo.setUserId(currentUser.getUserId());
+            /*获取对应的uuid*/
+            vo.setFruitUuid(DBData.getUuid());
+        });
     }
 
     public FruitDict.LogsDict operateType(Supplier<AnnotationValue> supplier, LogInfo logInfo) {
