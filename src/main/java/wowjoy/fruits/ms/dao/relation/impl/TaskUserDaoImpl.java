@@ -13,6 +13,7 @@ import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.text.MessageFormat;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Created by wangziwen on 2017/9/12.
@@ -36,7 +37,7 @@ public class TaskUserDaoImpl<T extends TaskUserRelation> extends AbstractDaoRela
     }
 
     private TaskUserRelationExample removeTemplate(TaskUserRelation relation) {
-        final TaskUserRelationExample example =  new TaskUserRelationExample();
+        final TaskUserRelationExample example = new TaskUserRelationExample();
         final TaskUserRelationExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(relation.getTaskId()))
             criteria.andTaskIdEqualTo(relation.getTaskId());
@@ -66,5 +67,11 @@ public class TaskUserDaoImpl<T extends TaskUserRelation> extends AbstractDaoRela
         TaskUserRelation delete = TaskUserRelation.getInstance();
         delete.setIsDeleted(FruitDict.Systems.Y.name());
         mapper.updateByExampleSelective(delete, removeTemplate(relation));
+    }
+
+    public List<TaskUserRelation> findByExample(Consumer<TaskUserRelationExample> exampleConsumer) {
+        TaskUserRelationExample example = new TaskUserRelationExample();
+        exampleConsumer.accept(example);
+        return mapper.selectByExample(example);
     }
 }

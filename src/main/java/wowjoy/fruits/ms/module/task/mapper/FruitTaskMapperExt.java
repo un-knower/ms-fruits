@@ -14,7 +14,7 @@ import java.util.List;
 public interface FruitTaskMapperExt {
     List<FruitTaskDao> selectByTaskList(@Param("example") FruitTaskExample example, @Param("listIds") List<String> listIds);
 
-    List<FruitTaskDao> selectUserByTask(@Param("ids") List<String> example);
+    List<FruitTaskDao> selectJoinUserByTaskIds(@Param("ids") List<String> example);
 
     List<FruitTaskDao> selectPlanByTask(@Param("example") FruitTaskExample example);
 
@@ -23,6 +23,8 @@ public interface FruitTaskMapperExt {
     List<FruitTaskDao> selectPlanJoinProjectByTask(@Param("taskIds") List<String> taskIds);
 
     List<FruitTaskDao> selectListByTask(@Param("example") FruitTaskExample example);
+
+    List<FruitTaskDao> selectByExampleAndUserIdAndProjectId(@Param("example") FruitTaskExample example, @Param("projectId") String projectId, @Param("userIds") List<String> userIds);
 
     /************************************************************************************************
      *                                       个人中心专供                                            *

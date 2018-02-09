@@ -99,13 +99,13 @@ public abstract class AbstractDaoNotepad implements InterfaceDao {
                 criteria.andEstimatedSubmitDateBetween(vo.getStartDate(), vo.getEndDate());
             if (StringUtils.isNotBlank(vo.getState()))
                 criteria.andStateEqualTo(vo.getState());
-            criteria.andUserIdIn(teamInfo.getUsers().parallelStream().map(FruitUserDao::getUserId).collect(toList()));
+            criteria.andUserIdIn(teamInfo.findUsers().orElseGet(LinkedList::new).parallelStream().map(FruitUserDao::getUserId).collect(toList()));
             criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
             example.setOrderByClause("estimated_submit_date desc,create_date_time desc");
         });
         DaoThread notepadThread = DaoThread.getFixed().execute(this.plugLogs(notepadDaoList)).execute(this.plugUser(notepadDaoList));
         Map<String, List<FruitNotepadDao>> notepadMap = notepadDaoList.stream().collect(groupingBy(FruitNotepadDao::getUserId));
-        teamInfo.getUsers().parallelStream().forEach(user -> user.setNotepadDaos(notepadMap.get(user.getUserId())));
+        teamInfo.findUsers().orElseGet(LinkedList::new).parallelStream().forEach(user -> user.setNotepadDaos(notepadMap.get(user.getUserId())));
         notepadThread.get().shutdown();
         return teamInfo;
     }

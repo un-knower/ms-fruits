@@ -84,7 +84,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
     }
 
     @Override
-    protected List<FruitTaskDao> find(Consumer<FruitTaskExample> consumerExample) {
+    public List<FruitTaskDao> findByExample(Consumer<FruitTaskExample> consumerExample) {
         FruitTaskExample example = new FruitTaskExample();
         consumerExample.accept(example);
         return taskMapper.selectByExample(example);
@@ -130,19 +130,19 @@ public class TaskDaoImpl extends AbstractDaoTask {
     }
 
     @Override
-    protected List<FruitListDao> findProjectList(String projectId, Consumer<FruitListExample> listExampleConsumer) {
+    public List<FruitListDao> findProjectList(String projectId, Consumer<FruitListExample> listExampleConsumer) {
         return listDao.findByProjectId(projectId, listExampleConsumer::accept);
     }
 
     @Override
-    public List<FruitTaskDao> findUserByTaskIds(List<String> taskIds) {
+    public List<FruitTaskDao> findJoinUserByTaskIds(List<String> taskIds) {
         if (taskIds == null || taskIds.isEmpty())
             return Lists.newLinkedList();
-        return taskMapper.selectUserByTask(taskIds);
+        return taskMapper.selectJoinUserByTaskIds(taskIds);
     }
 
     @Override
-    protected List<FruitTaskDao> findPlanByTaskIds(List<String> taskIds) {
+    public List<FruitTaskDao> findPlanByTaskIds(List<String> taskIds) {
         if (taskIds == null || taskIds.isEmpty())
             return Lists.newLinkedList();
         FruitTaskExample example = new FruitTaskExample();
@@ -151,7 +151,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
     }
 
     @Override
-    protected List<FruitTaskDao> findProjectByTask(List<String> taskIds) {
+    public List<FruitTaskDao> findProjectByTask(List<String> taskIds) {
         if (taskIds == null || taskIds.isEmpty())
             return Lists.newLinkedList();
         FruitTaskExample example = new FruitTaskExample();
@@ -160,14 +160,14 @@ public class TaskDaoImpl extends AbstractDaoTask {
     }
 
     @Override
-    protected List<FruitTaskDao> findPlanJoinProjectByTask(List<String> taskIds) {
+    public List<FruitTaskDao> findPlanJoinProjectByTask(List<String> taskIds) {
         if (taskIds == null || taskIds.isEmpty())
             return Lists.newLinkedList();
         return taskMapper.selectPlanJoinProjectByTask(taskIds);
     }
 
     @Override
-    protected List<FruitTaskDao> findListByTask(List<String> taskIds) {
+    public List<FruitTaskDao> findListByTask(List<String> taskIds) {
         if (taskIds == null || taskIds.isEmpty())
             return Lists.newLinkedList();
         FruitTaskExample example = new FruitTaskExample();
@@ -176,7 +176,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
     }
 
     @Override
-    protected Map<String, LinkedList<FruitLogsDao>> findJoinLogsByTask(List<String> taskIds) {
+    public Map<String, LinkedList<FruitLogsDao>> findJoinLogsByTask(List<String> taskIds) {
         if (taskIds == null || taskIds.isEmpty()) return Maps.newLinkedHashMap();
         return logsDaoImpl.findLogs(example -> {
             example.createCriteria().andFruitUuidIn(taskIds).andFruitTypeEqualTo(FruitDict.Parents.TASK.name());
@@ -200,6 +200,10 @@ public class TaskDaoImpl extends AbstractDaoTask {
                 appends.add(userFunction.andThen(text -> "移除成员：" + text).apply(vo.getUserRelation().get(Systems.DELETE)));
             return template + "，" + appends.stream().reduce((l, r) -> l + "，" + r).get();
         }, FruitDict.Parents.TASK);
+    }
+
+    public List<FruitTaskDao> findByExampleAndUserIdByProjectId(FruitTaskExample example, String projectId, List<String> userIds) {
+        return taskMapper.selectByExampleAndUserIdAndProjectId(example, projectId, userIds);
     }
 
 

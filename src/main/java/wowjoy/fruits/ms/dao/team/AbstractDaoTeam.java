@@ -69,6 +69,7 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
         try {
             this.plugUser(teamDaoList).call();
         } catch (Exception e) {
+            e.printStackTrace();
             throw new CheckException("获取用户信息异常");
         }
         return teamDaoList;
@@ -79,7 +80,7 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
             Map<String, LinkedList<FruitUserDao>> userMap = this.findUserByTeamIds(teamDaoList.parallelStream().map(FruitTeamDao::getUuid).collect(toList()))
                     .parallelStream().collect(toMap(FruitTeamDao::getUuid, team -> {
                         LinkedList<FruitUserDao> userList = Lists.newLinkedList();
-                        userList.addAll(team.getUsers());
+                        userList.addAll(team.findUsers().orElseGet(LinkedList::new));
                         return userList;
                     }, (l, r) -> {
                         r.addAll(l);

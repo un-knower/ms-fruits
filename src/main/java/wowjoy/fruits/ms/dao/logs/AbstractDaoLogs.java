@@ -56,7 +56,7 @@ public abstract class AbstractDaoLogs implements InterfaceDao {
                                                           FruitDict.Parents parents) {
         LogsTemplate logsTemplate = LogsTemplate.newInstance(parents);
         Map<String, LinkedList<FruitLogsDao>> logs = findExample(exampleConsumer)
-                .stream()
+                .parallelStream()
                 .map(log -> logsTemplate.msg(log, template))
                 .collect(toMap(
                         FruitLogsDao::getFruitUuid,

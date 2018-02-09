@@ -158,17 +158,15 @@
             <property name="replace" value="plan"/>
         </include>
         from fruits_plan plan
-        inner join (
-        select plan_id from plan_project_relation where
-        project_id = #{projectId}
-        and is_deleted = 'N'
-        ) ppr on ppr.plan_id = plan.uuid
+        right join (select plan_id,project_id from plan_project_relation where project_id = #{projectId} and is_deleted = 'N')
+        ppr on ppr.plan_id = plan.uuid
         <if test="example != null">
             <trim suffixOverrides="AND | OR" prefixOverrides="AND | OR">
                 <where>
                     <include refid="Example_Where_Clause">
                         <property name="replace" value="plan"/>
                     </include>
+                    and plan.uuid is not null
                 </where>
             </trim>
         </if>
@@ -231,6 +229,32 @@
         left join (select
         <include refid="Task_Base_Column_List"/>
         from fruits_task) task on task.uuid = taskPlanRelation.task_id
+    </select>
 
+    <select id="selectByExampleAndUserIdAndProjectId" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List">
+            <property name="replace" value="plan"/>
+        </include>
+        ,
+        <include refid="User_Column_List">
+            <property name="replace" value="fruitUser"/>
+            <property name="prefix" value="user_"/>
+        </include>
+        from fruits_plan plan
+        left join (select plan_id,project_id from plan_project_relation where project_id=#{projectId} and is_deleted='N') projectJoin on projectJoin.plan_id = plan.uuid
+        left join plan_user_relation userJoin on userJoin.plan_id = plan.uuid and userJoin.is_deleted = 'N'
+        left join (select <include refid="user_Base_Column_List"/> from fruits_user where user_id in
+        <foreach collection="userIds" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach> and is_deleted = 'N') fruitUser on fruitUser.user_id = userJoin.user_id
+        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
+            <where>
+                <include refid="Example_Where_Clause">
+                    <property name="replace" value="plan"/>
+                </include>
+                and projectJoin.plan_id is not null and userJoin.plan_id is not null
+            </where>
+        </trim>
     </select>
 </mapper>

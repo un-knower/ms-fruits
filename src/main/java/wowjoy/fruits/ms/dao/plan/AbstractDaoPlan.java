@@ -25,10 +25,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -38,9 +35,6 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.*;
 
-/**
- * Created by wangziwen on 2017/8/25.
- */
 public abstract class AbstractDaoPlan implements InterfaceDao {
     /*********************************************************************************
      * 抽象接口，私有，因为对外的公共接口用来书写业务层，发布api必须在自己的控制范围内，不发布无用的接口。*
@@ -49,8 +43,6 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
     protected abstract List<FruitPlanDao> findByProjectId(Consumer<FruitPlanExample> exampleConsumer, String projectId, Integer pageNum, Integer pageSize, boolean isPage);
 
     protected abstract List<FruitPlanDao> findByExample(Consumer<FruitPlanExample> exampleConsumer);
-
-    protected abstract List<FruitPlanDao> findByProjectId(FruitPlanDao dao);
 
     protected abstract List<FruitPlanDao> findUserByPlanIds(List<String> planIds, String currentUserId);
 
@@ -90,17 +82,10 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
 
     /**
      * 获取计划，分级展示
-     *
-     * @param vo
-     * @param currentUser
-     * @param isPage
-     * @return
      */
-
-    private final List<FruitPlanDao> findTree(FruitPlanVo vo, FruitUser currentUser, boolean isPage) {
+    private List<FruitPlanDao> findTree(FruitPlanVo vo, FruitUser currentUser) {
         DaoThread planThread = DaoThread.getFixed();
-        List<FruitPlanDao> planDaoListSource = this.findByProjectId(this.findParent(vo), vo.getProjectId(), vo.getPageNum(), vo.getPageSize(), isPage);
-
+        List<FruitPlanDao> planDaoListSource = this.findByProjectId(this.findParent(vo), vo.getProjectId(), vo.getPageNum(), vo.getPageSize(), false);
         if (planDaoListSource.isEmpty()) return planDaoListSource;
 
         planThread.execute(this.plugUser(planDaoListSource, currentUser));
@@ -112,7 +97,8 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
                     if (StringUtils.isNotBlank(vo.getPlanStatus()))
                         criteria.andPlanStatusEqualTo(vo.getPlanStatus());
                     criteria.andParentIdIsNotNull();
-                    criteria.andParentIdIn(planDaoListSource.stream().map(FruitPlanDao::getUuid).collect(toList()));
+                    criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
+                    criteria.andParentIdIn(planDaoListSource.parallelStream().filter(Objects::nonNull).map(FruitPlanDao::getUuid).collect(toList()));
                     example.setOrderByClause("create_date_time desc");
                     if (StringUtils.isNotBlank(vo.sortConstrue()))
                         example.setOrderByClause(vo.sortConstrue());
@@ -123,8 +109,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
                 false)
         );
         try {
-            planThread
-                    .execute(this.plugUser(weekFuture.get(), currentUser));
+            planThread.execute(this.plugUser(weekFuture.get(), currentUser));
             Map<String, List<FruitPlanDao>> nodePlanDaoList = weekFuture.get().parallelStream().collect(groupingBy(FruitPlanDao::getParentId));
             planDaoListSource.parallelStream().forEach(plan -> plan.setWeeks(nodePlanDaoList.get(plan.getUuid())));
         } catch (InterruptedException e) {
@@ -143,13 +128,14 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         return example -> {
             FruitPlanExample.Criteria criteria = example.createCriteria();
             criteria.andParentIdIsNull();
+            criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
             example.setOrderByClause("create_date_time desc");
             if (StringUtils.isNotBlank(vo.sortConstrue()))
                 example.setOrderByClause(vo.sortConstrue());
         };
     }
 
-    protected List<FruitPlanDao> wherePlan(List<FruitPlanDao> planDaoListSource, FruitPlanVo vo) {
+    private List<FruitPlanDao> wherePlan(List<FruitPlanDao> planDaoListSource, FruitPlanVo vo) {
         Stream<FruitPlanDao> planDaoStream = planDaoListSource.stream();
         final Predicate<FruitPlanDao> planWeekFilter = plan -> plan.getWeeks() != null && !plan.getWeeks().isEmpty();
         Predicate<FruitPlanDao> chain = plan -> !planWeekFilter.test(plan);
@@ -165,7 +151,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         return () -> {
             if (planDaos.isEmpty()) return false;
             Map<String, LinkedList<FruitLogsDao>> logsMap = this.findLogsByPlanIds(planDaos.stream().map(FruitPlanDao::getUuid).collect(toList()));
-            planDaos.stream().forEach(plan -> plan.setLogs(logsMap.get(plan.getUuid())));
+            planDaos.forEach(plan -> plan.setLogs(logsMap.get(plan.getUuid())));
             return true;
         };
     }
@@ -183,7 +169,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
                         r.addAll(l);
                         return r;
                     }));
-            planDaos.stream().forEach(plan -> plan.setUsers(userMap.get(plan.getUuid())));
+            planDaos.forEach(plan -> plan.setUsers(userMap.get(plan.getUuid())));
             return true;
         };
     }
@@ -201,18 +187,15 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
                         r.addAll(l);
                         return r;
                     }));
-            planDaos.stream().forEach(plan -> plan.setTasks(taskMap.get(plan.getUuid())));
+            planDaos.forEach(plan -> plan.setTasks(taskMap.get(plan.getUuid())));
             return true;
         };
     }
 
     /**
      * 统计当前不同状态下数目
-     *
-     * @param result
-     * @return
      */
-    private Result dataCount(List<FruitPlanDao> plans, Result result) {
+    private void dataCount(List<FruitPlanDao> plans, Result result) {
         /*状态匹配*/
         /*进行中的不统计*/
         plans.forEach((plan) -> {
@@ -229,12 +212,11 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
                     result.addStateType(FruitDict.PlanDict.COMPLETE, 1);
                 }
         });
-        return result;
     }
 
     public Result compositeQuery(FruitPlanVo vo) {
         Result result = Result.getInstance();
-        result.setPlans(findTree(vo, ApplicationContextUtils.getCurrentUser(), false));
+        result.setPlans(findTree(vo, ApplicationContextUtils.getCurrentUser()));
         long start = System.currentTimeMillis();
         dataCount(result.getPlans(), result);
         long end = System.currentTimeMillis();
@@ -242,8 +224,21 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         return result;
     }
 
-    public List<FruitPlanDao> findByProjectId(FruitPlanVo vo) {
-        return findByProjectId(findTemplate(vo));
+    public List<FruitPlanDao> findList(FruitPlanVo vo) {
+        if (StringUtils.isBlank(vo.getProjectId()))
+            throw new CheckException("必须填写项目id");
+        this.getStartTimeAndEndTime(vo);
+        return this.findByProjectId(example -> {
+            FruitPlanExample.Criteria criteria = example.createCriteria();
+            if (StringUtils.isNotBlank(vo.getPlanStatus()))
+                criteria.andPlanStatusIn(Arrays.asList(vo.getPlanStatus().split(",")));
+            if (StringUtils.isNotBlank(vo.getTitle()))
+                criteria.andTitleLike(MessageFormat.format("%{0}%", vo.getTitle()));
+            criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
+            example.setOrderByClause("create_date_time desc");
+            if (StringUtils.isNotBlank(vo.sortConstrue()))
+                example.setOrderByClause(vo.sortConstrue());
+        }, vo.getProjectId(), vo.getPageNum(), vo.getPageSize(), false);
     }
 
     private FruitPlanDao findTemplate(FruitPlanVo vo) {
@@ -261,10 +256,10 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
     }
 
     /*若年月不为空，则设置开始时间 and 结束时间*/
-    protected final void getStartTimeAndEndTime(FruitPlanVo vo) {
+    private void getStartTimeAndEndTime(FruitPlanVo vo) {
         if (StringUtils.isBlank(vo.getYear()) || StringUtils.isBlank(vo.getMonth()))
             return;
-        DateUtils.Month<DateUtils.Week.WeekChinese> month = DateUtils.getMonthByYearMonth(Integer.valueOf(vo.getYear()), Integer.valueOf(Integer.valueOf(vo.getMonth())));
+        DateUtils.Month<DateUtils.Week.WeekChinese> month = DateUtils.getMonthByYearMonth(Integer.valueOf(vo.getYear()), Integer.valueOf(vo.getMonth()));
         vo.setStartDateVo(Date.from(month.getStartDate().atStartOfDay(ZoneId.systemDefault()).toInstant()));
         vo.setEndDateVo(Date.from(month.getEndDate().atStartOfDay(ZoneId.systemDefault()).toInstant()));
     }
@@ -283,8 +278,6 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
 
     /**
      * 添加【项目】计划
-     *
-     * @param vo
      */
     public final void addJoinProject(FruitPlanVo vo) {
         try {
@@ -310,7 +303,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
     }
 
     /*添加【项目】计划前检查参数是否合法*/
-    private final void addCheckJoinProject(FruitPlanDao dao) {
+    private void addCheckJoinProject(FruitPlanDao dao) {
         if (StringUtils.isBlank(dao.getTitle()))
             throw new CheckException("标题不能为空");
         if (dao.getProjectRelation(FruitDict.Systems.ADD).isEmpty() || dao.getProjectRelation(FruitDict.Systems.ADD).size() != 1)
@@ -323,8 +316,6 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
 
     /**
      * 修改计划
-     *
-     * @param vo
      */
     public final void modify(FruitPlanVo vo) {
         try {
@@ -348,8 +339,6 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
 
     /**
      * 添加计划关联摘要
-     *
-     * @param vo
      */
     public final void insertSummary(FruitPlanSummaryVo vo) {
         try {
@@ -370,8 +359,6 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
 
     /**
      * 终止计划
-     *
-     * @param vo
      */
     public final void end(FruitPlanVo vo) {
         if (checkPlan(vo))
@@ -391,7 +378,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
                         .andIsDeletedEqualTo(FruitDict.Systems.N.name())
                         .andPlanStatusIn(Lists.newArrayList(FruitDict.PlanDict.STAY_PENDING.name(), FruitDict.PlanDict.PENDING.name()))
         );
-        nodes.stream().forEach(plan -> this.insertLogs(logsVo -> {
+        nodes.forEach(plan -> this.insertLogs(logsVo -> {
             logsVo.setUserId(currentUser.getUserId());
             logsVo.setFruitUuid(plan.getUuid());
             logsVo.setFruitType(FruitDict.Parents.PLAN);
@@ -416,8 +403,6 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
 
     /**
      * 完成计划
-     *
-     * @param vo
      */
     public final void complete(FruitPlanVo vo) {
         if (checkPlan(vo))
@@ -433,8 +418,13 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         if (plan.computeDays().getDays() < 0) {
             if (StringUtils.isBlank(vo.getStatusDescription()))
                 throw new CheckException("计划延期完成，需要填写延期说明");
-            if (vo.getEndDate() != null && Duration.between(LocalDate.now(), LocalDateTime.ofInstant(vo.getEndDate().toInstant(), ZoneId.systemDefault())).toDays() > 0)
-                throw new CheckException("实际结束时间不能大约今天");
+            if (vo.getEndDate() != null
+                    &&
+                    Duration.between(
+                            LocalDate.now().atTime(0, 0, 0),
+                            LocalDateTime.ofInstant(vo.getEndDate().toInstant(), ZoneId.systemDefault()).withHour(23).withMinute(59).withSecond(59)
+                    ).toDays() > 0)
+                throw new CheckException("实际结束时间不能大于今天");
         }
 
         this.update(dao -> {
@@ -449,8 +439,6 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
 
     /**
      * 待进行 -> 进行中
-     *
-     * @param vo
      */
     public final void pending(FruitPlanVo vo) {
         if (checkPlan(vo))
@@ -479,15 +467,15 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         private final List<FruitPlanDao> plans = Lists.newLinkedList();
         private final Map<FruitDict.PlanDict, Integer> dataCount = Maps.newLinkedHashMap();
 
-        public List<FruitPlanDao> getPlans() {
+        List<FruitPlanDao> getPlans() {
             return plans;
         }
 
-        public void setPlans(List<FruitPlanDao> plans) {
+        void setPlans(List<FruitPlanDao> plans) {
             this.plans.addAll(plans);
         }
 
-        public void addStateType(FruitDict.PlanDict planDict, Integer count) {
+        void addStateType(FruitDict.PlanDict planDict, Integer count) {
             if (!dataCount.containsKey(planDict))
                 dataCount.put(planDict, 1);
             else

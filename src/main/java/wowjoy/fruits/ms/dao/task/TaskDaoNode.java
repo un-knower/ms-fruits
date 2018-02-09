@@ -25,7 +25,7 @@ public class TaskDaoNode extends AbstractDaoChain {
             return super.getNext().find(uuid);
         if (StringUtils.isBlank(uuid))
             return null;
-        List<FruitTaskDao> taskDaos = taskDao.find(example -> example.createCriteria().andUuidEqualTo(uuid).andIsDeletedEqualTo(FruitDict.Systems.N.name()));
+        List<FruitTaskDao> taskDaos = taskDao.findByExample(example -> example.createCriteria().andUuidEqualTo(uuid).andIsDeletedEqualTo(FruitDict.Systems.N.name()));
         if (taskDaos == null || taskDaos.isEmpty()) return null;
         return taskDaos.get(0);
     }

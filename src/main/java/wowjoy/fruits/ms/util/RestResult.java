@@ -67,7 +67,7 @@ public class RestResult<T> {
         return new RestResultPage(pageNum, pageSize, total, data);
     }
 
-    public static RestResult newError(String msg) {
-        return new RestResultError(msg);
+    public static RestResult newError(int code, String msg) {
+        return new RestResult(code, msg, null, false);
     }
 }

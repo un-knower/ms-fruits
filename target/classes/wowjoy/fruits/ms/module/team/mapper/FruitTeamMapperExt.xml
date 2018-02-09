@@ -8,7 +8,7 @@
         <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
-        <collection property="users" ofType="wowjoy.fruits.ms.module.user.FruitUser" resultMap="UserResultMap"
+        <collection property="users" ofType="wowjoy.fruits.ms.module.user.FruitUserDao" resultMap="UserResultMap"
                     columnPrefix="user_"/>
     </resultMap>
     <resultMap id="UserResultMap" type="wowjoy.fruits.ms.module.user.FruitUserDao">
@@ -87,21 +87,15 @@
             <property name="replace" value="fuser"/>
             <property name="prefix" value="user_"/>
         </include>
-        ,
-        fteam.uuid
-        ,
-        utr.ut_role as user_ut_role
+        ,fteam.uuid
+        ,utr.ut_role as user_ut_role
         FROM
         fruits_team fteam
-        RIGHT JOIN (
-        select team_id,user_id,ut_role from user_team_relation WHERE is_deleted = 'N' and
-        team_id in
+        RIGHT JOIN user_team_relation utr on utr.is_deleted = 'N' and fteam.uuid = utr.`team_id` and utr.team_id in
         <foreach collection="ids" open="(" close=")" separator="," item="id">
             #{id}
         </foreach>
-        ) utr on fteam.uuid = utr.`team_id`
-        LEFT JOIN (select
-        <include refid="User_Base_Column_List"/>
-        from fruits_user where is_deleted = 'N') fuser on fuser.user_id = utr.user_id
+        RIGHT JOIN fruits_user fuser on fuser.user_id = utr.user_id and fuser.is_deleted = 'N'
+        WHERE fteam.is_deleted = 'N'
     </select>
 </mapper>

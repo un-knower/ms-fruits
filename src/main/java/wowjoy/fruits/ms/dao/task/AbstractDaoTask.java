@@ -46,7 +46,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
      */
     protected abstract void insert(FruitTaskDao dao);
 
-    protected abstract List<FruitTaskDao> find(Consumer<FruitTaskExample> consumerExample);
+    protected abstract List<FruitTaskDao> findByExample(Consumer<FruitTaskExample> consumerExample);
 
     protected abstract void update(Consumer<FruitTaskDao> daoConsumer, Consumer<FruitTaskExample> taskExampleConsumer);
 
@@ -59,7 +59,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
 
     protected abstract List<FruitListDao> findProjectList(String projectId, Consumer<FruitListExample> listExampleConsumer);
 
-    protected abstract List<FruitTaskDao> findUserByTaskIds(List<String> taskIds);
+    protected abstract List<FruitTaskDao> findJoinUserByTaskIds(List<String> taskIds);
 
     protected abstract List<FruitTaskDao> findPlanByTaskIds(List<String> taskIds);
 
@@ -217,7 +217,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
             throw new CheckException("查询标识不存在");
         final FruitTaskDao dao = FruitTask.getDao();
         dao.setUuid(uuid);
-        List<FruitTaskDao> data = this.find(example -> example.createCriteria()
+        List<FruitTaskDao> data = this.findByExample(example -> example.createCriteria()
                 .andIsDeletedEqualTo(FruitDict.Systems.N.name())
                 .andUuidEqualTo(uuid));
         if (data == null || data.isEmpty())
@@ -251,7 +251,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
                 .execute(this.plugUser(tasks))
                 .execute(this.plugLogs(tasks))
                 .execute(this.plugUtil(tasks));
-        Map<String, List<FruitTaskDao>> listMap = tasks.stream().collect(groupingBy(FruitTaskDao::getListId));
+        Map<String, List<FruitTaskDao>> listMap = tasks.parallelStream().collect(groupingBy(FruitTaskDao::getListId));
         lists.parallelStream().forEach(list -> list.setTasks(listMap.get(list.getUuid())));
         if (StringUtils.isNotBlank(vo.getTitle()))
             lists = lists.stream().filter(list -> list.getTasks() != null && !list.getTasks().isEmpty()).collect(toList());
@@ -373,10 +373,10 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         };
     }
 
-    private Callable plugUser(final List<FruitTaskDao> tasks) {
+    public Callable plugUser(final List<FruitTaskDao> tasks) {
         return () -> {
             if (tasks == null || tasks.isEmpty()) return false;
-            Map<String, LinkedList<FruitUserDao>> userMap = this.findUserByTaskIds(tasks.parallelStream().map(FruitTaskDao::getUuid).collect(toList()))
+            Map<String, LinkedList<FruitUserDao>> userMap = this.findJoinUserByTaskIds(tasks.parallelStream().map(FruitTaskDao::getUuid).collect(toList()))
                     .stream()
                     .collect(toMap(FruitTaskDao::getUuid, task -> {
                         LinkedList<FruitUserDao> userList = Lists.newLinkedList();

@@ -6,21 +6,28 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import wowjoy.fruits.ms.dao.plan.PlanDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.ProjectTeamDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.UserProjectDaoImpl;
-import wowjoy.fruits.ms.dao.user.UserDaoImpl;
+import wowjoy.fruits.ms.dao.task.TaskDaoImpl;
 import wowjoy.fruits.ms.exception.CheckException;
+import wowjoy.fruits.ms.module.plan.FruitPlanDao;
+import wowjoy.fruits.ms.module.plan.example.FruitPlanExample;
 import wowjoy.fruits.ms.module.project.FruitProject;
 import wowjoy.fruits.ms.module.project.FruitProjectDao;
 import wowjoy.fruits.ms.module.project.FruitProjectExample;
 import wowjoy.fruits.ms.module.project.mapper.FruitProjectMapper;
 import wowjoy.fruits.ms.module.relation.entity.ProjectTeamRelation;
 import wowjoy.fruits.ms.module.relation.entity.UserProjectRelation;
+import wowjoy.fruits.ms.module.task.FruitTaskDao;
+import wowjoy.fruits.ms.module.task.FruitTaskExample;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;
 
 import java.text.MessageFormat;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * Created by wangziwen on 2017/9/6.
@@ -39,18 +46,21 @@ public class ProjectDaoImpl extends AbstractDaoProject {
     @Autowired
     private UserProjectDaoImpl userRelationDao;
     @Autowired
-    private UserDaoImpl userDao;
-
+    private PlanDaoImpl planDaoImpl;
+    @Autowired
+    private TaskDaoImpl taskDaoImpl;
 
     @Override
-    public void insert(FruitProjectDao dao) {
+    public void insert(Consumer<FruitProjectDao> daoConsumer) {
+        FruitProjectDao dao = FruitProject.getDao();
+        daoConsumer.accept(dao);
         projectMapper.insertSelective(dao);
         Relation.getInstance(teamRelationDao, userRelationDao, dao).insertTeamRelation().insertUserRelation();
     }
 
     @Override
     public List<FruitProjectDao> finds(FruitProjectDao dao) {
-        return projectMapper.selectByExample(findTemplate(dao));
+        return projectMapper.selectByExampleWithBLOBs(findTemplate(dao));
     }
 
     @Override
@@ -78,15 +88,14 @@ public class ProjectDaoImpl extends AbstractDaoProject {
 
 
     @Override
-    protected FruitProject find(FruitProjectDao dao) {
+    protected Optional<FruitProjectDao> find(Consumer<FruitProjectExample> exampleConsumer) {
         FruitProjectExample example = new FruitProjectExample();
+        exampleConsumer.accept(example);
         FruitProjectExample.Criteria criteria = example.createCriteria();
-        if (StringUtils.isNotBlank(dao.getUuid()))
-            criteria.andUuidEqualTo(dao.getUuid());
-        List<FruitProjectDao> datas = projectMapper.selectByExample(example);
-        if (datas.isEmpty())
-            return FruitProject.getEmpty();
-        return datas.get(0);
+        List<FruitProjectDao> data = projectMapper.selectByExample(example);
+        if (data.isEmpty())
+            return Optional.empty();
+        return Optional.of(data.get(0));
     }
 
     @Override
@@ -104,10 +113,12 @@ public class ProjectDaoImpl extends AbstractDaoProject {
     }
 
     @Override
-    public void update(FruitProjectDao dao) {
+    public void update(Consumer<FruitProjectDao> daoConsumer, Consumer<FruitProjectExample> exampleConsumer) {
+        FruitProjectDao dao = FruitProject.getDao();
+        daoConsumer.accept(dao);
         /*修改项目信息*/
         FruitProjectExample example = new FruitProjectExample();
-        example.createCriteria().andUuidEqualTo(dao.getUuid());
+        exampleConsumer.accept(example);
         projectMapper.updateByExampleSelective(dao, example);
         /*删除关联*/
         Relation.getInstance(teamRelationDao, userRelationDao, dao).removeUserRelation().removeTeamRelation();
@@ -131,13 +142,15 @@ public class ProjectDaoImpl extends AbstractDaoProject {
     }
 
     @Override
-    public List<UserProjectRelation> findJoin(UserProjectRelation relation) {
-        return userRelationDao.finds(relation);
+    public List<FruitPlanDao> findPlanByPlanExampleAndUserIdsAnProjectId(Consumer<FruitPlanExample> exampleConsumer, List<String> userIds, String projectId) {
+        return planDaoImpl.findByExampleAndUserIdAndProjectId(exampleConsumer, projectId, userIds);
     }
 
     @Override
-    public List<ProjectTeamRelation> findJoin(ProjectTeamRelation relation) {
-        return teamRelationDao.finds(relation);
+    public List<FruitTaskDao> findTaskByTaskExampleAndUserIdsAndProjectId(Consumer<FruitTaskExample> exampleConsumer, List<String> userIds, String projectId) {
+        FruitTaskExample example = new FruitTaskExample();
+        exampleConsumer.accept(example);
+        return taskDaoImpl.findByExampleAndUserIdByProjectId(example, projectId, userIds);
     }
 
     /**

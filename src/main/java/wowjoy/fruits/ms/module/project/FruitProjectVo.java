@@ -9,10 +9,7 @@ import wowjoy.fruits.ms.module.relation.entity.ProjectTeamRelation;
 import wowjoy.fruits.ms.module.relation.entity.UserProjectRelation;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by wangziwen on 2017/9/12.
@@ -26,16 +23,20 @@ public class FruitProjectVo extends FruitProject {
     private Map<FruitDict.Systems, List<ProjectTeamRelation>> teamRelation;
     private Map<FruitDict.Systems, List<UserProjectRelation>> userRelation;
 
-    public Map<FruitDict.Systems, List<ProjectTeamRelation>> getTeamRelation() {
-        return teamRelation;
+    public Optional<Map<FruitDict.Systems, List<ProjectTeamRelation>>> getTeamRelation() {
+        if (teamRelation != null)
+            return Optional.of(teamRelation);
+        return Optional.empty();
     }
 
     public void setTeamRelation(Map<FruitDict.Systems, List<ProjectTeamRelation>> teamRelation) {
         this.teamRelation = teamRelation;
     }
 
-    public Map<FruitDict.Systems, List<UserProjectRelation>> getUserRelation() {
-        return userRelation;
+    public Optional<Map<FruitDict.Systems, List<UserProjectRelation>>> getUserRelation() {
+        if (userRelation != null)
+            return Optional.of(userRelation);
+        return Optional.empty();
     }
 
     public void setUserRelation(Map<FruitDict.Systems, List<UserProjectRelation>> userRelation) {

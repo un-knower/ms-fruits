@@ -5,8 +5,10 @@ import wowjoy.fruits.ms.module.relation.entity.UserTeamRelation;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Created by wangziwen on 2017/9/14.
@@ -39,7 +41,7 @@ public class FruitTeamDao extends FruitTeam {
      * @return
      */
     public void searchLeader() {
-        this.setLeader(this.getUsers().parallelStream().filter(user -> FruitDict.UserTeamDict.LEADER.name().equals(user.getTeamRole())).findAny().get());
+        this.setLeader(this.findUsers().orElseGet(LinkedList::new).parallelStream().filter(user -> FruitDict.UserTeamDict.LEADER.name().equals(user.getTeamRole())).findAny().orElse(null));
     }
 
     public String getProjectRole() {
@@ -66,8 +68,10 @@ public class FruitTeamDao extends FruitTeam {
         this.userRelation = userRelation;
     }
 
-    public List<FruitUserDao> getUsers() {
-        return users;
+    public Optional<List<FruitUserDao>> findUsers() {
+        if (users != null)
+            return Optional.of(users);
+        return Optional.empty();
     }
 
     public void setUsers(List<FruitUserDao> users) {

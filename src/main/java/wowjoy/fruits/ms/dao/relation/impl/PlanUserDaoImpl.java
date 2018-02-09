@@ -12,6 +12,8 @@ import wowjoy.fruits.ms.module.relation.mapper.PlanUserRelationMapper;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.text.MessageFormat;
+import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Created by wangziwen on 2017/9/20.
@@ -53,5 +55,11 @@ public class PlanUserDaoImpl<T extends PlanUserRelation> extends AbstractDaoRela
         PlanUserRelation delete = PlanUserRelation.getInstance();
         delete.setIsDeleted(FruitDict.Systems.Y.name());
         mapper.updateByExampleSelective(delete, removeTemplate(relation));
+    }
+
+    public List<PlanUserRelation> findByExample(Consumer<PlanUserRelationExample> exampleConsumer) {
+        PlanUserRelationExample example = new PlanUserRelationExample();
+        exampleConsumer.accept(example);
+        return mapper.selectByExample(example);
     }
 }

@@ -3,8 +3,6 @@ package wowjoy.fruits.ms.dao.project;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.AbstractDaoChain;
 import wowjoy.fruits.ms.module.AbstractEntity;
-import wowjoy.fruits.ms.module.project.FruitProject;
-import wowjoy.fruits.ms.module.project.FruitProjectDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;
 
@@ -24,10 +22,6 @@ public class ProjectDaoNode extends AbstractDaoChain {
             return super.getNext().find(uuid);
         if (StringUtils.isBlank(uuid))
             return null;
-        FruitProjectDao dao = FruitProjectDao.getDao();
-        dao.setUuid(uuid);
-        FruitProject result = projectDao.find(dao);
-        if (!result.isNotEmpty()) return null;
-        return result;
+        return projectDao.find(example -> example.createCriteria().andUuidEqualTo(uuid)).orElse(null);
     }
 }

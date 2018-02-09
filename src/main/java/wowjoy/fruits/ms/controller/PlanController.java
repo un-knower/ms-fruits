@@ -75,14 +75,16 @@ public class PlanController {
     }
 
     /**
-     * @api {get} /v1/plan/project/{uuid} 列出所有计划，非综合查询【项目查询】【<span style="color:red;">未来版本移除</>】
+     * @api {get} /v1/plan/project/{uuid} 计划查询【项目查询】
      * @apiVersion 0.1.0
      * @apiGroup plan
+     * @apiParam title String 根据目标名称查询，前后模糊查询
+     * @apiParam planStatus String 状态查询，支持多查询。多个以逗号隔开：STAY_PENDING,PENDING,COMPLETE,END
      */
-    @RequestMapping(value = "/project/{uuid}", method = RequestMethod.GET)
-    public RestResult findsByProjectId(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
+    @RequestMapping(value = "/project/{projectId}", method = RequestMethod.GET)
+    public RestResult findList(@PathVariable("projectId") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
         vo.setProjectId(uuid);
-        return RestResult.getInstance().setData(dataPlanDao.findByProjectId(vo));
+        return RestResult.getInstance().setData(dataPlanDao.findList(vo));
     }
 
     /**

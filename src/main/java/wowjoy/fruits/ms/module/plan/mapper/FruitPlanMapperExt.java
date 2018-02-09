@@ -19,4 +19,6 @@ public interface FruitPlanMapperExt {
 
     List<FruitPlanDao> selectTaskByPlanIds(@Param("planIds") List<String> planIds);
 
+    List<FruitPlanDao> selectByExampleAndUserIdAndProjectId(@Param("example") FruitPlanExample example, @Param("projectId") String projectId, @Param("userIds") List<String> userIds);
+
 }

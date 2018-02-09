@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import wowjoy.fruits.ms.dao.logs.AbstractDaoLogs;
 import wowjoy.fruits.ms.dao.relation.impl.PlanProjectDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.PlanUserDaoImpl;
-import wowjoy.fruits.ms.dao.task.TaskDaoImpl;
+import wowjoy.fruits.ms.dao.task.AbstractDaoTask;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.logs.FruitLogsDao;
 import wowjoy.fruits.ms.module.logs.FruitLogsVo;
@@ -31,12 +31,10 @@ import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.*;
 
 /**
  * Created by wangziwen on 2017/8/25.
@@ -58,7 +56,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
     @Autowired
     private AbstractDaoLogs logsDaoImpl;
     @Autowired
-    private TaskDaoImpl daoTask;
+    private AbstractDaoTask daoTask;
 
     Predicate<FruitPlanExample> exampleIsValid = fruitPlanExample -> {
         if (fruitPlanExample.getOredCriteria().isEmpty())
@@ -83,9 +81,10 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         return mapper.selectByExample(example);
     }
 
-    @Override
-    protected List<FruitPlanDao> findByProjectId(FruitPlanDao dao) {
-        return mapper.selectByProjectId(this.findTemplate(dao), dao.getProjectId());
+    public List<FruitPlanDao> findByExampleAndUserIdAndProjectId(Consumer<FruitPlanExample> exampleConsumer, String projectId, List<String> userIds) {
+        FruitPlanExample example = new FruitPlanExample();
+        exampleConsumer.accept(example);
+        return mapper.selectByExampleAndUserIdAndProjectId(example, projectId, userIds);
     }
 
     @Override
@@ -99,16 +98,19 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         if (planIds == null || planIds.isEmpty()) return Lists.newLinkedList();
         List<FruitPlanDao> planDaoList = mapper.selectTaskByPlanIds(planIds);
         if (planDaoList.isEmpty()) return planDaoList;
-        Map<String, LinkedList<FruitUserDao>> userMap = daoTask.findUserByTaskIds(planDaoList.stream().flatMap(plan -> plan.getTasks().stream().map(FruitTaskDao::getUuid)).collect(toList()))
-                .stream()
-                .collect(toMap(FruitTaskDao::getUuid, task -> {
-                    LinkedList<FruitUserDao> userLists = Lists.newLinkedList();
-                    userLists.addAll(task.getUsers());
-                    return userLists;
-                }, (l, r) -> {
-                    r.addAll(l);
-                    return r;
-                }));
+        List<FruitTaskDao> tasks = planDaoList.stream().collect(reducing(Lists.newLinkedList(), FruitPlanDao::getTasks, (l, r) -> {
+            l.addAll(r);
+            return l;
+        }));
+        daoTask.plugUser(tasks);
+        Map<String, LinkedList<FruitUserDao>> userMap = tasks.parallelStream().collect(toMap(FruitTaskDao::getUuid, task -> {
+            LinkedList<FruitUserDao> userList = Lists.newLinkedList();
+            userList.addAll(task.getUsers());
+            return userList;
+        }, (l, r) -> {
+            r.addAll(l);
+            return r;
+        }));
         planDaoList.parallelStream().forEach(plan -> plan.getTasks().parallelStream().forEach(task -> task.setUsers(userMap.get(task.getUuid()))));
         return planDaoList;
     }
@@ -139,29 +141,6 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         if (datas.isEmpty())
             return FruitPlan.newEmpty("查询计划不存在");
         return datas.get(0);
-    }
-
-    private FruitPlanExample findTemplate(FruitPlanDao dao) {
-        final FruitPlanExample example = new FruitPlanExample();
-        final FruitPlanExample.Criteria criteria = example.createCriteria();
-        if (StringUtils.isNotBlank(dao.getTitle()))
-            criteria.andTitleEqualTo(dao.getTitle());
-        if (StringUtils.isNotBlank(dao.getPlanStatus()))
-            criteria.andPlanStatusEqualTo(dao.getPlanStatus());
-        if (StringUtils.isNotBlank(dao.getParentId()))
-            criteria.andParentIdEqualTo(dao.getParentId());
-        if (Objects.nonNull(dao.getStartDateDao()) && Objects.nonNull(dao.getEndDateDao()))
-            criteria.andEstimatedEndDateBetween(dao.getStartDateDao(), dao.getEndDateDao());
-        if (StringUtils.isNotBlank(dao.getPlanStatus())) {
-            criteria.andPlanStatusEqualTo(dao.getPlanStatus());
-        }
-        String sort = dao.sortConstrue();
-        if (StringUtils.isNotBlank(sort))
-            example.setOrderByClause(sort);
-        else
-            example.setOrderByClause("create_date_time desc");
-        criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
-        return example;
     }
 
     @Override
