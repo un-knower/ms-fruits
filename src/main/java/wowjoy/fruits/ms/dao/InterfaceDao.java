@@ -1,12 +1,17 @@
 package wowjoy.fruits.ms.dao;
 
 import com.google.common.collect.Lists;
+import org.elasticsearch.common.logging.Loggers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import wowjoy.fruits.ms.exception.CheckException;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.function.Function;
 
 /**
  * Created by wangziwen on 2017/8/24.
@@ -14,6 +19,8 @@ import java.util.concurrent.*;
 public interface InterfaceDao {
     Logger logger = LoggerFactory.getLogger(InterfaceDao.class);
     Integer processorCount = Runtime.getRuntime().availableProcessors() * 2;
+    Function<Date, LocalDateTime> ToLocalDate = date -> LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
+    Function<LocalDateTime, Date> ToDate = localDateTime -> Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
 
     class DaoThread {
         private final ExecutorService executorService;

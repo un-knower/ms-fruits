@@ -16,9 +16,8 @@ import wowjoy.fruits.ms.util.RestResult;
 import javax.annotation.Resource;
 import java.util.function.Predicate;
 
-/**
- * Created by wangziwen on 2017/8/30.
- */
+import static wowjoy.fruits.ms.util.RestResult.getInstance;
+
 @RestController
 @RequestMapping("/v1/task")
 public class TaskController {
@@ -76,7 +75,7 @@ public class TaskController {
     @RequestMapping(method = RequestMethod.POST)
     public RestResult insert(@JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
         daoTask.insert(vo);
-        return RestResult.getInstance().setData(vo.getUuid());
+        return getInstance().setData(vo.getUuid());
     }
 
     /**
@@ -96,7 +95,7 @@ public class TaskController {
             return FruitDict.LogsDict.UPDATE;
         });
         daoTask.modify(vo);
-        return RestResult.getInstance().setData(vo.getUuidVo());
+        return getInstance().setData(vo.getUuidVo());
     }
 
     /**
@@ -110,7 +109,7 @@ public class TaskController {
         FruitTaskVo vo = FruitTask.getVo();
         vo.setUuidVo(uuid);
         daoTask.changeStatusToEnd(vo);
-        return RestResult.getInstance().setData(vo.getUuidVo());
+        return getInstance().setData(vo.getUuidVo());
     }
 
     /**
@@ -124,7 +123,7 @@ public class TaskController {
         FruitTaskVo vo = FruitTask.getVo();
         vo.setUuidVo(uuid);
         daoTask.changeStatusToStart(vo);
-        return RestResult.getInstance().setData(vo.getUuidVo());
+        return getInstance().setData(vo.getUuidVo());
     }
 
     /**
@@ -137,7 +136,7 @@ public class TaskController {
     public RestResult changeStatusToClose(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
         vo.setUuidVo(uuid);
         daoTask.changeStatusToClose(vo);
-        return RestResult.getInstance().setData(vo.getUuidVo());
+        return getInstance().setData(vo.getUuidVo());
     }
 
     /**
@@ -150,7 +149,7 @@ public class TaskController {
     public RestResult changeList(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
         vo.setUuidVo(uuid);
         daoTask.changeList(vo);
-        return RestResult.getInstance().setData(vo.getUuidVo());
+        return getInstance().setData(vo.getUuidVo());
     }
 
     /**
@@ -168,7 +167,7 @@ public class TaskController {
         FruitTaskVo vo = FruitTask.getVo();
         vo.setUuidVo(uuid);
         daoTask.delete(vo);
-        return RestResult.getInstance().setData(vo.getUuidVo());
+        return getInstance().setData(vo.getUuidVo());
     }
 
 
@@ -182,7 +181,7 @@ public class TaskController {
     @RequestMapping(value = "/project/{uuid}", method = RequestMethod.GET)
     public RestResult findJoinProject(@PathVariable("uuid") String uuid,
                                       @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
-        return RestResult.getInstance().setData(daoTask.findJoinProjects(uuid, vo));
+        return getInstance().setData(daoTask.findJoinProjects(uuid, vo));
     }
 
     /**
@@ -192,7 +191,7 @@ public class TaskController {
      */
     @RequestMapping(value = "{uuid}", method = RequestMethod.GET)
     public RestResult findTaskInfo(@PathVariable("uuid") String uuid) {
-        return RestResult.getInstance().setData(daoTask.findTaskInfo(uuid));
+        return getInstance().setData(daoTask.findTaskInfo(uuid));
     }
 
     /************************************************************************************************
@@ -206,7 +205,7 @@ public class TaskController {
      */
     @RequestMapping(value = "/current", method = RequestMethod.GET)
     public RestResult myTask(@JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
-        return RestResult.getInstance().setData(daoTask.myTask(vo));
+        return getInstance().setData(daoTask.myTask(vo));
     }
 
     /**
@@ -216,7 +215,7 @@ public class TaskController {
      */
     @RequestMapping(value = "/current/end", method = RequestMethod.GET)
     public RestResult myTaskByEnd(@JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
-        return RestResult.getInstance().setData(daoTask.myTaskByEnd(vo));
+        return getInstance().setData(daoTask.myTaskByEnd(vo));
     }
 
     /**
@@ -226,7 +225,7 @@ public class TaskController {
      */
     @RequestMapping(value = "/current_create", method = RequestMethod.GET)
     public RestResult userFinds(@JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
-        return RestResult.getInstance().setData(daoTask.myCreateTask(vo));
+        return getInstance().setData(daoTask.myCreateTask(vo));
     }
 
 }

@@ -120,13 +120,14 @@ public class TaskDaoImpl extends AbstractDaoTask {
     }
 
     @Override
-    public List<FruitTaskDao> findByListId(Consumer<FruitTaskExample> exampleUnaryOperator, List<String> listId) {
-        if (listId == null || listId.isEmpty()) return Lists.newLinkedList();
+    public List<FruitTaskDao> findByListExampleAndProjectId(Consumer<FruitTaskExample> exampleUnaryOperator, Consumer<FruitListExample> listExampleConsumer, String projectId) {
+        if (projectId == null || projectId.isEmpty()) return Lists.newLinkedList();
         FruitTaskExample example = new FruitTaskExample();
+        FruitListExample listExample = new FruitListExample();
         exampleUnaryOperator.accept(example);
+        listExampleConsumer.accept(listExample);
         example.setOrderByClause("task.task_status desc,task.create_date_time desc");
-        List<FruitTaskDao> data = taskMapper.selectByTaskList(example, listId);
-        return data;
+        return taskMapper.selectByListExampleAndProjectId(example, listExample, projectId);
     }
 
     @Override
@@ -186,8 +187,8 @@ public class TaskDaoImpl extends AbstractDaoTask {
                 return template;
             FruitTaskVo vo = new Gson().fromJson(logsDao.getVoObject(), TypeToken.of(FruitTaskVo.class).getType());
             if (vo == null || vo.getUserRelation() == null) return template;
-            Predicate<Systems> userPredicate = (key) -> vo.getUserRelation().containsKey(key) && !vo.getUserRelation().get(key).isEmpty();
-            Function<List<TaskUserRelation>, String> userFunction = (userRelations) -> userDao.findExample(example -> example.createCriteria().andUserIdIn(
+            Predicate<Systems> userPredicate = key -> vo.getUserRelation().containsKey(key) && !vo.getUserRelation().get(key).isEmpty();
+            Function<List<TaskUserRelation>, String> userFunction = userRelations -> userDao.findExample(example -> example.createCriteria().andUserIdIn(
                     userRelations
                             .stream()
                             .map(TaskUserRelation::getUserId)

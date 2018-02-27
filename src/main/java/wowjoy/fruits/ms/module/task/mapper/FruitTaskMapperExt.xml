@@ -114,6 +114,35 @@
             </if>
         </foreach>
     </sql>
+    <sql id="list_Example_Where_Clause">
+        <foreach collection="listExample.oredCriteria" item="criteria" separator="or">
+            <if test="criteria.valid">
+                <trim prefix="(" prefixOverrides="and" suffix=")">
+                    <foreach collection="criteria.criteria" item="criterion">
+                        <choose>
+                            <when test="criterion.noValue">
+                                and ${replace}.${criterion.condition}
+                            </when>
+                            <when test="criterion.singleValue">
+                                and ${replace}.${criterion.condition} #{criterion.value}
+                            </when>
+                            <when test="criterion.betweenValue">
+                                and ${replace}.${criterion.condition} #{criterion.value} and
+                                #{criterion.secondValue}
+                            </when>
+                            <when test="criterion.listValue">
+                                and ${replace}.${criterion.condition}
+                                <foreach close=")" collection="criterion.value" item="listItem" open="("
+                                         separator=",">
+                                    #{listItem}
+                                </foreach>
+                            </when>
+                        </choose>
+                    </foreach>
+                </trim>
+            </if>
+        </foreach>
+    </sql>
 
     <sql id="Base_Column_List">
         ${replace}.uuid,
@@ -209,7 +238,7 @@
         ${replace}.is_deleted as ${prefix}is_deleted
     </sql>
 
-    <select id="selectByTaskList" resultMap="BaseResultMap">
+    <select id="selectByListExampleAndProjectId" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List">
             <property name="replace" value="task"/>
@@ -219,13 +248,19 @@
         from fruits_task task
         right join
         (
-        select task_id,list_id from task_list_relation
-        where is_deleted = 'N' AND list_id in
-        <foreach collection="listIds" item="id" open="(" close=")" separator=",">
-            #{id}
-        </foreach>
+        select task_id,list_id from task_list_relation where list_id in
+        (select list_id from fruits_list flist inner join (select list_id from project_list_relation where project_id =
+        #{projectId} and is_deleted = 'N') plr on plr.list_id = flist.uuid
+        and
+        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
+            <include refid="list_Example_Where_Clause">
+                <property name="replace" value="flist"/>
+            </include>
+            AND flist.is_deleted = 'N'
+        </trim>
+        ) and is_deleted = 'N'
         ) listRelation on listRelation.task_id = task.uuid
-        <trim prefixOverrides="ADN | OR" suffixOverrides="ADN | OR">
+        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
             <where>
                 <include refid="Base_Example_Where_Clause">
                     <property name="replace" value="task"/>
@@ -360,9 +395,9 @@
             <property name="prefix" value="list_"/>
         </include>
         from fruits_task task
-        left join (select task_id,list_id from task_list_relation where is_deleted = 'N') listJoin on listJoin.task_id =
+        right join (select task_id,list_id from task_list_relation where is_deleted = 'N') listJoin on listJoin.task_id =
         task.uuid
-        left join (select uuid, title, l_type, description, modify_date_time, create_date_time, is_deleted from
+        right join (select uuid, title, l_type, description, modify_date_time, create_date_time, is_deleted from
         fruits_list where is_deleted = 'N') flist on flist.uuid = listJoin.list_id
         <trim suffixOverrides="AND | OR" prefixOverrides="AND | OR ">
             <where>

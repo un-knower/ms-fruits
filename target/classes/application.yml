@@ -17,7 +17,7 @@ security:
 tomcat:
   jdbc:
     pool:
-      uri: jdbc:mysql://effiy.cn:3306/fruits?useUnicode=true&characterEncoding=utf8
-      password: Yi19911024!@#
+      uri: jdbc:mysql://buckball.cn:8306/fruits?useUnicode=true&characterEncoding=utf8&useSSL=false
+      password: my-secret-pw
       username: root
       driverClassName: com.mysql.cj.jdbc.Driver

@@ -320,6 +320,8 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
     public final void modify(FruitPlanVo vo) {
         try {
             if (!this.findByUUID(vo.getUuidVo()).isNotEmpty()) throw new CheckException("计划不存在，修改失败");
+            if (StringUtils.isBlank(vo.getTitle()))
+                throw new CheckException("标题不能为空");
             this.update(dao -> {
                 dao.setUuid(vo.getUuidVo());
                 dao.setTitle(vo.getTitle());

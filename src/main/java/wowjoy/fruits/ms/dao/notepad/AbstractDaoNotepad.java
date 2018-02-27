@@ -14,13 +14,9 @@ import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;
 
-import java.sql.Date;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
@@ -76,8 +72,13 @@ public abstract class AbstractDaoNotepad implements InterfaceDao {
         FruitUser currentUser = ApplicationContextUtils.getCurrentUser();
         List<FruitNotepadDao> notepadDaoList = findsByExample(example -> {
             FruitNotepadExample.Criteria criteria = example.createCriteria();
-            if (vo.getStartDate() != null && vo.getEndDate() != null)
-                criteria.andEstimatedSubmitDateBetween(vo.getStartDate(), vo.getEndDate());
+            if (vo.getStartDate() != null && vo.getEndDate() != null) {
+                criteria.andEstimatedSubmitDateBetween(
+                        ToDate.apply(ToLocalDate.apply(vo.getStartDate()).withHour(0).withMinute(0).withSecond(0)),
+                        ToDate.apply(ToLocalDate.apply(vo.getEndDate()).withHour(23).withMinute(59).withSecond(59))
+                );
+            }
+
             if (StringUtils.isNotBlank(vo.getState()))
                 criteria.andStateEqualTo(vo.getState());
             criteria.andUserIdEqualTo(currentUser.getUserId());
@@ -115,8 +116,8 @@ public abstract class AbstractDaoNotepad implements InterfaceDao {
         LocalDate startDate = LocalDate.of(date.getYear(), date.getMonth(), 1);
         LocalDate endDate = LocalDate.of(date.getYear(), date.getMonth(), date.lengthOfMonth());
         FruitNotepadVo vo = FruitNotepad.getVo();
-        vo.setStartDate(Date.from(startDate.atTime(0, 0, 0).atZone(ZoneId.systemDefault()).toInstant()));
-        vo.setEndDate(Date.from(endDate.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant()));
+        vo.setStartDate(ToDate.apply(startDate.atTime(0, 0, 0)));
+        vo.setEndDate(ToDate.apply(endDate.atTime(23, 59, 59)));
         return Optional.of(this.findNotepadByTeamId(vo, teamId));
     }
 

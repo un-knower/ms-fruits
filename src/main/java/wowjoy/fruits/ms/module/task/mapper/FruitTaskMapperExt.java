@@ -2,6 +2,7 @@ package wowjoy.fruits.ms.module.task.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import wowjoy.fruits.ms.module.list.FruitListExample;
 import wowjoy.fruits.ms.module.task.FruitTaskDao;
 import wowjoy.fruits.ms.module.task.FruitTaskExample;
 
@@ -12,7 +13,7 @@ import java.util.List;
  */
 @Mapper
 public interface FruitTaskMapperExt {
-    List<FruitTaskDao> selectByTaskList(@Param("example") FruitTaskExample example, @Param("listIds") List<String> listIds);
+    List<FruitTaskDao> selectByListExampleAndProjectId(@Param("example") FruitTaskExample example, @Param("listExample") FruitListExample listExample, @Param("projectId") String projectId);
 
     List<FruitTaskDao> selectJoinUserByTaskIds(@Param("ids") List<String> example);
 

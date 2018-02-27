@@ -55,7 +55,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
     /**
      * 查询关联项目的任务列表
      */
-    protected abstract List<FruitTaskDao> findByListId(Consumer<FruitTaskExample> exampleUnaryOperator, List<String> listId);
+    protected abstract List<FruitTaskDao> findByListExampleAndProjectId(Consumer<FruitTaskExample> exampleUnaryOperator, Consumer<FruitListExample> listExampleConsumer, String projectId);
 
     protected abstract List<FruitListDao> findProjectList(String projectId, Consumer<FruitListExample> listExampleConsumer);
 
@@ -235,27 +235,25 @@ public abstract class AbstractDaoTask implements InterfaceDao {
      */
     public List<FruitListDao> findJoinProjects(String projectId, final FruitTaskVo vo) {
         if (StringUtils.isBlank(projectId)) throw new CheckException("项目id不能为空");
-        List<FruitListDao> lists = this.findProjectList(projectId, listExample -> {
+        final List<FruitListDao> lists = Lists.newLinkedList();
+        Consumer<FruitListExample> listExampleConsumer = listExample -> {
             if (StringUtils.isNotBlank(vo.getListTitle()))
                 listExample.createCriteria().andTitleLike(MessageFormat.format("%{0}%", vo.getListTitle()));
-        });
-        if (lists.isEmpty()) return Lists.newLinkedList();
-        List<FruitTaskDao> tasks = this.findByListId((taskExample) -> {
+        };
+        List<FruitTaskDao> tasks = this.findByListExampleAndProjectId((taskExample) -> {
             if (StringUtils.isNotBlank(vo.getTitle()))
                 taskExample.createCriteria().andTitleLike(MessageFormat.format("%{0}%", vo.getTitle()));
-        }, lists.stream().map(FruitListDao::getUuid).collect(toList())).stream().collect(toList());
+        }, listExampleConsumer, projectId);
         DaoThread taskThread = DaoThread.getFixed();
-        if (tasks.isEmpty()) return lists;
         taskThread
-                .execute(this.plugPlan(tasks))
                 .execute(this.plugUser(tasks))
-                .execute(this.plugLogs(tasks))
-                .execute(this.plugUtil(tasks));
+                .execute(this.plugUtil(tasks))
+                .execute(() -> lists.addAll(findProjectList(projectId, listExampleConsumer)));
         Map<String, List<FruitTaskDao>> listMap = tasks.parallelStream().collect(groupingBy(FruitTaskDao::getListId));
+        taskThread.get().shutdown();
         lists.parallelStream().forEach(list -> list.setTasks(listMap.get(list.getUuid())));
         if (StringUtils.isNotBlank(vo.getTitle()))
-            lists = lists.stream().filter(list -> list.getTasks() != null && !list.getTasks().isEmpty()).collect(toList());
-        taskThread.get().shutdown();
+            return lists.stream().filter(list -> list.getTasks() != null && !list.getTasks().isEmpty()).collect(toList());
         return lists;
     }
 
@@ -321,6 +319,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
 
     private Callable plugLogs(final List<FruitTaskDao> tasks) {
         return () -> {
+            long start = System.currentTimeMillis();
             if (tasks == null || tasks.isEmpty()) return false;
             Map<String, LinkedList<FruitLogsDao>> logs = this.findJoinLogsByTask(tasks.parallelStream().map(FruitTaskDao::getUuid).collect(toList()));
             tasks.stream().forEach(task -> {
@@ -329,6 +328,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
                 else
                     task.setLogs(Lists.newLinkedList());
             });
+            logger.info("日志耗时：" + (start - System.currentTimeMillis()));
             return true;
         };
     }
@@ -536,6 +536,8 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         }
 
         private TaskTemplate modifyTemplate() {
+            if (StringUtils.isBlank(vo.getTitle()))
+                throw new CheckException("标题不能为空");
             dao.setUuid(vo.getUuidVo());
             dao.setTitle(vo.getTitle());
             dao.setTaskLevel(vo.getTaskLevel());
