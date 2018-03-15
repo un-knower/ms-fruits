@@ -1,6 +1,7 @@
 package wowjoy.fruits.ms.module.user;
 
 
+import com.google.gson.Gson;
 import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 

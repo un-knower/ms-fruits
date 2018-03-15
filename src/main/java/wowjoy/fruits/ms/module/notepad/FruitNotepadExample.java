@@ -725,6 +725,11 @@ public class FruitNotepadExample {
             return (Criteria) this;
         }
 
+        public Criteria andCustom(String condition) {
+            addCriterion(condition, "None", "None");
+            return (Criteria) this;
+        }
+
         public Criteria andIsDeletedIsNull() {
             addCriterion("is_deleted is null");
             return (Criteria) this;

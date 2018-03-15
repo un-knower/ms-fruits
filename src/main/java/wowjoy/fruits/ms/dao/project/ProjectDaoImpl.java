@@ -1,16 +1,18 @@
 package wowjoy.fruits.ms.dao.project;
 
 import org.apache.commons.lang.StringUtils;
-import org.assertj.core.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import wowjoy.fruits.ms.dao.list.ListDaoImpl;
 import wowjoy.fruits.ms.dao.plan.PlanDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.ProjectTeamDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.UserProjectDaoImpl;
 import wowjoy.fruits.ms.dao.task.TaskDaoImpl;
+import wowjoy.fruits.ms.dao.team.TeamDaoImpl;
 import wowjoy.fruits.ms.exception.CheckException;
+import wowjoy.fruits.ms.module.list.FruitListDao;
 import wowjoy.fruits.ms.module.plan.FruitPlanDao;
 import wowjoy.fruits.ms.module.plan.example.FruitPlanExample;
 import wowjoy.fruits.ms.module.project.FruitProject;
@@ -21,12 +23,12 @@ import wowjoy.fruits.ms.module.relation.entity.ProjectTeamRelation;
 import wowjoy.fruits.ms.module.relation.entity.UserProjectRelation;
 import wowjoy.fruits.ms.module.task.FruitTaskDao;
 import wowjoy.fruits.ms.module.task.FruitTaskExample;
+import wowjoy.fruits.ms.module.team.FruitTeamUser;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;
 
-import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -37,18 +39,34 @@ import java.util.function.Consumer;
 @Transactional
 public class ProjectDaoImpl extends AbstractDaoProject {
 
+    private final FruitProjectMapper projectMapper;
+    private final ProjectTeamDaoImpl teamRelationDao;
+    private final UserProjectDaoImpl userRelationDao;
+    private final PlanDaoImpl planDaoImpl;
+    private final TaskDaoImpl taskDaoImpl;
+    private final ListDaoImpl listDao;
+    private final TeamDaoImpl teamDao;
+
     @Autowired
-    private FruitProjectMapper projectMapper;
-    @Qualifier("projectTeamDaoImpl")
-    @Autowired
-    private ProjectTeamDaoImpl teamRelationDao;
-    @Qualifier("userProjectDaoImpl")
-    @Autowired
-    private UserProjectDaoImpl userRelationDao;
-    @Autowired
-    private PlanDaoImpl planDaoImpl;
-    @Autowired
-    private TaskDaoImpl taskDaoImpl;
+    public ProjectDaoImpl(TeamDaoImpl teamDao, FruitProjectMapper projectMapper, @Qualifier("projectTeamDaoImpl") ProjectTeamDaoImpl teamRelationDao, @Qualifier("userProjectDaoImpl") UserProjectDaoImpl userRelationDao, PlanDaoImpl planDaoImpl, TaskDaoImpl taskDaoImpl, ListDaoImpl listDao) {
+        this.teamDao = teamDao;
+        this.projectMapper = projectMapper;
+        this.teamRelationDao = teamRelationDao;
+        this.userRelationDao = userRelationDao;
+        this.planDaoImpl = planDaoImpl;
+        this.taskDaoImpl = taskDaoImpl;
+        this.listDao = listDao;
+    }
+
+    @Override
+    public List<FruitTeamUser> findUserByTeamId(ArrayList<String> teamIds) {
+        return teamDao.findUserByTeamIds(teamIds, example -> example.createCriteria().andIsDeletedEqualTo(FruitDict.Systems.N.name()));
+    }
+
+    @Override
+    public List<FruitListDao> findListByProjectId(String projectId) {
+        return listDao.findByProjectId(projectId, listExample -> listExample.createCriteria().andIsDeletedEqualTo(FruitDict.Systems.N.name()));
+    }
 
     @Override
     public void insert(Consumer<FruitProjectDao> daoConsumer) {
@@ -59,55 +77,29 @@ public class ProjectDaoImpl extends AbstractDaoProject {
     }
 
     @Override
-    public List<FruitProjectDao> finds(FruitProjectDao dao) {
-        return projectMapper.selectByExampleWithBLOBs(findTemplate(dao));
-    }
-
-    @Override
-    public List<FruitProjectDao> findsCurrentUser(FruitProjectDao dao) {
-        return projectMapper.selectCurrentUserByExample(findTemplate(dao), ApplicationContextUtils.getCurrentUser().getUserId());
-    }
-
-    private FruitProjectExample findTemplate(FruitProjectDao dao) {
-        final FruitProjectExample example = new FruitProjectExample();
-        final FruitProjectExample.Criteria criteria = example.createCriteria();
-        if (StringUtils.isNotBlank(dao.getTitle()))
-            criteria.andTitleLike(MessageFormat.format("%{0}%", dao.getTitle()));
-        if (StringUtils.isNotBlank(dao.getProjectStatus()))
-            criteria.andProjectStatusEqualTo(dao.getProjectStatus());
-        if (StringUtils.isNotBlank(dao.getUuid()))
-            criteria.andUuidEqualTo(dao.getUuid());
-        criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
-        String order = dao.sortConstrue();
-        if (StringUtils.isNotBlank(order))
-            example.setOrderByClause(order);
-        else
-            example.setOrderByClause("create_date_time desc");
-        return example;
-    }
-
-
-    @Override
-    protected Optional<FruitProjectDao> find(Consumer<FruitProjectExample> exampleConsumer) {
+    public List<FruitProjectDao> findsCurrentUser(Consumer<FruitProjectExample> exampleConsumer) {
         FruitProjectExample example = new FruitProjectExample();
         exampleConsumer.accept(example);
-        FruitProjectExample.Criteria criteria = example.createCriteria();
-        List<FruitProjectDao> data = projectMapper.selectByExample(example);
-        if (data.isEmpty())
-            return Optional.empty();
-        return Optional.of(data.get(0));
+        return projectMapper.selectCurrentUserByExample(example, ApplicationContextUtils.getCurrentUser().getUserId());
     }
 
     @Override
-    public List<FruitProjectDao> findUserByProjectIds(String... ids) {
-        if (Arrays.isNullOrEmpty(ids))
+    public List<FruitProjectDao> finds(Consumer<FruitProjectExample> exampleConsumer) {
+        FruitProjectExample example = new FruitProjectExample();
+        exampleConsumer.accept(example);
+        return projectMapper.selectByExampleWithBLOBs(example);
+    }
+
+    @Override
+    public List<FruitProjectDao> findUserByProjectIds(List<String> ids) {
+        if (ids.isEmpty())
             throw new CheckException("查询关联用户时，必须提供项目id");
         return projectMapper.selectUserByProjectId(ids);
     }
 
     @Override
-    public List<FruitProjectDao> findTeamByProjectIds(String... ids) {
-        if (Arrays.isNullOrEmpty(ids))
+    public List<FruitProjectDao> findTeamByProjectIds(List<String> ids) {
+        if (ids.isEmpty())
             throw new CheckException("查询关联团队时，必须提供项目id");
         return projectMapper.selectTeamByProjectId(ids);
     }

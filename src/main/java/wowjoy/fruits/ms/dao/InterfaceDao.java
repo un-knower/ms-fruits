@@ -1,10 +1,10 @@
 package wowjoy.fruits.ms.dao;
 
 import com.google.common.collect.Lists;
-import org.elasticsearch.common.logging.Loggers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import wowjoy.fruits.ms.exception.CheckException;
+import wowjoy.fruits.ms.exception.ExceptionSupport;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -50,6 +50,8 @@ public interface InterfaceDao {
                 Thread.currentThread().interrupt();
                 futures.forEach((i) -> i.cancel(true));
                 throw new CheckException("强制中断线程");
+            } catch (ExceptionSupport exceptionSupport) {
+                throw new CheckException(exceptionSupport.getMessage());
             } catch (ExecutionException e) {
                 executorService.shutdownNow();
                 e.printStackTrace();

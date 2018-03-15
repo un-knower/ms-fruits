@@ -2,6 +2,8 @@ package wowjoy.fruits.ms.module.team.mapper;
 
 import org.apache.ibatis.annotations.Param;
 import wowjoy.fruits.ms.module.team.FruitTeamDao;
+import wowjoy.fruits.ms.module.team.FruitTeamUser;
+import wowjoy.fruits.ms.module.user.example.FruitUserExample;
 
 import java.util.List;
 
@@ -10,5 +12,5 @@ import java.util.List;
  */
 public interface FruitTeamMapperExt {
 
-    List<FruitTeamDao> selectUserByTeamId(@Param("ids") List<String> ids);
+    List<FruitTeamUser> selectUserByTeamId(@Param("example") FruitUserExample userExample, @Param("teamIds") List<String> teamIds);
 }

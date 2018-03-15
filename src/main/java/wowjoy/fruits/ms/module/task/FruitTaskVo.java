@@ -1,15 +1,12 @@
 package wowjoy.fruits.ms.module.task;
 
 import com.google.common.collect.Lists;
-import wowjoy.fruits.ms.module.relation.entity.TaskListRelation;
-import wowjoy.fruits.ms.module.relation.entity.TaskPlanRelation;
-import wowjoy.fruits.ms.module.relation.entity.TaskProjectRelation;
-import wowjoy.fruits.ms.module.relation.entity.TaskUserRelation;
+import org.apache.commons.lang.StringUtils;
+import wowjoy.fruits.ms.exception.CheckException;
+import wowjoy.fruits.ms.module.relation.entity.*;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 /**
@@ -102,6 +99,10 @@ public class FruitTaskVo extends FruitTask {
         return userRelation;
     }
 
+    public Optional<List<TaskUserRelation>> getUserRelation(FruitDict.Systems parent) {
+        return userRelation != null && userRelation.containsKey(parent) ? Optional.of(userRelation.get(parent)) : Optional.empty();
+    }
+
     public void setUserRelation(Map<FruitDict.Systems, List<TaskUserRelation>> userRelation) {
         this.userRelation = userRelation;
     }
@@ -112,6 +113,45 @@ public class FruitTaskVo extends FruitTask {
 
     public void setListRelation(Map<FruitDict.Systems, List<TaskListRelation>> listRelation) {
         this.listRelation = listRelation;
+    }
+
+    public void checkUuid() {
+        if (StringUtils.isBlank(this.getUuidVo()))
+            throw new CheckException("uuid不存在");
+    }
+
+    public static class TaskTransferVo extends FruitTaskVo {
+        private String reason;
+
+        private LinkedList<TransferUserRelation> transferUser;
+
+        private String transferId;
+
+        public String getTransferId() {
+            return transferId;
+        }
+
+        public void setTransferId(String transferId) {
+            this.transferId = transferId;
+        }
+
+        public LinkedList<TransferUserRelation> getTransferUser() {
+            return transferUser;
+        }
+
+        public TaskTransferVo checkTransferUser() {
+            if (transferUser == null || transferUser.isEmpty())
+                throw new CheckException("未检查到任务接收人");
+            return this;
+        }
+
+        public String getReason() {
+            return reason;
+        }
+
+        public void setReason(String reason) {
+            this.reason = reason;
+        }
     }
 
 }

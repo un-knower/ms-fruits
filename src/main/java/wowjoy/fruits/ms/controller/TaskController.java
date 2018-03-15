@@ -9,6 +9,7 @@ import wowjoy.fruits.ms.dao.task.AbstractDaoTask;
 import wowjoy.fruits.ms.dao.task.TaskDaoImpl;
 import wowjoy.fruits.ms.module.task.FruitTask;
 import wowjoy.fruits.ms.module.task.FruitTaskVo;
+import wowjoy.fruits.ms.module.task.FruitTaskVo.TaskTransferVo;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.JsonArgument;
 import wowjoy.fruits.ms.util.RestResult;
@@ -87,11 +88,11 @@ public class TaskController {
     @RequestMapping(value = "/{uuid}", method = RequestMethod.PUT)
     public RestResult modify(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
         vo.setUuidVo(uuid);
-        /*若变更记录中包含人员变更，将日志状态改为 HANDOVER*/
+        /*若变更记录中包含人员变更，将日志状态改为 STAFF_CHANGE*/
         vo.setOperateTypeSupplier(() -> {
             Predicate<FruitDict.Systems> userPredicate = (o) -> vo.getUserRelation().containsKey(o) && !vo.getUserRelation().get(o).isEmpty();
             if (vo.getUserRelation() != null && (userPredicate.test(FruitDict.Systems.ADD) || userPredicate.test(FruitDict.Systems.DELETE)))
-                return FruitDict.LogsDict.HANDOVER;
+                return FruitDict.LogsDict.STAFF_CHANGE;
             return FruitDict.LogsDict.UPDATE;
         });
         daoTask.modify(vo);
@@ -99,16 +100,16 @@ public class TaskController {
     }
 
     /**
-     * @api {put} /v1/task/end/{uuid} 变更任务状态【结束】
+     * @api {put} /v1/task/complete/{uuid} 变更任务状态【完成】
      * @apiVersion 0.1.0
      * @apiGroup task
      */
-    @LogInfo(uuid = "uuid", type = FruitDict.Parents.TASK, operateType = FruitDict.LogsDict.END)
-    @RequestMapping(value = "/end/{uuid}", method = RequestMethod.PUT)
-    public RestResult changeStatusToEnd(@PathVariable("uuid") String uuid) {
+    @LogInfo(uuid = "uuid", type = FruitDict.Parents.TASK, operateType = FruitDict.LogsDict.COMPLETE)
+    @RequestMapping(value = "/complete/{uuid}", method = RequestMethod.PUT)
+    public RestResult changeStatusToComplete(@PathVariable("uuid") String uuid) {
         FruitTaskVo vo = FruitTask.getVo();
         vo.setUuidVo(uuid);
-        daoTask.changeStatusToEnd(vo);
+        daoTask.changeStatusToComplete(vo);
         return getInstance().setData(vo.getUuidVo());
     }
 
@@ -127,15 +128,15 @@ public class TaskController {
     }
 
     /**
-     * @api {put} /v1/task/close/{uuid} 变更任务状态【关闭】
+     * @api {put} /v1/task/end/{uuid} 变更任务状态【终止】
      * @apiVersion 0.1.0
      * @apiGroup task
      */
-    @LogInfo(uuid = "uuidVo", type = FruitDict.Parents.TASK, operateType = FruitDict.LogsDict.CLOSE)
-    @RequestMapping(value = "/close/{uuid}", method = RequestMethod.PUT)
-    public RestResult changeStatusToClose(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
+    @LogInfo(uuid = "uuidVo", type = FruitDict.Parents.TASK, operateType = FruitDict.LogsDict.END)
+    @RequestMapping(value = "/end/{uuid}", method = RequestMethod.PUT)
+    public RestResult changeStatusToEnd(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
         vo.setUuidVo(uuid);
-        daoTask.changeStatusToClose(vo);
+        daoTask.changeStatusToEnd(vo);
         return getInstance().setData(vo.getUuidVo());
     }
 
@@ -192,6 +193,24 @@ public class TaskController {
     @RequestMapping(value = "{uuid}", method = RequestMethod.GET)
     public RestResult findTaskInfo(@PathVariable("uuid") String uuid) {
         return getInstance().setData(daoTask.findTaskInfo(uuid));
+    }
+
+    /**
+     * @api {put} /v1/task/transfer/{uuid} 任务转交
+     * @apiVersion 2.5.0
+     * @apiGroup task
+     * @apiParamExample {json} 转交栗子：
+     * {
+     * "reason":"神兽保佑",
+     * "transferUser":[{"userId":"8401e45249434eafb7654447e02397a2"},{"userId":"d9f6e08b897247b7a02fb8ff6b8fc558"}]
+     * }
+     */
+    @LogInfo(uuid = "uuid", type = FruitDict.Parents.TASK, operateType = FruitDict.LogsDict.TRANSFER)
+    @RequestMapping(value = "transfer/{uuid}", method = RequestMethod.PUT)
+    public RestResult transfer(@PathVariable("uuid") String uuid, @JsonArgument(type = TaskTransferVo.class) TaskTransferVo transferVo) {
+        transferVo.setUuidVo(uuid);
+        daoTask.transfer(transferVo);
+        return getInstance().setData(uuid);
     }
 
     /************************************************************************************************

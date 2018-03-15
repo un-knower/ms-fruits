@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import wowjoy.fruits.ms.aspectj.LogInfo;
 import wowjoy.fruits.ms.dao.project.AbstractDaoProject;
-import wowjoy.fruits.ms.module.notepad.FruitNotepad;
 import wowjoy.fruits.ms.module.project.FruitProject;
 import wowjoy.fruits.ms.module.project.FruitProjectVo;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
@@ -23,18 +22,32 @@ import wowjoy.fruits.ms.util.RestResult;
 public class ProjectController {
 
 
-    @Qualifier("projectDaoImpl")
+    private final AbstractDaoProject projectDaoImpl;
+
     @Autowired
-    private AbstractDaoProject projectDaoImpl;
+    public ProjectController(@Qualifier("projectDaoImpl") AbstractDaoProject projectDaoImpl) {
+        this.projectDaoImpl = projectDaoImpl;
+    }
 
     /**
-     * @api {get} /v1/project/relation 项目查询【列表】
+     * @api {get} /v1/project/list/{uuid} 项目列表
+     * @apiVersion 2.5.0
+     * @apiGroup project
+     * @apiParam {String} 项目 uuid
+     */
+    @RequestMapping(value = "/list/{uuid}", method = RequestMethod.GET)
+    public RestResult findList(@PathVariable("uuid") String uuid) {
+        return RestResult.getInstance().setData(projectDaoImpl.findListByProjectId(uuid));
+    }
+
+    /**
+     * @api {get} /v1/project/relation 项目查询
      * @apiVersion 0.1.0
      * @apiGroup project
      */
     @RequestMapping(value = "/relation", method = RequestMethod.GET)
     public RestResult findRelation(@JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
-        return RestResult.getInstance().setData(projectDaoImpl.finds(vo, true));
+        return RestResult.getInstance().setData(projectDaoImpl.finds(vo));
     }
 
     /**
@@ -48,13 +61,14 @@ public class ProjectController {
     }
 
     /**
-     * @api {get} /v1/project/user/{uuid} 根据项目id，查询用户信息
-     * @apiVersion 0.1.0
+     * @api {get} /v1/project/user/{uuid} 查询项目所有用户成员（树形结构）（v2.5.0开始，获取用户信息使用此接口）
+     * @apiVersion 2.5.0
      * @apiGroup project
+     * @apiParam {String} 项目 uuid
      */
     @RequestMapping(value = "/user/{uuid}", method = RequestMethod.GET)
-    public RestResult findRelation(@PathVariable("uuid") String uuid) {
-        return RestResult.getInstance().setData(projectDaoImpl.findUserByProjectId(uuid));
+    public RestResult treeTeamUserList(@PathVariable("uuid") String uuid) {
+        return RestResult.getInstance().setData(projectDaoImpl.treeTeamUserList(uuid));
     }
 
     /**
@@ -66,7 +80,7 @@ public class ProjectController {
     public RestResult findByUUID(@PathVariable("uuid") String uuid) {
         FruitProjectVo projectVo = FruitProject.getVo();
         projectVo.setUuidVo(uuid);
-        return RestResult.getInstance().setData(projectDaoImpl.findByUUID(projectVo, true));
+        return RestResult.getInstance().setData(projectDaoImpl.find(projectVo));
     }
 
     /**

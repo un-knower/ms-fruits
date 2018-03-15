@@ -12,8 +12,8 @@ import wowjoy.fruits.ms.module.list.FruitListVo;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.function.UnaryOperator;
 
 /**
  * Created by wangziwen on 2017/10/17.
@@ -24,10 +24,7 @@ public abstract class AbstractDaoList implements InterfaceDao {
 
     protected abstract void update(FruitListDao dao);
 
-    protected abstract List<FruitListDao> finds(FruitListDao dao);
-
-    /*查询包括已删除的列表*/
-    protected abstract FruitList find(FruitListDao dao);
+    protected abstract List<FruitListDao> finds(Consumer<FruitListExample> exampleConsumer);
 
     protected abstract void delete(FruitListDao dao);
 
@@ -56,6 +53,8 @@ public abstract class AbstractDaoList implements InterfaceDao {
      * @return
      */
     private FruitListDao insertTemplate(FruitListVo vo) {
+        if (StringUtils.isBlank(vo.getTitle()))
+            throw new CheckException("列表标题不能为空");
         FruitListDao dao = FruitList.getDao();
         dao.setUuid(vo.getUuid());
         dao.setTitle(vo.getTitle());
@@ -70,8 +69,10 @@ public abstract class AbstractDaoList implements InterfaceDao {
      */
     public final void update(FruitListVo vo) {
         try {
-            if (!checkByUUID(vo.getUuidVo()).isNotEmpty())
+            if (!checkByUUID(vo.getUuidVo()).isPresent())
                 throw new CheckException("列表不存在，操作被拒绝");
+            if (StringUtils.isBlank(vo.getTitle()))
+                throw new CheckException("列表标题不能为空");
             FruitListDao dao = FruitList.getDao();
             dao.setUuid(vo.getUuidVo());
             dao.setTitle(vo.getTitle());
@@ -103,15 +104,12 @@ public abstract class AbstractDaoList implements InterfaceDao {
         }
     }
 
-    private FruitList checkByUUID(String uuid) {
+    private Optional<FruitListDao> checkByUUID(String uuid) {
         if (StringUtils.isBlank(uuid))
-            return FruitList.getEmpty();
+            return Optional.empty();
         FruitListDao dao = FruitList.getDao();
         dao.setUuid(uuid);
-        List<FruitListDao> finds = this.finds(dao);
-        if (finds.isEmpty())
-            return FruitList.getEmpty();
-        return finds.get(0);
+        return this.finds(listExample -> listExample.createCriteria().andUuidEqualTo(uuid).andIsDeletedEqualTo(FruitDict.Systems.N.name())).stream().findAny();
     }
 
 }

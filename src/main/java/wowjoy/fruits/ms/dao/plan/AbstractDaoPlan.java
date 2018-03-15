@@ -52,8 +52,6 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
 
     protected abstract void insertLogs(Consumer<FruitLogsVo> vo);
 
-    protected abstract FruitPlan find(FruitPlanDao dao);
-
     protected abstract FruitPlan findByUUID(String uuid);
 
     protected abstract void insert(FruitPlanDao dao);
@@ -63,8 +61,6 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
     public abstract List<FruitPlanDao> batchUpdateStatusAndReturnResult(Consumer<FruitPlanDao> planDaoConsumer, Consumer<FruitPlanExample> fruitPlanExampleConsumer);
 
     protected abstract void delete(String uuid);
-
-    protected abstract FruitPlanSummary find(FruitPlanSummaryDao dao);
 
     protected abstract void insertSummary(FruitPlanSummaryDao dao);
 
@@ -84,6 +80,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
      * 获取计划，分级展示
      */
     private List<FruitPlanDao> findTree(FruitPlanVo vo, FruitUser currentUser) {
+        this.getStartTimeAndEndTime(vo);
         DaoThread planThread = DaoThread.getFixed();
         List<FruitPlanDao> planDaoListSource = this.findByProjectId(this.findParent(vo), vo.getProjectId(), vo.getPageNum(), vo.getPageSize(), false);
         if (planDaoListSource.isEmpty()) return planDaoListSource;
@@ -128,6 +125,8 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         return example -> {
             FruitPlanExample.Criteria criteria = example.createCriteria();
             criteria.andParentIdIsNull();
+            if (Objects.nonNull(vo.getStartDateVo()) && Objects.nonNull(vo.getEndDateVo()))
+                criteria.andEstimatedEndDateBetween(vo.getStartDateVo(), vo.getEndDateVo());
             criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
             example.setOrderByClause("create_date_time desc");
             if (StringUtils.isNotBlank(vo.sortConstrue()))
@@ -194,19 +193,26 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
 
     /**
      * 统计当前不同状态下数目
+     * tips:
+     * 进行中 and 未延期的不统计
      */
     private void dataCount(List<FruitPlanDao> plans, Result result) {
-        /*状态匹配*/
-        /*进行中的不统计*/
-        plans.forEach((plan) -> {
+        /*状态等于进行中的 and 待执行的*/
+        Predicate<FruitPlanDao> delay = plan -> FruitDict.PlanDict.PENDING.name().equals(plan.getPlanStatus())
+                || FruitDict.PlanDict.STAY_PENDING.name().equals(plan.getPlanStatus());
+        /*状态等于终止*/
+        Predicate<FruitPlanDao> end = plan -> FruitDict.PlanDict.END.name().equals(plan.getPlanStatus());
+        /*状态等于完成*/
+        Predicate<FruitPlanDao> complete = plan -> FruitDict.PlanDict.COMPLETE.name().equals(plan.getPlanStatus());
+        /*延期*/
+        Predicate<FruitPlanDao> day = plan -> plan.getDays() < 0;
+        plans.forEach(plan -> {
             if (plan.getWeeks() != null && !plan.getWeeks().isEmpty()) dataCount(plan.getWeeks(), result);
             plan.computeDays();
-            if (FruitDict.PlanDict.END.name().equals(plan.getPlanStatus()))
-                result.addStateType(FruitDict.PlanDict.END, 1);
-            else if (FruitDict.PlanDict.PENDING.name().equals(plan.getPlanStatus()) && plan.getDays() < 0)
-                result.addStateType(FruitDict.PlanDict.DELAY, 1);
-            else if (FruitDict.PlanDict.COMPLETE.name().equals(plan.getPlanStatus()))
-                if (plan.getDays() < 0) {
+            if (end.test(plan)) result.addStateType(FruitDict.PlanDict.END, 1);
+            else if (delay.and(day).test(plan)) result.addStateType(FruitDict.PlanDict.DELAY, 1);
+            else if (complete.test(plan))
+                if (day.test(plan)) {
                     result.addStateType(FruitDict.PlanDict.DELAY_COMPLETE, 1);
                 } else {
                     result.addStateType(FruitDict.PlanDict.COMPLETE, 1);

@@ -20,6 +20,7 @@ public abstract class AbstractEntity implements InterfaceEntity {
 
     protected AbstractEntity() {
         /*利大于弊，我选择保留，如果有更好的方法，可以尝试*/
+        /*2018年03月09日11:17:30：内心惭愧，扎根太深一次无法拔出。目前打算使用内部类的方式代替全局UUID，以后的所有功能维护尽量不依赖全局UUID*/
         this.setUuid(UUID());
         this.setIsDeleted(FruitDict.Systems.N.name());
     }

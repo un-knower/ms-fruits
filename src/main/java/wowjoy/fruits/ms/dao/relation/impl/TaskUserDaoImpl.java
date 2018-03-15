@@ -4,7 +4,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import wowjoy.fruits.ms.dao.relation.AbstractDaoRelation;
+import wowjoy.fruits.ms.dao.relation.RelationInterface;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.relation.entity.TaskUserRelation;
 import wowjoy.fruits.ms.module.relation.example.TaskUserRelationExample;
@@ -20,7 +20,7 @@ import java.util.function.Consumer;
  */
 @Service
 @Transactional
-public class TaskUserDaoImpl<T extends TaskUserRelation> extends AbstractDaoRelation<T> {
+public class TaskUserDaoImpl<T extends TaskUserRelation,E extends TaskUserRelationExample> implements RelationInterface<T,E> {
     @Autowired
     private TaskUserRelationMapper mapper;
 

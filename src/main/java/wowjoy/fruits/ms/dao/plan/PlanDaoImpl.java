@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import wowjoy.fruits.ms.dao.logs.AbstractDaoLogs;
+import wowjoy.fruits.ms.dao.logs.service.ServiceLogs;
 import wowjoy.fruits.ms.dao.relation.impl.PlanProjectDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.PlanUserDaoImpl;
 import wowjoy.fruits.ms.dao.task.AbstractDaoTask;
@@ -43,20 +43,12 @@ import static java.util.stream.Collectors.*;
 @Transactional
 public class PlanDaoImpl extends AbstractDaoPlan {
 
-    @Autowired
-    private FruitPlanMapper mapper;
-    @Autowired
-    private FruitPlanSummaryMapper summaryMapper;
-    @Qualifier("planUserDaoImpl")
-    @Autowired
-    private PlanUserDaoImpl userRelation;
-    @Qualifier("planProjectDaoImpl")
-    @Autowired
-    private PlanProjectDaoImpl projectDao;
-    @Autowired
-    private AbstractDaoLogs logsDaoImpl;
-    @Autowired
-    private AbstractDaoTask daoTask;
+    private final FruitPlanMapper mapper;
+    private final FruitPlanSummaryMapper summaryMapper;
+    private final PlanUserDaoImpl userRelation;
+    private final PlanProjectDaoImpl projectDao;
+    private final ServiceLogs logsDaoImpl;
+    private final AbstractDaoTask daoTask;
 
     Predicate<FruitPlanExample> exampleIsValid = fruitPlanExample -> {
         if (fruitPlanExample.getOredCriteria().isEmpty())
@@ -65,6 +57,16 @@ public class PlanDaoImpl extends AbstractDaoPlan {
             return true;
         return false;
     };
+
+    @Autowired
+    public PlanDaoImpl(FruitPlanMapper mapper, FruitPlanSummaryMapper summaryMapper, @Qualifier("planUserDaoImpl") PlanUserDaoImpl userRelation, @Qualifier("planProjectDaoImpl") PlanProjectDaoImpl projectDao, ServiceLogs logsDaoImpl, AbstractDaoTask daoTask) {
+        this.mapper = mapper;
+        this.summaryMapper = summaryMapper;
+        this.userRelation = userRelation;
+        this.projectDao = projectDao;
+        this.logsDaoImpl = logsDaoImpl;
+        this.daoTask = daoTask;
+    }
 
     @Override
     protected List<FruitPlanDao> findByProjectId(Consumer<FruitPlanExample> exampleConsumer, String projectId, Integer pageNum, Integer pageSize, boolean isPage) {
@@ -102,7 +104,11 @@ public class PlanDaoImpl extends AbstractDaoPlan {
             l.addAll(r);
             return l;
         }));
-        daoTask.plugUser(tasks);
+        try {
+            daoTask.plugUser(tasks).call();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         Map<String, LinkedList<FruitUserDao>> userMap = tasks.parallelStream().collect(toMap(FruitTaskDao::getUuid, task -> {
             LinkedList<FruitUserDao> userList = Lists.newLinkedList();
             userList.addAll(task.getUsers());
@@ -128,19 +134,6 @@ public class PlanDaoImpl extends AbstractDaoPlan {
     @Override
     public void insertLogs(Consumer<FruitLogsVo> vo) {
         logsDaoImpl.insertVo(vo);
-    }
-
-    @Override
-    protected FruitPlan find(FruitPlanDao dao) {
-        FruitPlanExample example = new FruitPlanExample();
-        FruitPlanExample.Criteria criteria = example.createCriteria();
-        if (StringUtils.isNotBlank(dao.getUuid()))
-            criteria.andUuidEqualTo(dao.getUuid());
-        criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
-        List<FruitPlanDao> datas = mapper.selectByExampleWithBLOBs(example);
-        if (datas.isEmpty())
-            return FruitPlan.newEmpty("查询计划不存在");
-        return datas.get(0);
     }
 
     @Override
@@ -208,18 +201,6 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         Relation.getInstance(userRelation, projectDao, plan).removesProject().removesUser();
         /*删除进度小结*/
         deleteSummarys(FruitPlanSummary.newDao(uuid));
-    }
-
-    @Override
-    protected FruitPlanSummary find(FruitPlanSummaryDao dao) {
-        FruitPlanSummaryExample example = new FruitPlanSummaryExample();
-        FruitPlanSummaryExample.Criteria criteria = example.createCriteria();
-        if (StringUtils.isNotBlank(dao.getUuid()))
-            criteria.andUuidEqualTo(dao.getUuid());
-        List<FruitPlanSummaryDao> result = summaryMapper.selectByExample(example);
-        if (result.isEmpty())
-            return FruitPlanSummary.getEmpty();
-        return result.get(0);
     }
 
     @Override

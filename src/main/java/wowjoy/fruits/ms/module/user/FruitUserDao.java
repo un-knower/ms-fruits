@@ -29,16 +29,6 @@ public class FruitUserDao extends FruitUser {
 
     private String taskId;
 
-    private List<FruitNotepadDao> notepadDaos;
-
-    public List<FruitNotepadDao> getNotepadDaos() {
-        return notepadDaos;
-    }
-
-    public void setNotepadDaos(List<FruitNotepadDao> notepadDaos) {
-        this.notepadDaos = notepadDaos;
-    }
-
     public String getTaskId() {
         return taskId;
     }

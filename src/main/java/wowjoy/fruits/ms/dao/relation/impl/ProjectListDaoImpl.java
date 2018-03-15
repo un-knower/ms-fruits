@@ -4,7 +4,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import wowjoy.fruits.ms.dao.relation.AbstractDaoRelation;
+import wowjoy.fruits.ms.dao.relation.RelationInterface;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.relation.entity.ProjectListRelation;
 import wowjoy.fruits.ms.module.relation.example.ProjectListRelationExample;
@@ -19,7 +19,7 @@ import java.util.List;
  */
 @Service
 @Transactional
-public class ProjectListDaoImpl<T extends ProjectListRelation> extends AbstractDaoRelation<T> {
+public class ProjectListDaoImpl<T extends ProjectListRelation,E extends ProjectListRelationExample> implements RelationInterface<T,E> {
     @Autowired
     private ProjectListRelationMapper mapper;
 

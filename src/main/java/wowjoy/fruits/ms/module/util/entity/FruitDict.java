@@ -9,34 +9,6 @@ import wowjoy.fruits.ms.module.AbstractEntity;
  */
 public class FruitDict extends AbstractEntity {
 
-    private String dictParentCode;
-    private String dictCode;
-    private String dictName;
-
-    public void setDictParentCode(String dictParentCode) {
-        this.dictParentCode = dictParentCode;
-    }
-
-    public void setDictCode(String dictCode) {
-        this.dictCode = dictCode;
-    }
-
-    public void setDictName(String dictName) {
-        this.dictName = dictName;
-    }
-
-    public String getDictParentCode() {
-        return dictParentCode;
-    }
-
-    public String getDictCode() {
-        return dictCode;
-    }
-
-    public String getDictName() {
-        return dictName;
-    }
-
     /**
      * 系统字典
      */
@@ -81,7 +53,8 @@ public class FruitDict extends AbstractEntity {
         START("开始"),
         END("结束"),
         CLOSE("关闭"),
-        HANDOVER("交接");
+        STAFF_CHANGE("人员变动"),
+        TRANSFER("转移");
 
         private String parentCode;
         private String value;
@@ -113,9 +86,7 @@ public class FruitDict extends AbstractEntity {
      * dict 管理项目所有父节点，便于父节点的管理和维护。
      */
     public enum Parents {
-        /**
-         * 业务字典
-         */
+        TRANSFER("转交"),
         PROJECT("项目"),
         SUMMARY("小结"),
         NOTEPAD("日报"),
@@ -150,13 +121,9 @@ public class FruitDict extends AbstractEntity {
      * plan 状态管理
      */
     public enum PlanDict {
-        /*待进行*/
         STAY_PENDING("待执行"),
-        //进行中
         PENDING("进行中"),
-        //已完成
         COMPLETE("已完成"),
-        //终止
         END("已终止"),
         /*下列字段只用于数据统计，不在数据库中真实存放*/
         DELAY("延期"),
@@ -192,9 +159,7 @@ public class FruitDict extends AbstractEntity {
      * project 状态管理
      */
     public enum ProjectDict {
-        //进行中
         UNDERWAY("进行中"),
-        //已完成
         COMPLETE("已完成");
 
         private String parentCode;
@@ -232,13 +197,14 @@ public class FruitDict extends AbstractEntity {
          */
         LOW("低"),
         CENTRE("中"),
-        HEIGH("高"),
+        HEIGHT("高"),
         /**
          * 任务状态
          */
         START("进行中"),
-        END("结束"),
-        CLOSE("关闭");
+        COMPLETE("完成"),
+        END("终止"),
+        DENIAL("拒绝");
 
 
         private String parentCode;
@@ -270,9 +236,7 @@ public class FruitDict extends AbstractEntity {
      * milestone 里程碑管理
      */
     public enum MilestoneDict {
-        //未完成
         UNDONE("未完成"),
-        //已完成
         COMPLETE("已完成");
 
 
@@ -309,9 +273,6 @@ public class FruitDict extends AbstractEntity {
      * taskUserRelation 任务用户关联字典管理
      */
     public enum TaskUserDict {
-        /*废弃*/
-//        PRINCIPAL("负责人"),
-//        PARTICIPANT("参与者");
         EXECUTOR("执行人");
 
 
@@ -345,8 +306,6 @@ public class FruitDict extends AbstractEntity {
      */
     public enum PlanUserDict {
         PRINCIPAL("负责人");
-//        PARTICIPANT("参与者");
-
 
         private String parentCode;
         private String value;
@@ -444,7 +403,9 @@ public class FruitDict extends AbstractEntity {
      */
     public enum ProjectTeamDict {
         PRINCIPAL("负责团队"),
-        PARTICIPANT("参与团队");
+        PARTICIPANT("参与团队"),
+        /*不记录数据库，中用在和前端数据交接时使用*/
+        OTHER("其他团队");
 
 
         private String parentCode;
@@ -483,7 +444,6 @@ public class FruitDict extends AbstractEntity {
         JOB_NUMBER("工号"),
         TEMP("临时用户");
 
-
         private String parentCode;
         private String value;
 
@@ -518,7 +478,6 @@ public class FruitDict extends AbstractEntity {
         PAY_SUBMIT("补交"),
         NOT_SUBMIT("未提交");
 
-
         private String parentCode;
         private String value;
 
@@ -545,34 +504,31 @@ public class FruitDict extends AbstractEntity {
 
     }
 
-
-    public enum ESType {
-        PROJECT("项目"),
-        PLAN("计划");
-
-
+    public enum TransferDict {
+        OLD("旧负责人"),
+        NEW("新负责人");
         private String parentCode;
         private String value;
 
-        private void setParentCode(String parentCode) {
-            this.parentCode = parentCode;
-        }
-
-        private void setValue(String value) {
-            this.value = value;
-        }
-
         public String getParentCode() {
             return parentCode;
+        }
+
+        private void setParentCode(String parentCode) {
+            this.parentCode = parentCode;
         }
 
         public String getValue() {
             return value;
         }
 
-        ESType(String value) {
-            this.setParentCode(Parents.MS_FRUITS.name());
-            this.setValue(value);
+        private void setValue(String value) {
+            this.value = value;
+        }
+
+        TransferDict(String value) {
+            this.parentCode = Parents.TRANSFER.name();
+            this.value = value;
         }
     }
 

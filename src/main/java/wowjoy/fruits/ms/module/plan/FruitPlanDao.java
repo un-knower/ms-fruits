@@ -155,16 +155,12 @@ public class FruitPlanDao extends FruitPlan {
         LocalDateTime currentTime = LocalDateTime.parse(new SimpleDateFormat(DateTimeFormat).format(endDate));
         Duration between = Duration.between(currentTime, predictEndTime);
         this.setDays((int) between.toDays());
-//        checkPlanStatus();
         return this;
     }
 
-    private void checkPlanStatus() {
-        if (FruitDict.PlanDict.PENDING.name().equals(this.getPlanStatus()))
-            return;
-        if (FruitDict.PlanDict.COMPLETE.name().equals(this.getPlanStatus()))
-            if (this.getDays() < 0)
-                setPlanStatus(FruitDict.PlanDict.DELAY_COMPLETE.name());
+    public void obtainPlanStatus() {
+        if (FruitDict.PlanDict.COMPLETE.name().equals(this.getPlanStatus()) && this.getDays() < 0)
+            setPlanStatus(FruitDict.PlanDict.DELAY_COMPLETE.name());
     }
 
 }

@@ -25,16 +25,20 @@ import java.util.function.UnaryOperator;
 @Service
 @Transactional(rollbackFor = CheckException.class)
 public class ListDaoImpl extends AbstractDaoList {
-    @Autowired
-    private FruitListMapper mapper;
-    @Autowired
-    private ProjectListDaoImpl listDao;
+    private final FruitListMapper mapper;
+    private final ProjectListDaoImpl listDao;
     private final static Consumer<FruitListExample> afterExample = (listExample) -> {
         if (listExample.getOredCriteria().isEmpty())
             listExample.getOredCriteria().forEach((criteria) -> criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name()));
         else
             listExample.createCriteria().andIsDeletedEqualTo(FruitDict.Systems.N.name());
     };
+
+    @Autowired
+    public ListDaoImpl(FruitListMapper mapper, ProjectListDaoImpl listDao) {
+        this.mapper = mapper;
+        this.listDao = listDao;
+    }
 
     /**
      * 添加列表，并维护关联列表
@@ -55,29 +59,10 @@ public class ListDaoImpl extends AbstractDaoList {
     }
 
     @Override
-    public List<FruitListDao> finds(FruitListDao dao) {
+    public List<FruitListDao> finds(Consumer<FruitListExample> exampleConsumer) {
         FruitListExample example = new FruitListExample();
-        FruitListExample.Criteria criteria = example.createCriteria();
-        if (StringUtils.isNotBlank(dao.getUuid()))
-            criteria.andUuidEqualTo(dao.getUuid());
-        if (StringUtils.isNotBlank(dao.getlType()))
-            criteria.andLTypeEqualTo(dao.getlType());
-        if (StringUtils.isNotBlank(dao.getTitle()))
-            criteria.andTitleEqualTo(dao.getTitle());
-        criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
+        exampleConsumer.accept(example);
         return mapper.selectByExample(example);
-    }
-
-    @Override
-    protected FruitList find(FruitListDao dao) {
-        FruitListExample example = new FruitListExample();
-        FruitListExample.Criteria criteria = example.createCriteria();
-        if (StringUtils.isNotBlank(dao.getUuid()))
-            criteria.andUuidEqualTo(dao.getUuid());
-        List<FruitListDao> datas = mapper.selectByExample(example);
-        if (datas.isEmpty())
-            return FruitList.getEmpty();
-        return datas.get(0);
     }
 
     @Override

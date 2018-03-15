@@ -126,13 +126,6 @@ public class FruitProjectDao extends FruitProject {
             super.setTitle(title);
     }
 
-    @Override
-    public void setProjectStatus(String projectStatus) {
-        super.setProjectStatus(projectStatus);
-        if (FruitDict.ProjectDict.COMPLETE.equals(projectStatus))
-            this.setEndDate(java.sql.Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
-    }
-
     /***************
      * 项目工具函数  *
      ***************/
@@ -140,6 +133,7 @@ public class FruitProjectDao extends FruitProject {
     /**
      * 是否延期
      * 延期天数
+     * 2018年03月08日15:03:09：暂无需求
      */
     public FruitProjectDao computeDays() {
         Date startDate;

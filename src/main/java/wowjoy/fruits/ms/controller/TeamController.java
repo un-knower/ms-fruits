@@ -19,9 +19,12 @@ import wowjoy.fruits.ms.util.RestResult;
 @RequestMapping("/v1/team")
 public class TeamController {
 
-    @Qualifier("teamDaoImpl")
+    private final AbstractDaoTeam teamDao;
+
     @Autowired
-    private AbstractDaoTeam teamDao;
+    public TeamController(@Qualifier("teamDaoImpl") AbstractDaoTeam teamDao) {
+        this.teamDao = teamDao;
+    }
 
     /**
      * @api {get} /v1/team/relation 团队信息查询

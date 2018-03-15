@@ -5,6 +5,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import org.springframework.core.MethodParameter;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -13,10 +15,11 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.exception.ExceptionSupport;
 
-import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.Charset;
 import java.util.Map;
 
 /**
@@ -24,6 +27,7 @@ import java.util.Map;
  */
 public class ArgumentInterceptor implements HandlerMethodArgumentResolver {
     private final Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
+    public static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
@@ -33,7 +37,7 @@ public class ArgumentInterceptor implements HandlerMethodArgumentResolver {
     @Override
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer, NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
         final HttpServletRequest request = (HttpServletRequest) webRequest.getNativeRequest();
-        final String data = RequestMethod.GET.name().toLowerCase().equals(request.getMethod().toLowerCase()) ? findGet(request.getParameterMap()) : findNotGet(request.getInputStream());
+        final String data = RequestMethod.GET.name().toLowerCase().equals(request.getMethod().toLowerCase()) ? findGet(request.getParameterMap()) : findNotGet(request);
         try {
             return toType(data, parameter.getParameterAnnotation(JsonArgument.class).type());
         } catch (ExceptionSupport ex) {
@@ -64,12 +68,22 @@ public class ArgumentInterceptor implements HandlerMethodArgumentResolver {
         }
     }
 
-    private String findNotGet(ServletInputStream inputStream) throws IOException {
+    private String findNotGet(HttpServletRequest request) throws IOException {
         StringBuffer parameter = new StringBuffer();
-        final InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-        while (inputStreamReader.ready())
-            parameter.append((char) inputStreamReader.read());
+        ServletServerHttpRequest inputMessage = new ServletServerHttpRequest(request);
+        Reader reader = new InputStreamReader(inputMessage.getBody(), getCharset(inputMessage.getHeaders()));
+        int ch;
+        while ((ch = reader.read()) != -1) {
+            parameter.append((char) ch);
+        }
         return parameter.toString();
+    }
+
+    private Charset getCharset(HttpHeaders headers) {
+        if (headers == null || headers.getContentType() == null || headers.getContentType().getCharset() == null) {
+            return DEFAULT_CHARSET;
+        }
+        return headers.getContentType().getCharset();
     }
 
     private String findGet(Map<String, String[]> parameterMap) {

@@ -11,6 +11,47 @@ import org.springframework.web.client.RestTemplate;
 /**
  * Created wangziwen on 2017/8/20.
  */
+
+/**
+ * 　　　　　　　 ┏┓       ┏┓+ +
+ * 　　　　　　　┏┛┻━━━━━━━┛┻┓ + +
+ * 　　　　　　　┃　　　　　　 ┃
+ * 　　　　　　　┃　　　━　　　┃ ++ + + +
+ * 　　　　　　 █████━█████  ┃+
+ * 　　　　　　　┃　　　　　　 ┃ +
+ * 　　　　　　　┃　　　┻　　　┃
+ * 　　　　　　　┃　　　　　　 ┃ + +
+ * 　　　　　　　┗━━┓　　　 ┏━┛
+ *                 ┃　　   ┃
+ * 　　　　　　　　　┃　　  ┃ + + + +
+ * 　　　　　　　　　┃　　　┃　Code is far away from     bug with the animal protecting
+ * 　　　　　　　　　┃　　　┃ + 　　　　         神兽保佑,代码无bug
+ * 　　　　　　　　　┃　　　┃
+ * 　　　　　　　　　┃　　　┃　　+
+ * 　　　　　　　　　┃　 　 ┗━━━┓ + +
+ * 　　　　　　　　　┃ 　　　　　┣┓
+ * 　　　　　　　　　┃ 　　　　　┏┛
+ * 　　　　　　　　　┗┓┓┏━━━┳┓┏┛ + + + +
+ * 　　　　　　　　　 ┃┫┫　 ┃┫┫
+ * 　　　　　　　　　 ┗┻┛　 ┗┻┛+ + + +
+ *
+ *       ┏┛ ┻━━━━━┛ ┻┓
+ *       ┃　　　　　　 ┃
+ *       ┃　　　━　　　┃
+ *       ┃　┳┛　  ┗┳　┃¬
+ *       ┃　　　　　　 ┃
+ *       ┃　　　┻　　　┃
+ *       ┃　　　　　　 ┃
+ *       ┗━┓　　　┏━━━┛
+ *         ┃　　　┃   神兽保佑
+ *         ┃　　　┃   代码无BUG！
+ *         ┃　　　┗━━━━━━━━━┓
+ *         ┃　　　　　　　    ┣┓
+ *         ┃　　　　         ┏┛
+ *         ┗━┓ ┓ ┏━━━┳ ┓ ┏━┛
+ *           ┃ ┫ ┫   ┃ ┫ ┫
+ *           ┗━┻━┛   ┗━┻━┛
+ */
 @SpringBootApplication
 @EnableEurekaClient
 @EnableFeignClients

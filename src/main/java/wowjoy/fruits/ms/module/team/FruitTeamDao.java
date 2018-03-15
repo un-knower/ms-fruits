@@ -21,12 +21,12 @@ public class FruitTeamDao extends FruitTeam {
     /**
      * 筛选出领导
      */
-    private FruitUserDao leader;
+    private FruitTeamUser leader;
 
     /**
      * 关联用户集合
      */
-    private List<FruitUserDao> users;
+    private List<FruitTeamUser> users;
 
     /**
      * 增删关联用户
@@ -52,11 +52,11 @@ public class FruitTeamDao extends FruitTeam {
         this.projectRole = projectRole;
     }
 
-    public FruitUserDao getLeader() {
+    public FruitTeamUser getLeader() {
         return leader;
     }
 
-    public void setLeader(FruitUserDao leader) {
+    public void setLeader(FruitTeamUser leader) {
         this.leader = leader;
     }
 
@@ -68,13 +68,13 @@ public class FruitTeamDao extends FruitTeam {
         this.userRelation = userRelation;
     }
 
-    public Optional<List<FruitUserDao>> findUsers() {
+    public Optional<List<FruitTeamUser>> findUsers() {
         if (users != null)
             return Optional.of(users);
         return Optional.empty();
     }
 
-    public void setUsers(List<FruitUserDao> users) {
+    public void setUsers(List<FruitTeamUser> users) {
         this.users = users;
     }
 }

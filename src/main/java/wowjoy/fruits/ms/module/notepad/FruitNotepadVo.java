@@ -11,6 +11,15 @@ public class FruitNotepadVo extends FruitNotepad {
     private String uuidVo;
     private Date startDate;
     private Date endDate;
+    private String userName;
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
 
     public void setStartDate(Date startDate) {
         this.startDate = startDate;

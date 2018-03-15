@@ -130,9 +130,13 @@ public class FruitTaskDao extends FruitTask {
     }
 
     public void computeDays() {
-        LocalDateTime estimatedEndDate = LocalDateTime.parse(new SimpleDateFormat("yyyy-MM-dd'T'23:59:59").format(this.getEstimatedEndDate()));
-        LocalDateTime toDay = LocalDateTime.now();
-        this.days = (int) Duration.between(toDay, estimatedEndDate).toDays();
+        LocalDateTime estimatedEndDate = LocalDateTime.parse(new SimpleDateFormat(DateTimeFormat).format(this.getEstimatedEndDate()));
+        LocalDateTime endDate;
+        if (!FruitDict.TaskDict.START.name().equals(this.getTaskStatus()))
+            endDate = LocalDateTime.parse(new SimpleDateFormat(DateTimeFormat).format(this.getEndDate()));
+        else
+            endDate = LocalDateTime.now().toLocalDate().atTime(23, 59, 59);
+        this.days = (int) Duration.between(endDate, estimatedEndDate).toDays();
 
     }
 

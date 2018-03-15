@@ -8,9 +8,8 @@
           This element was generated on Mon Dec 04 11:25:27 CST 2017.
         -->
         <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
-        <result column="content" jdbcType="VARCHAR" property="content"/>
+        <result column="content" jdbcType="LONGVARCHAR" property="content"/>
         <result column="user_id" jdbcType="VARCHAR" property="userId"/>
-        <result column="state" jdbcType="VARCHAR" property="state"/>
         <result column="estimated_submit_date" jdbcType="TIMESTAMP" property="estimatedSubmitDate"/>
         <result column="description" jdbcType="VARCHAR" property="description"/>
         <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
@@ -80,7 +79,6 @@
         ${replace}.uuid,
         ${replace}.content,
         ${replace}.user_id,
-        ${replace}.state,
         ${replace}.estimated_submit_date,
         ${replace}.description,
         ${replace}.modify_date_time,
@@ -142,6 +140,29 @@
                 AND utr.team_id IN
                 <foreach collection="teamIds" item="id" open="(" close=")" separator=",">
                     #{id}
+                </foreach>
+            </where>
+        </trim>
+        <if test="example.orderByClause != null">
+            order by ${example.orderByClause}
+        </if>
+    </select>
+
+    <select id="selectByCustom" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List">
+            <property name="replace" value="notepad"/>
+        </include>
+        FROM
+        fruits_notepad notepad
+        <trim suffixOverrides="AND | OR" prefixOverrides="AND | OR">
+            <where>
+                <include refid="Example_Where_Clause">
+                    <property name="replace" value="notepad"/>
+                </include>
+                AND
+                <foreach collection="customs" item="custom">
+                    ${custom}
                 </foreach>
             </where>
         </trim>

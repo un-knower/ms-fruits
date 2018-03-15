@@ -1,6 +1,5 @@
 package wowjoy.fruits.ms.module.notepad;
 
-import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
@@ -47,14 +46,12 @@ public class FruitNotepad extends AbstractEntity {
         return estimatedSubmitDate;
     }
 
-    public void setEstimatedSubmitDateAndState(Date estimatedSubmitDate) {
-        if (estimatedSubmitDate == null)
-            throw new CheckException("必须提供日报预计结束时间");
-        this.estimatedSubmitDate = Date.from(LocalDateTime.ofInstant(estimatedSubmitDate.toInstant(), ZoneId.systemDefault()).toLocalDate().atTime(0, 0, 0).atZone(ZoneId.systemDefault()).toInstant());
-        selectState();
+    public void setEstimatedSubmitDate(Date estimatedSubmitDate) {
+        this.estimatedSubmitDate = estimatedSubmitDate;
     }
 
-    private void selectState() {
+    /*计算日报状态*/
+    public void selectState() {
         LocalDateTime notepadDateTime = LocalDateTime.ofInstant(estimatedSubmitDate.toInstant(), ZoneId.systemDefault());
         notepadDateTime = LocalDateTime.of(notepadDateTime.getYear(),
                 notepadDateTime.getMonth(),
@@ -62,8 +59,8 @@ public class FruitNotepad extends AbstractEntity {
                 23,
                 59,
                 59);
-        LocalDateTime now = LocalDateTime.now();
-        if (Duration.between(now, notepadDateTime).toHours() < 0)
+        LocalDateTime now = LocalDateTime.ofInstant(this.getCreateDateTime().toInstant(), ZoneId.systemDefault());
+        if (Duration.between(now, notepadDateTime).toHours() <= -12)
             this.setState(FruitDict.NotepadDict.PAY_SUBMIT.name());
         else
             this.setState(FruitDict.NotepadDict.PUNCTUAL_SUBMIT.name());

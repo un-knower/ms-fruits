@@ -1,5 +1,7 @@
 import com.google.gson.Gson;
+import com.google.gson.JsonParser;
 import org.junit.Test;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.DateUtils;
 
 import java.util.concurrent.ExecutorService;
@@ -30,7 +32,6 @@ public class PatternTest {
 
     @Test
     public void test() throws Exception {
-        DateUtils.Month<DateUtils.Week.WeekChinese> monthByYearMonth = DateUtils.getMonthByYearMonth(2017, 5);
-        System.out.println(new Gson().toJsonTree(monthByYearMonth));
+        System.out.println(FruitDict.TransferDict.valueOf("NEW").name());
     }
 }

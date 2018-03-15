@@ -4,7 +4,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import wowjoy.fruits.ms.dao.relation.AbstractDaoRelation;
+import wowjoy.fruits.ms.dao.relation.RelationInterface;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.relation.entity.TaskPlanRelation;
 import wowjoy.fruits.ms.module.relation.example.TaskPlanRelationExample;
@@ -19,7 +19,7 @@ import java.util.List;
  */
 @Service
 @Transactional
-public class TaskPlanDaoImpl<T extends TaskPlanRelation> extends AbstractDaoRelation<T> {
+public class TaskPlanDaoImpl<T extends TaskPlanRelation,E extends TaskPlanRelationExample> implements RelationInterface<T,E> {
     @Autowired
     private TaskPlanRelationMapper mapper;
 

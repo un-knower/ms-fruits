@@ -2,24 +2,23 @@ package wowjoy.fruits.ms.dao.task;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.reflect.TypeToken;
-import com.google.gson.Gson;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wowjoy.fruits.ms.dao.list.ListDaoImpl;
-import wowjoy.fruits.ms.dao.logs.AbstractDaoLogs;
+import wowjoy.fruits.ms.dao.logs.service.ServiceLogs;
+import wowjoy.fruits.ms.dao.logs.service.ServiceTransferLogs;
 import wowjoy.fruits.ms.dao.relation.impl.TaskListDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.TaskPlanDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.TaskProjectDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.TaskUserDaoImpl;
-import wowjoy.fruits.ms.dao.user.UserDaoImpl;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.list.FruitListDao;
 import wowjoy.fruits.ms.module.list.FruitListExample;
 import wowjoy.fruits.ms.module.logs.FruitLogsDao;
+import wowjoy.fruits.ms.module.logs.transfer.FruitTransferLogs;
 import wowjoy.fruits.ms.module.relation.entity.TaskListRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskPlanRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskProjectRelation;
@@ -27,9 +26,7 @@ import wowjoy.fruits.ms.module.relation.entity.TaskUserRelation;
 import wowjoy.fruits.ms.module.task.FruitTask;
 import wowjoy.fruits.ms.module.task.FruitTaskDao;
 import wowjoy.fruits.ms.module.task.FruitTaskExample;
-import wowjoy.fruits.ms.module.task.FruitTaskVo;
 import wowjoy.fruits.ms.module.task.mapper.FruitTaskMapper;
-import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.module.util.entity.FruitDict.Systems;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;
@@ -39,10 +36,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-
-import static java.util.stream.Collectors.toList;
 
 /**
  * Created by wangziwen on 2017/8/31.
@@ -55,26 +48,26 @@ import static java.util.stream.Collectors.toList;
 @Service
 @Transactional
 public class TaskDaoImpl extends AbstractDaoTask {
+    private final FruitTaskMapper taskMapper;
+    private final TaskPlanDaoImpl taskPlanDao;
+    private final TaskProjectDaoImpl taskProjectDao;
+    private final TaskUserDaoImpl taskUserDao;
+    private final TaskListDaoImpl taskListDao;
+    private final ListDaoImpl listDao;
+    private final ServiceLogs logsDaoImpl;
+    private final ServiceTransferLogs transferLogs;
+
     @Autowired
-    private FruitTaskMapper taskMapper;
-    @Qualifier("taskPlanDaoImpl")
-    @Autowired
-    private TaskPlanDaoImpl taskPlanDao;
-    @Qualifier("taskProjectDaoImpl")
-    @Autowired
-    private TaskProjectDaoImpl taskProjectDao;
-    @Qualifier("taskUserDaoImpl")
-    @Autowired
-    private TaskUserDaoImpl taskUserDao;
-    @Qualifier("taskListDaoImpl")
-    @Autowired
-    private TaskListDaoImpl taskListDao;
-    @Autowired
-    private ListDaoImpl listDao;
-    @Autowired
-    private AbstractDaoLogs logsDaoImpl;
-    @Autowired
-    private UserDaoImpl userDao;
+    public TaskDaoImpl(FruitTaskMapper taskMapper, @Qualifier("taskPlanDaoImpl") TaskPlanDaoImpl taskPlanDao, @Qualifier("taskProjectDaoImpl") TaskProjectDaoImpl taskProjectDao, @Qualifier("taskUserDaoImpl") TaskUserDaoImpl taskUserDao, @Qualifier("taskListDaoImpl") TaskListDaoImpl taskListDao, ListDaoImpl listDao, ServiceLogs logsDaoImpl, ServiceTransferLogs transferLogs) {
+        this.taskMapper = taskMapper;
+        this.taskPlanDao = taskPlanDao;
+        this.taskProjectDao = taskProjectDao;
+        this.taskUserDao = taskUserDao;
+        this.taskListDao = taskListDao;
+        this.listDao = listDao;
+        this.logsDaoImpl = logsDaoImpl;
+        this.transferLogs = transferLogs;
+    }
 
     @Override
     public void insert(FruitTaskDao dao) {
@@ -96,7 +89,8 @@ public class TaskDaoImpl extends AbstractDaoTask {
         FruitTaskExample example = new FruitTaskExample();
         daoConsumer.accept(dao);
         taskExampleConsumer.accept(example);
-        taskMapper.updateByExampleSelective(dao, example);
+        if (example.getOredCriteria().stream().filter(FruitTaskExample.Criteria::isValid).count() > 0)
+            taskMapper.updateByExampleSelective(dao, example);
         Relation.getInstance(dao, taskPlanDao, taskProjectDao, taskUserDao, taskListDao)
                 /*删除列表、计划、项目、用户的关联信息*/
                 .removeList().removePlan().removeProject().removeUser()
@@ -182,29 +176,16 @@ public class TaskDaoImpl extends AbstractDaoTask {
         return logsDaoImpl.findLogs(example -> {
             example.createCriteria().andFruitUuidIn(taskIds).andFruitTypeEqualTo(FruitDict.Parents.TASK.name());
             example.setOrderByClause("flogs.create_date_time desc");
-        }, (logsDao, template) -> {
-            if (logsDao.getOperateType() != FruitDict.LogsDict.HANDOVER)
-                return template;
-            FruitTaskVo vo = new Gson().fromJson(logsDao.getVoObject(), TypeToken.of(FruitTaskVo.class).getType());
-            if (vo == null || vo.getUserRelation() == null) return template;
-            Predicate<Systems> userPredicate = key -> vo.getUserRelation().containsKey(key) && !vo.getUserRelation().get(key).isEmpty();
-            Function<List<TaskUserRelation>, String> userFunction = userRelations -> userDao.findExample(example -> example.createCriteria().andUserIdIn(
-                    userRelations
-                            .stream()
-                            .map(TaskUserRelation::getUserId)
-                            .collect(toList())
-            )).stream().map(FruitUserDao::getUserName).reduce((l, r) -> l + "、" + r).get();
-            LinkedList<Object> appends = Lists.newLinkedList();
-            if (userPredicate.test(Systems.ADD))
-                appends.add(userFunction.andThen(text -> "添加成员：" + text).apply(vo.getUserRelation().get(Systems.ADD)));
-            if (userPredicate.test(Systems.DELETE))
-                appends.add(userFunction.andThen(text -> "移除成员：" + text).apply(vo.getUserRelation().get(Systems.DELETE)));
-            return template + "，" + appends.stream().reduce((l, r) -> l + "，" + r).get();
         }, FruitDict.Parents.TASK);
     }
 
     public List<FruitTaskDao> findByExampleAndUserIdByProjectId(FruitTaskExample example, String projectId, List<String> userIds) {
         return taskMapper.selectByExampleAndUserIdAndProjectId(example, projectId, userIds);
+    }
+
+    @Override
+    protected void insertTransfer(Consumer<FruitTransferLogs.Insert> insertConsumer) {
+        transferLogs.insert(insertConsumer);
     }
 
 

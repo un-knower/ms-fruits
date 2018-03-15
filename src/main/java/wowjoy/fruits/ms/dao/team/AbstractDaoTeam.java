@@ -8,23 +8,20 @@ import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.exception.ExceptionSupport;
 import wowjoy.fruits.ms.exception.ServiceException;
 import wowjoy.fruits.ms.module.relation.entity.UserTeamRelation;
-import wowjoy.fruits.ms.module.team.FruitTeam;
-import wowjoy.fruits.ms.module.team.FruitTeamDao;
-import wowjoy.fruits.ms.module.team.FruitTeamExample;
-import wowjoy.fruits.ms.module.team.FruitTeamVo;
-import wowjoy.fruits.ms.module.user.FruitUserDao;
+import wowjoy.fruits.ms.module.team.*;
+import wowjoy.fruits.ms.module.user.example.FruitUserExample;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
+import wowjoy.fruits.ms.module.util.entity.FruitDict.Systems;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;
 
 import java.text.MessageFormat;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.*;
 
 /**
  * Created by wangziwen on 2017/9/6.
@@ -35,7 +32,7 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
      * 抽象接口，私有，因为对外的公共接口用来书写业务层，发布api必须在自己的控制范围内，不发布无用的接口。*
      *********************************************************************************/
 
-    public abstract List<FruitTeamDao> findUserByTeamIds(List<String> teamIds);
+    public abstract List<FruitTeamUser> findUserByTeamIds(List<String> teamIds, Consumer<FruitUserExample> userExampleConsumer);
 
     public abstract List<FruitTeamDao> findTeamByExample(Consumer<FruitTeamExample> teamExampleConsumer);
 
@@ -59,7 +56,7 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
                 criteria.andTitleLike(MessageFormat.format("%{0}%", vo.getTitle()));
             if (StringUtils.isNotBlank(vo.getUuidVo()))
                 criteria.andUuidEqualTo(vo.getUuidVo());
-            criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
+            criteria.andIsDeletedEqualTo(Systems.N.name());
             String sort = vo.sortConstrue();
             if (StringUtils.isNotBlank(sort))
                 fruitTeamExample.setOrderByClause(sort);
@@ -76,16 +73,13 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
     }
 
     private Callable plugUser(List<FruitTeamDao> teamDaoList) {
+        return plugUser(teamDaoList, example -> example.createCriteria().andIsDeletedEqualTo(Systems.N.name()));
+    }
+
+    private Callable plugUser(List<FruitTeamDao> teamDaoList, Consumer<FruitUserExample> userExampleConsumer) {
         return () -> {
-            Map<String, LinkedList<FruitUserDao>> userMap = this.findUserByTeamIds(teamDaoList.parallelStream().map(FruitTeamDao::getUuid).collect(toList()))
-                    .parallelStream().collect(toMap(FruitTeamDao::getUuid, team -> {
-                        LinkedList<FruitUserDao> userList = Lists.newLinkedList();
-                        userList.addAll(team.findUsers().orElseGet(LinkedList::new));
-                        return userList;
-                    }, (l, r) -> {
-                        r.addAll(l);
-                        return r;
-                    }));
+            Map<String, ArrayList<FruitTeamUser>> userMap = this.findUserByTeamIds(teamDaoList.parallelStream().map(FruitTeamDao::getUuid).collect(toList()), userExampleConsumer)
+                    .parallelStream().collect(groupingBy(FruitTeamUser::getTeamId, toCollection(ArrayList::new)));
             teamDaoList.parallelStream().forEach(fruitTeamDao -> {
                 fruitTeamDao.setUsers(userMap.get(fruitTeamDao.getUuid()));
                 fruitTeamDao.searchLeader();
@@ -101,18 +95,22 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
     }
 
     public final FruitTeamDao findInfo(String uuid) {
+        return findInfo(uuid, example -> example.createCriteria().andIsDeletedEqualTo(Systems.N.name()));
+    }
+
+    public final FruitTeamDao findInfo(String uuid, Consumer<FruitUserExample> userExampleConsumer) {
         if (StringUtils.isBlank(uuid))
             throw new CheckException("团队id不能为空");
         List<FruitTeamDao> result = this.findTeamByExample(fruitTeamExample -> {
             FruitTeamExample.Criteria criteria = fruitTeamExample.createCriteria();
             if (StringUtils.isNotBlank(uuid))
                 criteria.andUuidEqualTo(uuid);
-            criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
+            criteria.andIsDeletedEqualTo(Systems.N.name());
         });
         if (result.isEmpty())
             throw new CheckException("未找到指定团队");
         try {
-            this.plugUser(result).call();
+            this.plugUser(result, userExampleConsumer).call();
         } catch (Exception e) {
             throw new CheckException("获取团队用户信息失败");
         }
@@ -137,10 +135,10 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
     }
 
     private void checkInUsers(FruitTeamDao dao) {
-        if (dao.getUserRelation(FruitDict.Systems.ADD).isEmpty())
+        if (dao.getUserRelation(Systems.ADD).isEmpty())
             throw new CheckException("缺少关联用户");
         Map<String, List<UserTeamRelation>> roleValue = Maps.newLinkedHashMap();
-        dao.getUserRelation(FruitDict.Systems.ADD).forEach((i) -> {
+        dao.getUserRelation(Systems.ADD).forEach((i) -> {
             if (roleValue.containsKey(i.getUtRole()))
                 roleValue.get(i.getUtRole()).add(i);
             else

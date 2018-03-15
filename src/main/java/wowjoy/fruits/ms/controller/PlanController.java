@@ -26,9 +26,12 @@ import wowjoy.fruits.ms.util.RestResult;
 public class PlanController {
 
 
-    @Qualifier("planDaoImpl")
+    private final AbstractDaoPlan dataPlanDao;
+
     @Autowired
-    private AbstractDaoPlan dataPlanDao;
+    public PlanController(@Qualifier("planDaoImpl") AbstractDaoPlan dataPlanDao) {
+        this.dataPlanDao = dataPlanDao;
+    }
 
     /**
      * @api {get} /v1/plan/week/{year} 查询一年中每周的开始和结束时间
@@ -79,7 +82,7 @@ public class PlanController {
      * @apiVersion 0.1.0
      * @apiGroup plan
      * @apiParam title String 根据目标名称查询，前后模糊查询
-     * @apiParam planStatus String 状态查询，支持多查询。多个以逗号隔开：STAY_PENDING,PENDING,COMPLETE,END
+     * @apiParam planStatus String 状态查询，支持多查询。多个以逗号隔开：STAY_PENDING,PENDING,COMPLETE,COMPLETE
      */
     @RequestMapping(value = "/project/{projectId}", method = RequestMethod.GET)
     public RestResult findList(@PathVariable("projectId") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
@@ -182,19 +185,5 @@ public class PlanController {
         dataPlanDao.delete(vo);
         return RestResult.getInstance().setData(uuid);
     }
-
-    /**
-     * @api {put} /v1/plan/summary/{uuid} 添加进度小结
-     * @apiVersion 0.1.0
-     * @apiGroup plan
-     */
-    @LogInfo(uuid = "uuid", type = FruitDict.Parents.SUMMARY, operateType = FruitDict.LogsDict.ADD)
-    @RequestMapping(value = "/summary/{uuid}", method = RequestMethod.POST)
-    public RestResult insertSummary(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanSummaryVo.class) FruitPlanSummaryVo vo) {
-        vo.setPlanId(uuid);
-        dataPlanDao.insertSummary(vo);
-        return RestResult.getInstance().setData(vo.getUuid());
-    }
-
 
 }

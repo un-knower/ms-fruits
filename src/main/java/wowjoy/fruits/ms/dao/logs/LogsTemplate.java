@@ -25,7 +25,10 @@ import java.util.function.Supplier;
 
 /**
  * Created by wangziwen on 2017/12/22.
+ * Tips:
+ *  wangziwen-2018年03月08日09:54:55：2.5.0版本中保留，预计2.6.0版本移除
  */
+@Deprecated
 public abstract class LogsTemplate<T extends AbstractEntity> {
     private Map<LogsDict, String> templates = Maps.newLinkedHashMap();
     private final static LinkedHashMap<FruitDict.Parents, Supplier<LogsTemplate>> instanceFactory = Maps.newLinkedHashMap();
@@ -140,19 +143,19 @@ public abstract class LogsTemplate<T extends AbstractEntity> {
         private final String DELETE = "{user.userName} 删除了任务";
         private final String MOVE_TASK = "{user.userName} 改变了任务所在列表";
         private final String START = "{user.userName} 启动了任务";
-        private final String END = "{user.userName} 结束了任务";
-        private final String CLOSE = "{user.userName} 关闭了任务，关闭理由：{statusDescription}";
+        private final String COMPLETE = "{user.userName} 完成了任务";
+        private final String END = "{user.userName} 终止了任务，终止理由：{statusDescription}";
         private final String HANDOVER = "{user.userName} 改变了任务执行人";
 
         public TaskTemplate() {
             super.setTemplates(LogsDict.ADD, ADD);
             super.setTemplates(LogsDict.UPDATE, UPDATE);
             super.setTemplates(LogsDict.DELETE, DELETE);
-            super.setTemplates(LogsDict.END, END);
+            super.setTemplates(LogsDict.COMPLETE, COMPLETE);
             super.setTemplates(LogsDict.START, START);
             super.setTemplates(LogsDict.MOVE_TASK, MOVE_TASK);
-            super.setTemplates(LogsDict.CLOSE, CLOSE);
-            super.setTemplates(LogsDict.HANDOVER, HANDOVER);
+            super.setTemplates(LogsDict.END, END);
+            super.setTemplates(LogsDict.STAFF_CHANGE, HANDOVER);
         }
 
         @Override

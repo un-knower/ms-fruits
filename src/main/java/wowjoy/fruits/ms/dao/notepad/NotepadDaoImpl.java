@@ -1,20 +1,21 @@
 package wowjoy.fruits.ms.dao.notepad;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import wowjoy.fruits.ms.dao.logs.AbstractDaoLogs;
+import wowjoy.fruits.ms.dao.logs.service.ServiceLogs;
 import wowjoy.fruits.ms.dao.team.AbstractDaoTeam;
 import wowjoy.fruits.ms.dao.user.UserDaoImpl;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.logs.FruitLogsDao;
-import wowjoy.fruits.ms.module.notepad.FruitNotepad;
 import wowjoy.fruits.ms.module.notepad.FruitNotepadDao;
 import wowjoy.fruits.ms.module.notepad.FruitNotepadExample;
 import wowjoy.fruits.ms.module.notepad.mapper.FruitNotepadMapper;
 import wowjoy.fruits.ms.module.team.FruitTeamDao;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
+import wowjoy.fruits.ms.module.user.example.FruitUserExample;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.util.LinkedList;
@@ -28,25 +29,23 @@ import java.util.function.Consumer;
 @Service
 @Transactional
 public class NotepadDaoImpl extends AbstractDaoNotepad {
-    @Autowired
-    private FruitNotepadMapper mapper;
-    @Autowired
-    private AbstractDaoLogs daoLogs;
-    @Autowired
-    private UserDaoImpl userDaoImpl;
-    @Autowired
-    private AbstractDaoTeam daoTeamImpl;
+    private final FruitNotepadMapper mapper;
+    private final ServiceLogs daoLogs;
+    private final UserDaoImpl userDaoImpl;
+    private final AbstractDaoTeam daoTeamImpl;
 
-    @Override
-    public FruitNotepad find(FruitNotepadDao dao) {
+    @Autowired
+    public NotepadDaoImpl(FruitNotepadMapper mapper, ServiceLogs daoLogs, UserDaoImpl userDaoImpl, AbstractDaoTeam daoTeamImpl) {
+        this.mapper = mapper;
+        this.daoLogs = daoLogs;
+        this.userDaoImpl = userDaoImpl;
+        this.daoTeamImpl = daoTeamImpl;
+    }
+
+    public List<FruitNotepadDao> finds(Consumer<FruitNotepadExample> exampleConsumer) {
         FruitNotepadExample example = new FruitNotepadExample();
-        FruitNotepadExample.Criteria criteria = example.createCriteria();
-        if (StringUtils.isNotBlank(dao.getUuid()))
-            criteria.andUuidEqualTo(dao.getUuid());
-        List<FruitNotepadDao> notepads = mapper.selectByExample(example);
-        if (notepads.isEmpty())
-            return FruitNotepad.getEmpty();
-        return notepads.get(0);
+        exampleConsumer.accept(example);
+        return mapper.selectByExample(example);
     }
 
     @Override
@@ -79,10 +78,12 @@ public class NotepadDaoImpl extends AbstractDaoNotepad {
     }
 
     @Override
-    protected List<FruitNotepadDao> findsByExample(Consumer<FruitNotepadExample> exampleConsumer) {
+    protected List<FruitNotepadDao> findsByExampleAndCustom(Consumer<FruitNotepadExample> exampleConsumer, Consumer<List<String>> customConsumer) {
         FruitNotepadExample notepadExample = new FruitNotepadExample();
+        List<String> customs = Lists.newLinkedList();
+        customConsumer.accept(customs);
         exampleConsumer.accept(notepadExample);
-        return mapper.selectByExample(notepadExample);
+        return mapper.selectByCustom(notepadExample, customs);
     }
 
     @Override
@@ -99,8 +100,8 @@ public class NotepadDaoImpl extends AbstractDaoNotepad {
     }
 
     @Override
-    public FruitTeamDao findTeamInfo(String teamId) {
-        return daoTeamImpl.findInfo(teamId);
+    public FruitTeamDao findTeamInfo(String teamId, Consumer<FruitUserExample> userExampleConsumer) {
+        return daoTeamImpl.findInfo(teamId, userExampleConsumer);
     }
 
     private void checkUuid(String uuid) {

@@ -24,8 +24,12 @@ import java.time.format.DateTimeParseException;
 @RequestMapping("/v1/notepad")
 public class NotepadController {
 
+    private final AbstractDaoNotepad daoNotepad;
+
     @Autowired
-    private AbstractDaoNotepad daoNotepad;
+    public NotepadController(AbstractDaoNotepad daoNotepad) {
+        this.daoNotepad = daoNotepad;
+    }
 
     /**
      * @api {post} /v1/notepad 添加日报
@@ -102,9 +106,9 @@ public class NotepadController {
     }
 
     /**
-     * @api {get} /v1/notepad/team/month/{teamId}/{year}/{month} 查看某月日报（团队-个人视角）
+     * @api {get} /v1/notepad/team/month/{teamId}/{year}/{month} 查看某月日报（团队）
      * @apiVersion 0.1.0
-     * @apiGroup notepad
+     * @apiGroup notepad-个人视角
      * @apiParam {String} teamId 团队id
      * @apiParam {String} year 年份
      * @apiParam {String} month 月份
@@ -112,7 +116,9 @@ public class NotepadController {
     @RequestMapping(value = "team/month/{teamId}/{year}/{month}")
     public RestResult findNotepadMonthByTeamId(@PathVariable("teamId") String teamId, @PathVariable("year") String year, @PathVariable("month") String month) {
         try {
-            return RestResult.getInstance().setData(daoNotepad.findNotepadMonthByTeamId(LocalDate.parse(MessageFormat.format("{0}-{1}-01", year, month)), teamId));
+            return RestResult
+                    .getInstance()
+                    .setData(daoNotepad.findNotepadMonthByTeamId(LocalDate.parse(MessageFormat.format("{0}-{1}-01", year, month)), teamId).orElse(null));
         } catch (DateTimeParseException datetime) {
             throw new CheckException("日期格式：yyyy-MM-dd");
         }

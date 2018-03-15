@@ -11,7 +11,9 @@ import wowjoy.fruits.ms.module.relation.example.UserTeamRelationExample;
 import wowjoy.fruits.ms.module.team.FruitTeam;
 import wowjoy.fruits.ms.module.team.FruitTeamDao;
 import wowjoy.fruits.ms.module.team.FruitTeamExample;
+import wowjoy.fruits.ms.module.team.FruitTeamUser;
 import wowjoy.fruits.ms.module.team.mapper.FruitTeamMapper;
+import wowjoy.fruits.ms.module.user.example.FruitUserExample;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.util.List;
@@ -24,14 +26,20 @@ import java.util.function.Consumer;
 @Service
 @Transactional(rollbackFor = CheckException.class)
 public class TeamDaoImpl extends AbstractDaoTeam {
+    private final FruitTeamMapper mapper;
+    private final UserTeamDaoImpl<UserTeamRelation, UserTeamRelationExample> dao;
+
     @Autowired
-    private FruitTeamMapper mapper;
-    @Autowired
-    private UserTeamDaoImpl<UserTeamRelation> dao;
+    public TeamDaoImpl(FruitTeamMapper mapper, UserTeamDaoImpl<UserTeamRelation, UserTeamRelationExample> dao) {
+        this.mapper = mapper;
+        this.dao = dao;
+    }
 
     @Override
-    public List<FruitTeamDao> findUserByTeamIds(List<String> teamIds) {
-        return mapper.selectUserByTeamId(teamIds);
+    public List<FruitTeamUser> findUserByTeamIds(List<String> teamIds, Consumer<FruitUserExample> userExampleConsumer) {
+        FruitUserExample userExample = new FruitUserExample();
+        userExampleConsumer.accept(userExample);
+        return mapper.selectUserByTeamId(userExample, teamIds);
     }
 
     @Override

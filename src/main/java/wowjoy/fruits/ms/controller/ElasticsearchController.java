@@ -25,9 +25,12 @@ import java.util.LinkedList;
 public class ElasticsearchController {
 
 
-    @Qualifier("globalSearchEs")
+    private final GlobalSearchEs globalSearchEs;
+
     @Autowired
-    private GlobalSearchEs globalSearchEs;
+    public ElasticsearchController(@Qualifier("globalSearchEs") GlobalSearchEs globalSearchEs) {
+        this.globalSearchEs = globalSearchEs;
+    }
 
     /*临时提供接口加载全局数据*/
     @RequestMapping(value = "/global", method = RequestMethod.POST)

@@ -59,12 +59,12 @@ public class RestResult<T> {
         return data;
     }
 
-    public static RestResult getInstance() {
-        return new RestResult();
+    public static <T> RestResult<T> getInstance() {
+        return new RestResult<>();
     }
 
-    public static <T> RestResultPage newPage(int pageNum, int pageSize, long total, T data) {
-        return new RestResultPage(pageNum, pageSize, total, data);
+    public static <T> RestResultPage<T> newPage(int pageNum, int pageSize, long total, T data) {
+        return new RestResultPage<>(pageNum, pageSize, total, data);
     }
 
     public static RestResult newError(int code, String msg) {

@@ -8,10 +8,8 @@
         <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
-        <collection property="users" ofType="wowjoy.fruits.ms.module.user.FruitUserDao" resultMap="UserResultMap"
-                    columnPrefix="user_"/>
     </resultMap>
-    <resultMap id="UserResultMap" type="wowjoy.fruits.ms.module.user.FruitUserDao">
+    <resultMap id="UserResultMap" type="wowjoy.fruits.ms.module.team.FruitTeamUser">
         <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
         <result column="user_id" jdbcType="VARCHAR" property="userId"/>
         <result column="user_name" jdbcType="VARCHAR" property="userName"/>
@@ -26,6 +24,7 @@
 
         <!-- 团队担任角色 -->
         <result column="ut_role" jdbcType="VARCHAR" property="teamRole"/>
+        <result column="team_id" jdbcType="VARCHAR" property="teamId"/>
     </resultMap>
     <sql id="Example_Where_Clause">
         <foreach collection="example.oredCriteria" item="criteria" separator="or">
@@ -81,21 +80,25 @@
         modify_date_time, create_date_time, is_deleted
     </sql>
 
-    <select id="selectUserByTeamId" resultMap="BaseResultMap">
+    <select id="selectUserByTeamId" resultMap="UserResultMap">
         SELECT
         <include refid="User_Column_List">
             <property name="replace" value="fuser"/>
-            <property name="prefix" value="user_"/>
+            <property name="prefix" value=""/>
         </include>
-        ,fteam.uuid
-        ,utr.ut_role as user_ut_role
-        FROM
-        fruits_team fteam
-        RIGHT JOIN user_team_relation utr on utr.is_deleted = 'N' and fteam.uuid = utr.`team_id` and utr.team_id in
-        <foreach collection="ids" open="(" close=")" separator="," item="id">
+        ,utr.team_id,utr.ut_role as user_ut_role
+        FROM fruits_user fuser
+        right JOIN (select team_id,user_id,ut_role from user_team_relation where is_deleted = 'N' and team_id in
+        <foreach collection="teamIds" open="(" close=")" separator="," item="id">
             #{id}
-        </foreach>
-        RIGHT JOIN fruits_user fuser on fuser.user_id = utr.user_id and fuser.is_deleted = 'N'
-        WHERE fteam.is_deleted = 'N'
+        </foreach>) utr on fuser.user_id = utr.`user_id`
+        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
+            <where>
+                <include refid="Example_Where_Clause">
+                    <property name="prefix" value="fuser"/>
+                </include>
+                AND fuser.uuid is not null
+            </where>
+        </trim>
     </select>
 </mapper>

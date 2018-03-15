@@ -1,16 +1,16 @@
-import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import org.elasticsearch.client.transport.TransportClient;
 import org.junit.Test;
 import wowjoy.fruits.ms.module.project.FruitProject;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
+import java.lang.reflect.Field;
 import java.net.UnknownHostException;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Stream;
 
 /**
  * Created by wangziwen on 2017/9/26.
@@ -49,23 +49,7 @@ public class ElasticsearchTest {
 
     @Test
     public void test() {
-        LinkedList<String> objects = Lists.newLinkedList();
-        objects.add("1");
-        objects.add("1");
-        objects.add("1");
-        objects.add("1");
-        objects.add("1");
-        objects.add("1");
-        objects.add("1");
-        objects.add("1");
-        objects.add("1");
-        objects.add("1");
-        objects.add("1");
-        objects.add("1");
-        objects.add("1");
-        Optional<String> reduce = objects.stream().reduce((old, news) -> old + news);
-        System.out.println(reduce);
-        System.out.println(reduce.get());
+
     }
 
 }

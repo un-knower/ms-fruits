@@ -13,4 +13,5 @@ public interface FruitNotepadMapperExt {
 
     List<FruitNotepadDao> selectByTeamIds(@Param("example") FruitNotepadExample example, @Param("teamIds") String... teamIds);
 
+    List<FruitNotepadDao> selectByCustom(@Param("example") FruitNotepadExample example, @Param("customs") List<String> customs);
 }
