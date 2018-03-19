@@ -54,7 +54,7 @@ public class ListController {
     }
 
     /**
-     * @api {post} /v1/list/project 添加【项目】列表
+     * @api {post} /v1/list/project 项目-添加列表
      * @apiVersion 0.1.0
      * @apiGroup list
      * @apiExample {json} 项目添加示例

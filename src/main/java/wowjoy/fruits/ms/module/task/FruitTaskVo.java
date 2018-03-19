@@ -20,7 +20,7 @@ public class FruitTaskVo extends FruitTask {
     private Map<FruitDict.Systems, List<TaskProjectRelation>> projectRelation;
     private Map<FruitDict.Systems, List<TaskUserRelation>> userRelation;
     private Map<FruitDict.Systems, List<TaskListRelation>> listRelation;
-    private String projectIds;
+    private String projectId;
     private String listTitle;
 
     public String getListTitle() {
@@ -47,12 +47,12 @@ public class FruitTaskVo extends FruitTask {
         this.pageSize = pageSize;
     }
 
-    public List<String> getProjectIds() {
-        return split(projectIds);
+    public String getProjectId() {
+        return projectId;
     }
 
-    public void setProjectIds(String projectIds) {
-        this.projectIds = projectIds;
+    public void setProjectId(String projectId) {
+        this.projectId = projectId;
     }
 
     private List<String> split(String ids) {

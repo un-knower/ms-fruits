@@ -4,6 +4,8 @@ import org.junit.Test;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.DateUtils;
 
+import java.time.Duration;
+import java.time.LocalDate;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -32,6 +34,10 @@ public class PatternTest {
 
     @Test
     public void test() throws Exception {
-        System.out.println(FruitDict.TransferDict.valueOf("NEW").name());
+        Duration between = Duration.between(
+                LocalDate.now().atTime(0, 0, 0),
+                LocalDate.now().atTime(23, 59, 59)
+        );
+        System.out.println(between.toHours());
     }
 }

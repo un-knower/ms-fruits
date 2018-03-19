@@ -3,6 +3,7 @@ package wowjoy.fruits.ms.dao.project;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.gson.Gson;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
@@ -24,6 +25,7 @@ import wowjoy.fruits.ms.module.team.FruitTeamUser;
 import wowjoy.fruits.ms.module.user.FruitUser;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
+import wowjoy.fruits.ms.module.util.entity.FruitDict.ProjectTeamDict;
 
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
@@ -116,7 +118,7 @@ public abstract class AbstractDaoProject implements InterfaceDao {
         if (!vo.getTeamRelation().isPresent() || !vo.getTeamRelation().get().containsKey(FruitDict.Systems.ADD))
             throw new CheckException("未检测到负责团队");
         Map<String, Long> roleCount = vo.getTeamRelation().get().get(FruitDict.Systems.ADD).parallelStream().collect(groupingBy(ProjectTeamRelation::getTpRole, counting()));
-        if (!roleCount.containsKey(FruitDict.ProjectTeamDict.PRINCIPAL.name()) || roleCount.get(FruitDict.ProjectTeamDict.PRINCIPAL.name()) != 1)
+        if (!roleCount.containsKey(ProjectTeamDict.PRINCIPAL.name()) || roleCount.get(ProjectTeamDict.PRINCIPAL.name()) != 1)
             throw new CheckException("必须绑定负责团队，并且只能绑定一个负责团队");
         return this;
     }
@@ -164,14 +166,8 @@ public abstract class AbstractDaoProject implements InterfaceDao {
     }
 
     public final List<FruitProjectDao> findsCurrentUser(FruitProjectVo vo) {
-        List<FruitProjectDao> result = this.findsCurrentUser(example -> {
+        return this.findsCurrentUser(example -> {
             final FruitProjectExample.Criteria criteria = example.createCriteria();
-            if (StringUtils.isNotBlank(vo.getTitle()))
-                criteria.andTitleLike(MessageFormat.format("%{0}%", vo.getTitle()));
-            if (StringUtils.isNotBlank(vo.getProjectStatus()))
-                criteria.andProjectStatusEqualTo(vo.getProjectStatus());
-            if (StringUtils.isNotBlank(vo.getUuid()))
-                criteria.andUuidEqualTo(vo.getUuid());
             criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
             String order = vo.sortConstrue();
             if (StringUtils.isNotBlank(order))
@@ -179,10 +175,6 @@ public abstract class AbstractDaoProject implements InterfaceDao {
             else
                 example.setOrderByClause("create_date_time desc");
         });
-        DaoThread.getFixed().execute(this.plugUser(result))
-                .execute(this.plugTeam(result))
-                .get().shutdown();
-        return result;
     }
 
     private Callable plugUser(List<FruitProjectDao> projectDaoList) {
@@ -240,6 +232,7 @@ public abstract class AbstractDaoProject implements InterfaceDao {
         try {
             if (!this.finds(example -> example.createCriteria().andUuidEqualTo(vo.getUuidVo())).stream().findAny().isPresent())
                 throw new CheckException("不存在的项目");
+            /*检查成员目标、任务完成情况*/
             this.modifyCheckJoinUser(vo);
             this.update(dao -> {
                 dao.setUuid(vo.getUuidVo());
@@ -259,50 +252,44 @@ public abstract class AbstractDaoProject implements InterfaceDao {
     }
 
     private void modifyCheckJoinUser(FruitProjectVo vo) {
-        if (!vo.getUserRelation().isPresent()
-                || !vo.getUserRelation().get().containsKey(FruitDict.Systems.DELETE)
-                || vo.getUserRelation().get().get(FruitDict.Systems.DELETE).isEmpty())
+        /*检查是否有删除用户*/
+        if (!vo.getUserRelation()
+                .filter(userRelation -> userRelation.containsKey(FruitDict.Systems.DELETE))
+                .filter(userRelation -> !userRelation.get(FruitDict.Systems.DELETE).isEmpty())
+                .isPresent())
             return;
+        Map<String, List<UserProjectRelation>> userMap = vo.getUserRelation().orElseGet(HashMap::new).get(FruitDict.Systems.DELETE)
+                .stream().collect(groupingBy(UserProjectRelation::getUserId));
         /*检查用户有没有待完成的 目标 OR 任务*/
-        List<FruitPlanDao> planList = this.findPlanByPlanExampleAndUserIdsAnProjectId(example -> example.createCriteria()
+        Map<String, Long> planUserMap = this.findPlanByPlanExampleAndUserIdsAnProjectId(example -> example.createCriteria()
                         .andIsDeletedEqualTo(FruitDict.Systems.N.name())
                         .andPlanStatusIn(Lists.newArrayList(FruitDict.PlanDict.PENDING.name(), FruitDict.PlanDict.STAY_PENDING.name())),
-                vo.getUserRelation().get().get(FruitDict.Systems.DELETE)
-                        .parallelStream()
-                        .map(UserProjectRelation::getUserId)
-                        .distinct()
-                        .collect(toList()), vo.getUuidVo()
-        );
+                Lists.newArrayList(userMap.keySet().toArray(new String[userMap.keySet().size()])),
+                vo.getUuidVo()
+        ).parallelStream().map(FruitPlanDao::getUsers).reduce((l, r) -> {
+            l.addAll(r);
+            return l;
+        }).orElseGet(Lists::newLinkedList).parallelStream().collect(groupingBy(FruitUserDao::getUserName, counting()));
 
-        List<FruitTaskDao> taskList = this.findTaskByTaskExampleAndUserIdsAndProjectId(
+        Map<String, Long> taskUserMap = this.findTaskByTaskExampleAndUserIdsAndProjectId(
                 example -> example.createCriteria().andIsDeletedEqualTo(FruitDict.Systems.N.name()).andTaskStatusEqualTo(FruitDict.TaskDict.START.name()),
-                vo.getUserRelation().get().get(FruitDict.Systems.DELETE)
-                        .parallelStream()
-                        .map(UserProjectRelation::getUserId)
-                        .distinct()
-                        .collect(toList()), vo.getUuidVo()
-        );
-        Map<String, Long> planUserMap = planList.parallelStream().map(FruitPlanDao::getUsers).reduce((l, r) -> {
+                Lists.newArrayList(userMap.keySet().toArray(new String[userMap.keySet().size()])), vo.getUuidVo()
+        ).parallelStream().map(FruitTaskDao::getUsers).reduce((l, r) -> {
             l.addAll(r);
             return l;
-        }).orElseGet(Lists::newLinkedList).parallelStream().collect(groupingBy(FruitUserDao::getUserName, counting()));
-        Map<String, Long> taskUserMap = taskList.parallelStream().map(FruitTaskDao::getUsers).reduce((l, r) -> {
-            l.addAll(r);
-            return l;
-        }).orElseGet(Lists::newLinkedList).parallelStream().collect(groupingBy(FruitUserDao::getUserName, counting()));
-        HashSet<String> userNameSet = planUserMap.keySet().stream().collect(toCollection(Sets::newHashSet));
+        }).orElseGet(Lists::newLinkedList).parallelStream().filter(user -> userMap.containsKey(user.getUserId())).collect(groupingBy(FruitUserDao::getUserName, counting()));
+        HashSet<String> userNameSet = Sets.newHashSet();
+        userNameSet.addAll(planUserMap.keySet().stream().collect(toCollection(Sets::newHashSet)));
         userNameSet.addAll(taskUserMap.keySet().stream().collect(toCollection(Sets::newHashSet)));
-        if (userNameSet.isEmpty())
-            return;
-        ArrayList<Object> taskPlanJoin = Lists.newArrayListWithCapacity(2);
-        throw new MessageException(userNameSet.parallelStream().map(userName -> {
-            taskPlanJoin.clear();
-            if (planUserMap.containsKey(userName))
-                taskPlanJoin.add(MessageFormat.format("{0}条未完成的目标", planUserMap.get(userName)));
-            if (taskUserMap.containsKey(userName))
-                taskPlanJoin.add(MessageFormat.format("{0}条未完成的任务", taskUserMap.get(userName)));
-            return MessageFormat.format("拒绝移除{0}，此人还有：{1}", userName, StringUtils.join(taskPlanJoin, "、"));
-        }).collect(joining("、")));
+        Optional.of(userNameSet).filter(set -> !set.isEmpty()).ifPresent(set -> {
+            LinkedList<MessageException.RefuseToRemoveUser> collect = set.parallelStream().map(userName -> MessageException.RefuseToRemoveUser.newInstance(userName,
+                    Optional.of(planUserMap).filter(planMap -> planMap.containsKey(userName))
+                            .map(planMap -> planMap.get(userName)).orElse(0L),
+                    Optional.of(taskUserMap).filter(taskMap -> taskMap.containsKey(userName))
+                            .map(taskMap -> taskMap.get(userName)).orElse(0L)))
+                    .collect(toCollection(LinkedList::new));
+            throw new MessageException(new Gson().toJson(collect));
+        });
     }
 
     public final void complete(FruitProjectVo vo) {
@@ -357,7 +344,7 @@ public abstract class AbstractDaoProject implements InterfaceDao {
      * @param projectId
      * @return
      */
-    public final Map<FruitDict.ProjectTeamDict, List<FruitUser>> treeTeamUserList(String projectId) {
+    public final Map<ProjectTeamDict, List<FruitUser>> treeTeamUserList(String projectId) {
         /*查询项目团队，查询团队用户*/
         return CompletableFuture.supplyAsync(() -> {
             List<FruitTeamDao> teamDaoList = this.findTeamByProjectIds(Lists.newArrayList(projectId))
@@ -372,20 +359,26 @@ public abstract class AbstractDaoProject implements InterfaceDao {
                     .forEach(fruitTeamDao -> fruitTeamDao.setUsers(keyIsTeamUuid.get(fruitTeamDao.getUuid())));
             return teamDaoList;
         }).thenCombine(CompletableFuture.supplyAsync(() -> this.findUserByProjectId(projectId)), (teamDaoList, fruitUserDaos) -> {
-            Map<FruitDict.ProjectTeamDict, List<FruitUser>> treeTeamUser = Maps.newLinkedHashMap();
+            Map<ProjectTeamDict, List<FruitUser>> treeTeamUser = Maps.newLinkedHashMap();
             /*提取负责团队、协作团队*/
-            Map<FruitDict.ProjectTeamDict, List<FruitTeamUser>> teamUserMap = teamDaoList
+            Optional<Map<ProjectTeamDict, ArrayList<FruitTeamUser>>> optionalTeamUserMap = Optional.ofNullable(teamDaoList
                     .stream()
-                    .collect(toMap(fruitTeamDao -> FruitDict.ProjectTeamDict.valueOf(fruitTeamDao.getProjectRole()), fruitTeamDao -> {
+                    .collect(toMap(fruitTeamDao -> ProjectTeamDict.valueOf(fruitTeamDao.getProjectRole()), fruitTeamDao -> {
                         ArrayList<FruitTeamUser> userArrayList = Lists.newArrayList();
                         userArrayList.addAll(fruitTeamDao.findUsers().orElseGet(ArrayList::new));
                         return userArrayList;
                     }, (l, r) -> {
                         r.addAll(l);
                         return r;
-                    }));
+                    })));
+            List<FruitTeamUser> principals = optionalTeamUserMap.filter(dictMap -> dictMap.containsKey(ProjectTeamDict.PRINCIPAL))
+                    .map(dictMap -> dictMap.get(ProjectTeamDict.PRINCIPAL))
+                    .orElseGet(ArrayList::new);
+            List<FruitTeamUser> participants = optionalTeamUserMap.filter(dictMap -> dictMap.containsKey(ProjectTeamDict.PARTICIPANT))
+                    .map(dictMap -> dictMap.get(ProjectTeamDict.PARTICIPANT))
+                    .orElseGet(ArrayList::new);
             /*保留负责团队成员*/
-            Map<String, FruitUser> keepUser = teamUserMap.get(FruitDict.ProjectTeamDict.PRINCIPAL).stream().collect(toMap(FruitUser::getUserId, fruitUser -> fruitUser));
+            Map<String, FruitUser> keepUser = principals.stream().collect(toMap(FruitUser::getUserId, fruitUser -> fruitUser));
             Predicate<FruitUser> removeUserPredicate = fruitUser -> {
                 if (keepUser.containsKey(fruitUser.getUserId()))
                     return false;
@@ -393,11 +386,11 @@ public abstract class AbstractDaoProject implements InterfaceDao {
                     keepUser.put(fruitUser.getUserId(), fruitUser);
                 return true;
             };
-            treeTeamUser.put(FruitDict.ProjectTeamDict.PRINCIPAL, new ArrayList<>(teamUserMap.get(FruitDict.ProjectTeamDict.PRINCIPAL)));
+            treeTeamUser.put(ProjectTeamDict.PRINCIPAL, Lists.newArrayList(principals));
             /*移除和负责团队冲突的协作团度成员*/
-            treeTeamUser.put(FruitDict.ProjectTeamDict.PARTICIPANT, teamUserMap.get(FruitDict.ProjectTeamDict.PARTICIPANT).stream().filter(removeUserPredicate).collect(toCollection(ArrayList::new)));
+            treeTeamUser.put(ProjectTeamDict.PARTICIPANT, participants.stream().filter(removeUserPredicate).collect(toCollection(ArrayList::new)));
             /*移除和负责团队、协作团队冲突的其他成员*/
-            treeTeamUser.put(FruitDict.ProjectTeamDict.OTHER, fruitUserDaos.stream().filter(removeUserPredicate).collect(toCollection(ArrayList::new)));
+            treeTeamUser.put(ProjectTeamDict.OTHER, fruitUserDaos.stream().filter(removeUserPredicate).collect(toCollection(ArrayList::new)));
             return treeTeamUser;
         }).join();
     }

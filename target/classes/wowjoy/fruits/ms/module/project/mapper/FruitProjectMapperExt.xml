@@ -207,17 +207,15 @@
             <property name="replace" value="fproject"/>
         </include>
         FROM fruits_project fproject
-        left join user_project_relation upr on upr.project_id = fproject.uuid
-        left join fruits_user fuser on fuser.user_id = upr.user_id
+        right join (select project_id,user_id,up_role from user_project_relation where user_id = #{userId} and
+        is_deleted = 'N') upr on upr.project_id = fproject.uuid
         <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
             <where>
                 <include refid="Example_Where_Clause">
                     <property name="replace" value="fproject"/>
                 </include>
-                AND fuser.user_id = #{userId}
-                AND upr.is_deleted = 'N'
-                AND fuser.is_deleted = 'N'
                 AND fproject.is_deleted = 'N'
+                and fproject.uuid is not null
             </where>
         </trim>
     </select>

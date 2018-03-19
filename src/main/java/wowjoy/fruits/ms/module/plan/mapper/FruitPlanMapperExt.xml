@@ -18,7 +18,6 @@
         <collection property="logs" resultMap="LogsResultMap" columnPrefix="flogs_"/>
         <collection property="users" ofType="wowjoy.fruits.ms.module.user.FruitUserDao" resultMap="UserResultMap"
                     columnPrefix="user_"/>
-        <collection property="tasks" resultMap="TaskResultMap" columnPrefix="task_"/>
     </resultMap>
     <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="wowjoy.fruits.ms.module.plan.FruitPlanDao">
         <result column="description" jdbcType="LONGVARCHAR" property="description"/>
@@ -49,7 +48,7 @@
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
     </resultMap>
-    <resultMap id="TaskResultMap" type="wowjoy.fruits.ms.module.task.FruitTaskDao">
+    <resultMap id="TaskResultMap" type="wowjoy.fruits.ms.module.plan.FruitPlanTask">
         <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
         <result column="title" jdbcType="VARCHAR" property="title"/>
         <result column="task_status" jdbcType="VARCHAR" property="taskStatus"/>
@@ -61,6 +60,8 @@
         <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
+
+        <result column="plan_id" jdbcType="VARCHAR" property="planId"/>
     </resultMap>
     <sql id="Example_Where_Clause">
         <foreach collection="example.oredCriteria" item="criteria" separator="or">
@@ -158,7 +159,8 @@
             <property name="replace" value="plan"/>
         </include>
         from fruits_plan plan
-        right join (select plan_id,project_id from plan_project_relation where project_id = #{projectId} and is_deleted = 'N')
+        right join (select plan_id,project_id from plan_project_relation where project_id = #{projectId} and is_deleted
+        = 'N')
         ppr on ppr.plan_id = plan.uuid
         <if test="example != null">
             <trim suffixOverrides="AND | OR" prefixOverrides="AND | OR">
@@ -209,26 +211,32 @@
         order by fruitUser.user_id = #{userId} desc
     </select>
 
-    <select id="selectTaskByPlanIds" resultMap="BaseResultMap">
+    <select id="selectTaskByPlanIds" resultMap="TaskResultMap">
         select
-        plan.uuid
+        taskPlanRelation.plan_id as plan_id
         ,
         <include refid="Task_Column_List">
-            <property name="replace" value="task"/>
-            <property name="prefix" value="task_"/>
+            <property name="replace" value="ftask"/>
+            <property name="prefix" value=""/>
         </include>
-        from fruits_plan plan
-        inner join (
+        from fruits_task ftask
+        right join (
         select task_id,plan_id from task_plan_relation
         where is_deleted = 'N'
         and plan_id in
         <foreach collection="planIds" item="id" open="(" close=")" separator=",">
             #{id}
         </foreach>
-        ) taskPlanRelation on taskPlanRelation.plan_id = plan.uuid
-        left join (select
-        <include refid="Task_Base_Column_List"/>
-        from fruits_task) task on task.uuid = taskPlanRelation.task_id
+        ) taskPlanRelation on taskPlanRelation.task_id = ftask.uuid
+        <trim>
+            <where>
+                <include refid="Example_Where_Clause">
+                    <property name="replace" value="ftask"/>
+                </include>
+                AND
+                ftask.is_deleted = 'N'
+            </where>
+        </trim>
     </select>
 
     <select id="selectByExampleAndUserIdAndProjectId" resultMap="BaseResultMap">
@@ -242,12 +250,16 @@
             <property name="prefix" value="user_"/>
         </include>
         from fruits_plan plan
-        left join (select plan_id,project_id from plan_project_relation where project_id=#{projectId} and is_deleted='N') projectJoin on projectJoin.plan_id = plan.uuid
+        left join (select plan_id,project_id from plan_project_relation where project_id=#{projectId} and
+        is_deleted='N') projectJoin on projectJoin.plan_id = plan.uuid
         left join plan_user_relation userJoin on userJoin.plan_id = plan.uuid and userJoin.is_deleted = 'N'
-        left join (select <include refid="user_Base_Column_List"/> from fruits_user where user_id in
+        left join (select
+        <include refid="user_Base_Column_List"/>
+        from fruits_user where user_id in
         <foreach collection="userIds" item="id" open="(" close=")" separator=",">
             #{id}
-        </foreach> and is_deleted = 'N') fruitUser on fruitUser.user_id = userJoin.user_id
+        </foreach>
+        and is_deleted = 'N') fruitUser on fruitUser.user_id = userJoin.user_id
         <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
             <where>
                 <include refid="Example_Where_Clause">

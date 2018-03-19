@@ -9,6 +9,7 @@ import wowjoy.fruits.ms.dao.list.ListDaoImpl;
 import wowjoy.fruits.ms.dao.plan.PlanDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.ProjectTeamDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.UserProjectDaoImpl;
+import wowjoy.fruits.ms.dao.task.AbstractDaoTask;
 import wowjoy.fruits.ms.dao.task.TaskDaoImpl;
 import wowjoy.fruits.ms.dao.team.TeamDaoImpl;
 import wowjoy.fruits.ms.exception.CheckException;
@@ -43,7 +44,7 @@ public class ProjectDaoImpl extends AbstractDaoProject {
     private final ProjectTeamDaoImpl teamRelationDao;
     private final UserProjectDaoImpl userRelationDao;
     private final PlanDaoImpl planDaoImpl;
-    private final TaskDaoImpl taskDaoImpl;
+    private final AbstractDaoTask taskDaoImpl;
     private final ListDaoImpl listDao;
     private final TeamDaoImpl teamDao;
 
@@ -140,9 +141,7 @@ public class ProjectDaoImpl extends AbstractDaoProject {
 
     @Override
     public List<FruitTaskDao> findTaskByTaskExampleAndUserIdsAndProjectId(Consumer<FruitTaskExample> exampleConsumer, List<String> userIds, String projectId) {
-        FruitTaskExample example = new FruitTaskExample();
-        exampleConsumer.accept(example);
-        return taskDaoImpl.findByExampleAndUserIdByProjectId(example, projectId, userIds);
+        return taskDaoImpl.findContainUserListByUserIdByProjectId(exampleConsumer, userIds, projectId);
     }
 
     /**

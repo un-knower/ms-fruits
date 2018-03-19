@@ -33,7 +33,7 @@ public class ProjectController {
      * @api {get} /v1/project/list/{uuid} 项目列表
      * @apiVersion 2.5.0
      * @apiGroup project
-     * @apiParam {String} 项目 uuid
+     * @apiParam {String} uuid 项目uuid
      */
     @RequestMapping(value = "/list/{uuid}", method = RequestMethod.GET)
     public RestResult findList(@PathVariable("uuid") String uuid) {
@@ -51,7 +51,7 @@ public class ProjectController {
     }
 
     /**
-     * @api {get} /v1/project/current 项目查询【列表，当前用户关联项目】
+     * @api {get} /v1/project/current 当前用户-项目查询
      * @apiVersion 0.1.0
      * @apiGroup project
      */
@@ -61,10 +61,10 @@ public class ProjectController {
     }
 
     /**
-     * @api {get} /v1/project/user/{uuid} 查询项目所有用户成员（树形结构）（v2.5.0开始，获取用户信息使用此接口）
+     * @api {get} /v1/project/user/{uuid} 查询项目所有用户成员
      * @apiVersion 2.5.0
      * @apiGroup project
-     * @apiParam {String} 项目 uuid
+     * @apiParam {String} uuid 项目uuid
      */
     @RequestMapping(value = "/user/{uuid}", method = RequestMethod.GET)
     public RestResult treeTeamUserList(@PathVariable("uuid") String uuid) {

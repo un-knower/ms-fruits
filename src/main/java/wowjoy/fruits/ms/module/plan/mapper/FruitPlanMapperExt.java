@@ -3,7 +3,9 @@ package wowjoy.fruits.ms.module.plan.mapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import wowjoy.fruits.ms.module.plan.FruitPlanDao;
+import wowjoy.fruits.ms.module.plan.FruitPlanTask;
 import wowjoy.fruits.ms.module.plan.example.FruitPlanExample;
+import wowjoy.fruits.ms.module.task.FruitTaskExample;
 
 import java.util.List;
 
@@ -17,7 +19,7 @@ public interface FruitPlanMapperExt {
 
     List<FruitPlanDao> selectUserByPlanIds(@Param("planIds") List<String> planIds, @Param("userId") String userId);
 
-    List<FruitPlanDao> selectTaskByPlanIds(@Param("planIds") List<String> planIds);
+    List<FruitPlanTask> selectTaskByPlanIds(@Param("example") FruitTaskExample taskExample, @Param("planIds") List<String> planIds);
 
     List<FruitPlanDao> selectByExampleAndUserIdAndProjectId(@Param("example") FruitPlanExample example, @Param("projectId") String projectId, @Param("userIds") List<String> userIds);
 

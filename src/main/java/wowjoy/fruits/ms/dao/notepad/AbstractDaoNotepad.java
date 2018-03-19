@@ -161,11 +161,10 @@ public abstract class AbstractDaoNotepad implements InterfaceDao {
         return teamInfo;
     }
 
-    public final Optional<FruitTeamDao> findNotepadMonthByTeamId(LocalDate date, String teamId) {
+    public final Optional<FruitTeamDao> findNotepadMonthByTeamId(LocalDate date, String teamId,FruitNotepadVo vo) {
         if (date == null) return Optional.empty();
         LocalDate startDate = LocalDate.of(date.getYear(), date.getMonth(), 1);
         LocalDate endDate = LocalDate.of(date.getYear(), date.getMonth(), date.lengthOfMonth());
-        FruitNotepadVo vo = FruitNotepad.getVo();
         vo.setStartDate(ToDate.apply(startDate.atTime(0, 0, 0)));
         vo.setEndDate(ToDate.apply(endDate.atTime(23, 59, 59)));
         return Optional.of(this.findNotepadByTeamId(vo, teamId));

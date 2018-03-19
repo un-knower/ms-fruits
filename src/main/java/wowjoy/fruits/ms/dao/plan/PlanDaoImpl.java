@@ -14,25 +14,22 @@ import wowjoy.fruits.ms.dao.task.AbstractDaoTask;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.logs.FruitLogsDao;
 import wowjoy.fruits.ms.module.logs.FruitLogsVo;
-import wowjoy.fruits.ms.module.plan.FruitPlan;
-import wowjoy.fruits.ms.module.plan.FruitPlanDao;
-import wowjoy.fruits.ms.module.plan.FruitPlanSummary;
-import wowjoy.fruits.ms.module.plan.FruitPlanSummaryDao;
+import wowjoy.fruits.ms.module.plan.*;
 import wowjoy.fruits.ms.module.plan.example.FruitPlanExample;
 import wowjoy.fruits.ms.module.plan.example.FruitPlanSummaryExample;
 import wowjoy.fruits.ms.module.plan.mapper.FruitPlanMapper;
 import wowjoy.fruits.ms.module.plan.mapper.FruitPlanSummaryMapper;
 import wowjoy.fruits.ms.module.relation.entity.PlanProjectRelation;
 import wowjoy.fruits.ms.module.relation.entity.PlanUserRelation;
-import wowjoy.fruits.ms.module.task.FruitTaskDao;
-import wowjoy.fruits.ms.module.user.FruitUserDao;
+import wowjoy.fruits.ms.module.relation.example.PlanProjectRelationExample;
+import wowjoy.fruits.ms.module.relation.example.PlanUserRelationExample;
+import wowjoy.fruits.ms.module.task.FruitTaskExample;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
+import wowjoy.fruits.ms.module.util.entity.FruitDict.Systems;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 import static java.util.stream.Collectors.*;
 
@@ -45,18 +42,10 @@ public class PlanDaoImpl extends AbstractDaoPlan {
 
     private final FruitPlanMapper mapper;
     private final FruitPlanSummaryMapper summaryMapper;
-    private final PlanUserDaoImpl userRelation;
-    private final PlanProjectDaoImpl projectDao;
+    private final PlanUserDaoImpl<PlanUserRelation, PlanUserRelationExample> userRelation;
+    private final PlanProjectDaoImpl<PlanProjectRelation, PlanProjectRelationExample> projectDao;
     private final ServiceLogs logsDaoImpl;
     private final AbstractDaoTask daoTask;
-
-    Predicate<FruitPlanExample> exampleIsValid = fruitPlanExample -> {
-        if (fruitPlanExample.getOredCriteria().isEmpty())
-            return true;
-        if (fruitPlanExample.getOredCriteria().stream().filter(criteria -> criteria.isValid()).collect(toList()).isEmpty())
-            return true;
-        return false;
-    };
 
     @Autowired
     public PlanDaoImpl(FruitPlanMapper mapper, FruitPlanSummaryMapper summaryMapper, @Qualifier("planUserDaoImpl") PlanUserDaoImpl userRelation, @Qualifier("planProjectDaoImpl") PlanProjectDaoImpl projectDao, ServiceLogs logsDaoImpl, AbstractDaoTask daoTask) {
@@ -96,29 +85,23 @@ public class PlanDaoImpl extends AbstractDaoPlan {
     }
 
     @Override
-    protected List<FruitPlanDao> findTaskByPlanIds(List<String> planIds) {
-        if (planIds == null || planIds.isEmpty()) return Lists.newLinkedList();
-        List<FruitPlanDao> planDaoList = mapper.selectTaskByPlanIds(planIds);
-        if (planDaoList.isEmpty()) return planDaoList;
-        List<FruitTaskDao> tasks = planDaoList.stream().collect(reducing(Lists.newLinkedList(), FruitPlanDao::getTasks, (l, r) -> {
-            l.addAll(r);
-            return l;
-        }));
-        try {
-            daoTask.plugUser(tasks).call();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        Map<String, LinkedList<FruitUserDao>> userMap = tasks.parallelStream().collect(toMap(FruitTaskDao::getUuid, task -> {
-            LinkedList<FruitUserDao> userList = Lists.newLinkedList();
-            userList.addAll(task.getUsers());
-            return userList;
-        }, (l, r) -> {
-            r.addAll(l);
-            return r;
-        }));
-        planDaoList.parallelStream().forEach(plan -> plan.getTasks().parallelStream().forEach(task -> task.setUsers(userMap.get(task.getUuid()))));
-        return planDaoList;
+    protected Optional<Map<String, ArrayList<FruitPlanTask>>> findTaskByTaskExampleAndPlanIds(Consumer<FruitTaskExample> taskConsumer, List<String> planIds) {
+        Optional<List<FruitPlanTask>> optionalTask = Optional.ofNullable(planIds)
+                .filter(planList -> !planList.isEmpty())
+                .map(planList -> {
+                    FruitTaskExample example = new FruitTaskExample();
+                    taskConsumer.accept(example);
+                    return mapper.selectTaskByPlanIds(example, planIds);
+                });
+        return optionalTask.filter(tasks -> !tasks.isEmpty())
+                .map(tasks -> CompletableFuture.supplyAsync(daoTask.plugUserSupplier(tasks)))
+                .map(CompletableFuture::join)
+                .flatMap(optionalUserByTaskId -> {
+                    optionalTask.ifPresent(tasks -> tasks.forEach(task -> {
+                        task.setUsers(optionalUserByTaskId.filter(userByTaskId -> userByTaskId.containsKey(task.getUuid())).map(userByTaskId -> userByTaskId.get(task.getUuid())).orElseGet(LinkedList::new));
+                    }));
+                    return optionalTask;
+                }).map(tasks -> tasks.stream().collect(groupingBy(FruitPlanTask::getPlanId, toCollection(ArrayList::new))));
     }
 
     @Override
@@ -137,15 +120,12 @@ public class PlanDaoImpl extends AbstractDaoPlan {
     }
 
     @Override
-    protected FruitPlan findByUUID(String uuid) {
+    protected Optional<FruitPlanDao> findByUUID(String uuid) {
         if (StringUtils.isBlank(uuid))
             throw new CheckException("【计划】uuId不能为空");
         FruitPlanExample example = new FruitPlanExample();
-        example.createCriteria().andUuidEqualTo(uuid).andIsDeletedEqualTo(FruitDict.Systems.N.name());
-        List<FruitPlanDao> data = mapper.selectByExampleWithBLOBs(example);
-        if (data.isEmpty())
-            return FruitPlan.newEmpty("计划不存在");
-        return data.get(0);
+        example.createCriteria().andUuidEqualTo(uuid).andIsDeletedEqualTo(Systems.N.name());
+        return mapper.selectByExampleWithBLOBs(example).stream().findAny();
     }
 
     /**
@@ -156,37 +136,61 @@ public class PlanDaoImpl extends AbstractDaoPlan {
      * @param dao
      */
     @Override
-    public void insert(FruitPlanDao dao) {
+    public void insert(FruitPlan.Insert dao) {
         mapper.insertSelective(dao);
-        Relation.getInstance(userRelation, projectDao, dao).insertUser().insertProject();
+        /*添加用户关联信息*/
+        Optional.ofNullable(dao.getUserRelation())
+                .filter(userMap -> userMap.containsKey(Systems.ADD))
+                .map(userMap -> userMap.get(Systems.ADD))
+                .orElseGet(ArrayList::new)
+                .forEach(user -> userRelation.insert(planUser -> {
+                    planUser.setUserId(user);
+                    planUser.setPlanId(dao.getUuid());
+                }));
+        /*添加项目关联信息*/
+        Optional.ofNullable(dao.getProjectRelation())
+                .filter(projectMap -> projectMap.containsKey(Systems.ADD))
+                .map(projectMap -> projectMap.get(Systems.ADD))
+                .orElseGet(ArrayList::new)
+                .forEach(project -> projectDao.insert(projectPlan -> {
+                    projectPlan.setPlanId(dao.getUuid());
+                    projectPlan.setProjectId(project);
+                }));
     }
 
     @Override
-    public void update(Consumer<FruitPlanDao> planDaoConsumer, Consumer<FruitPlanExample> exampleConsumer) {
+    public void update(Consumer<FruitPlan.Update> planDaoConsumer, Consumer<FruitPlanExample> exampleConsumer) {
         final FruitPlanExample example = new FruitPlanExample();
-        final FruitPlanDao dao = FruitPlan.getDao();
+        final FruitPlan.Update dao = FruitPlan.newUpdate();
         planDaoConsumer.accept(dao);
         exampleConsumer.accept(example);
-        if (exampleIsValid.test(example))
-            throw new CheckException("必须携带条件");
+        Optional.of(example.getOredCriteria())
+                /*检查列表元素是否为空*/
+                .map(criteriaList -> criteriaList.stream().filter(FruitPlanExample.Criteria::isValid).collect(toList()))
+                .filter(criteriaList -> !criteriaList.isEmpty())
+                .orElseThrow(() -> new CheckException("修改计划时，必须携带条件"));
+        /*更新用户关联信息*/
+        Optional.ofNullable(dao.getUserRelation())
+                .filter(userMap -> userMap.containsKey(Systems.DELETE))
+                .map(userMap -> userMap.get(Systems.DELETE))
+                .orElseGet(ArrayList::new)
+                .forEach(user -> userRelation.deleted(userRelationExample -> userRelationExample.createCriteria().andUserIdEqualTo(user).andPlanIdEqualTo(dao.getUuid())));
+        Optional.ofNullable(dao.getUserRelation())
+                .filter(userMap -> userMap.containsKey(Systems.ADD))
+                .map(userMap -> userMap.get(Systems.ADD))
+                .orElseGet(ArrayList::new)
+                .forEach(user -> userRelation.insert(planUserRelation -> {
+                    planUserRelation.setPlanId(dao.getUuid());
+                    planUserRelation.setUserId(user);
+                }));
         mapper.updateByExampleSelective(dao, example);
-        Relation.getInstance(userRelation, projectDao, dao)
-                .removeUser().removeProject()
-                .insertUser().insertProject();
     }
 
     @Override
-    public List<FruitPlanDao> batchUpdateStatusAndReturnResult(Consumer<FruitPlanDao> planDaoConsumer, Consumer<FruitPlanExample> fruitPlanExampleConsumer) {
-        List<FruitPlanDao> planDaoList = this.findByExample(fruitPlanExampleConsumer);
-        FruitPlanExample fruitPlanExample = new FruitPlanExample();
-        fruitPlanExampleConsumer.accept(fruitPlanExample);
-        if (fruitPlanExample.getOredCriteria().isEmpty())
-            throw new CheckException("必须携带条件");
-        if (planDaoList.isEmpty())
-            return planDaoList;
-        fruitPlanExample.getOredCriteria().get(0).andUuidIn(planDaoList.stream().map(FruitPlanDao::getUuid).collect(toList()));
-        this.update(planDaoConsumer, fruitPlanExampleConsumer);
-        return planDaoList;
+    public Optional<List<FruitPlanDao>> batchUpdateStatusAndReturnResult(Consumer<FruitPlan.Update> planDaoConsumer, Consumer<FruitPlanExample> fruitPlanExampleConsumer) {
+        Optional<List<FruitPlanDao>> optionalPlans = Optional.ofNullable(this.findByExample(fruitPlanExampleConsumer));
+        optionalPlans.filter(planList -> !planList.isEmpty()).ifPresent(planList -> this.update(planDaoConsumer, example -> example.createCriteria().andUuidIn(planList.stream().map(FruitPlanDao::getUuid).collect(toList()))));
+        return optionalPlans;
     }
 
     @Override
@@ -194,18 +198,14 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         FruitPlanExample example = new FruitPlanExample();
         example.createCriteria().andUuidEqualTo(uuid);
         FruitPlanDao delete = FruitPlan.getDao();
-        delete.setIsDeleted(FruitDict.Systems.Y.name());
+        delete.setIsDeleted(Systems.Y.name());
         mapper.updateByExampleSelective(delete, example);
         FruitPlanDao plan = FruitPlan.getDao();
         plan.setUuid(uuid);
-        Relation.getInstance(userRelation, projectDao, plan).removesProject().removesUser();
+        userRelation.deleted(userRelationExample -> userRelationExample.createCriteria().andPlanIdEqualTo(uuid));
+        projectDao.deleted(projectRelationExample -> projectRelationExample.createCriteria().andPlanIdEqualTo(uuid));
         /*删除进度小结*/
         deleteSummarys(FruitPlanSummary.newDao(uuid));
-    }
-
-    @Override
-    public void insertSummary(FruitPlanSummaryDao dao) {
-        summaryMapper.insertSelective(dao);
     }
 
     @Override
@@ -219,10 +219,11 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         if (criteria.getAllCriteria().isEmpty())
             throw new CheckException("【删除进度小结】没有可用的删除条件");
         FruitPlanSummaryDao delete = FruitPlanSummary.getDao();
-        delete.setIsDeleted(FruitDict.Systems.Y.name());
+        delete.setIsDeleted(Systems.Y.name());
         summaryMapper.updateByExampleSelective(delete, example);
     }
 
+    @Deprecated
     private static class Relation {
         private final PlanUserDaoImpl userDao;
         private final PlanProjectDaoImpl projectdao;
@@ -239,32 +240,14 @@ public class PlanDaoImpl extends AbstractDaoPlan {
             return new Relation(userDao, projectdao, planDao);
         }
 
-        public Relation insertUser() {
-            planDao.getUserRelation(FruitDict.Systems.ADD).forEach((i) -> {
-                userDao.insert(PlanUserRelation.getInstance(planDao.getUuid(), i, FruitDict.PlanUserDict.PRINCIPAL));
-            });
-            return this;
-        }
-
-        public Relation removeUser() {
-            planDao.getUserRelation(FruitDict.Systems.DELETE).forEach((i) ->
-                    userDao.deleted(PlanUserRelation.getInstance(planDao.getUuid(), i, null))
-            );
-            return this;
-        }
-
-        public void removesUser() {
-            userDao.deleted(PlanUserRelation.getInstance(planDao.getUuid()));
-        }
-
         public void insertProject() {
-            planDao.getProjectRelation(FruitDict.Systems.ADD).forEach((i) -> {
+            planDao.getProjectRelation(Systems.ADD).forEach((i) -> {
                 projectdao.insert(PlanProjectRelation.newInstance(planDao.getUuid(), i));
             });
         }
 
         public Relation removeProject() {
-            planDao.getProjectRelation(FruitDict.Systems.DELETE).forEach((i) ->
+            planDao.getProjectRelation(Systems.DELETE).forEach((i) ->
                     projectdao.deleted(PlanProjectRelation.newInstance(planDao.getUuid(), StringUtils.isBlank(i) ? null : i))
             );
             return this;

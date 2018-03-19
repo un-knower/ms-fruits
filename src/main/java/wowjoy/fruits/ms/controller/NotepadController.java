@@ -79,7 +79,7 @@ public class NotepadController {
     }
 
     /**
-     * @api {get} /v1/notepad/current 查看日报（当前登录用户）
+     * @api {get} /v1/notepad/current 当前用户-日报
      * @apiVersion 0.1.0
      * @apiGroup notepad
      * @apiParam {Date} startDate 开始日期 (范围查询，配合结束日期使用)
@@ -92,7 +92,7 @@ public class NotepadController {
     }
 
     /**
-     * @api {get} /v1/notepad/team/{teamId} 查看日报（团队视角）
+     * @api {get} /v1/notepad/team/{teamId} 团队日报
      * @apiVersion 0.1.0
      * @apiGroup notepad
      * @apiParam {String} teamId 团队id
@@ -106,19 +106,22 @@ public class NotepadController {
     }
 
     /**
-     * @api {get} /v1/notepad/team/month/{teamId}/{year}/{month} 查看某月日报（团队）
+     * @api {get} /v1/notepad/team/month/{teamId}/{year}/{month} 团队-指定月份日报
      * @apiVersion 0.1.0
-     * @apiGroup notepad-个人视角
+     * @apiGroup notepad
      * @apiParam {String} teamId 团队id
      * @apiParam {String} year 年份
      * @apiParam {String} month 月份
      */
     @RequestMapping(value = "team/month/{teamId}/{year}/{month}")
-    public RestResult findNotepadMonthByTeamId(@PathVariable("teamId") String teamId, @PathVariable("year") String year, @PathVariable("month") String month) {
+    public RestResult findNotepadMonthByTeamId(@PathVariable("teamId") String teamId,
+                                               @PathVariable("year") String year,
+                                               @PathVariable("month") String month,
+                                               @JsonArgument(type = FruitNotepadVo.class) FruitNotepadVo vo) {
         try {
             return RestResult
                     .getInstance()
-                    .setData(daoNotepad.findNotepadMonthByTeamId(LocalDate.parse(MessageFormat.format("{0}-{1}-01", year, month)), teamId).orElse(null));
+                    .setData(daoNotepad.findNotepadMonthByTeamId(LocalDate.parse(MessageFormat.format("{0}-{1}-01", year, month)), teamId, vo).orElse(null));
         } catch (DateTimeParseException datetime) {
             throw new CheckException("日期格式：yyyy-MM-dd");
         }

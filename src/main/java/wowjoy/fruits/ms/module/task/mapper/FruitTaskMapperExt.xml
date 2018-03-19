@@ -395,7 +395,8 @@
             <property name="prefix" value="list_"/>
         </include>
         from fruits_task task
-        right join (select task_id,list_id from task_list_relation where is_deleted = 'N') listJoin on listJoin.task_id =
+        right join (select task_id,list_id from task_list_relation where is_deleted = 'N') listJoin on listJoin.task_id
+        =
         task.uuid
         right join (select uuid, title, l_type, description, modify_date_time, create_date_time, is_deleted from
         fruits_list where is_deleted = 'N') flist on flist.uuid = listJoin.list_id
@@ -418,35 +419,59 @@
         <include refid="Base_Column_List">
             <property name="replace" value="task"/>
         </include>
-        FROM
-        fruits_task task
-        RIGHT join
-        (
-        select task_id,user_id from task_user_relation
-        where
-        is_deleted='N' and user_id = #{userId}
-        ) userRelation on userRelation.task_id = task.uuid
-        left join (select task_id,project_id from task_project_relation where is_deleted='N') projectJoin on task.uuid =
-        projectJoin.task_id
-        left join (select task_id,plan_id from task_plan_relation where is_deleted='N') planJoin on planJoin.task_id =
-        task.uuid
-        left join (select plan_id,project_id from plan_project_relation where is_deleted='N') planProjectRelation on
-        planProjectRelation.plan_id = planJoin.plan_id
-        left join
-        (
-        select uuid from fruits_project
-        where
-        is_deleted='N'
-        <if test="projectId != null">
-            and uuid = #{projectId}
-        </if>
-        ) fproject on fproject.uuid = planProjectRelation.project_id or fproject.uuid = projectJoin.project_id
+        from (
+        select
+        <include refid="Base_Column_List">
+            <property name="replace" value="ftask"/>
+        </include>
+        from fruits_task ftask
+        right join (select task_id,project_id from task_project_relation
         <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
+            <where>
+                <if test="projectId != null">
+                    project_id = #{projectId}
+                </if>
+                and is_deleted = 'N'
+            </where>
+        </trim>
+        ) projectJoin on projectJoin.task_id = ftask.uuid
+        where ftask.is_deleted = 'N'
+        union all
+        select
+        <include refid="Base_Column_List">
+            <property name="replace" value="ftask"/>
+        </include>
+        from fruits_task ftask
+        right join (select plan_id,task_id from task_plan_relation where is_deleted = 'N') taskJoin on taskJoin.task_id
+        = ftask.uuid
+        right join (select plan_id,project_id from plan_project_relation
+        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
+            <where>
+                <if test="projectId != null">
+                    project_id = #{projectId}
+                </if>
+                and is_deleted = 'N'
+            </where>
+        </trim>
+        ) planJoin on planJoin.plan_id = taskJoin.plan_id
+        where ftask.is_deleted = 'N'
+        ) task
+        right join (select uuid,task_id,user_id from task_user_relation
+        <where>
+            user_id in
+            <foreach collection="userIds" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+            and is_deleted = 'N'
+        </where>
+        ) userJoin on
+        userJoin.task_id = task.uuid
+        <trim suffixOverrides="AND | OR" prefixOverrides="AND | OR ">
             <where>
                 <include refid="Base_Example_Where_Clause">
                     <property name="replace" value="task"/>
                 </include>
-                and fproject.uuid is not null
+                and task.uuid is not null
             </where>
         </trim>
         <if test="example.orderByClause != null">
@@ -459,12 +484,48 @@
         <include refid="Base_Column_List">
             <property name="replace" value="task"/>
         </include>
-        FROM
-        fruits_task task
-        RIGHT join
-        (select `user_id`,`fruit_uuid` from fruits_logs
-        where fruit_type = 'TASK' and `operate_type` = 'ADD' and is_deleted = 'N'
-        AND user_id = #{userId}) flogs on flogs.fruit_uuid = task.uuid
+        from (
+        select
+        <include refid="Base_Column_List">
+            <property name="replace" value="ftask"/>
+        </include>
+        from fruits_task ftask
+        right join (select task_id,project_id from task_project_relation
+        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
+            <where>
+                <if test="projectId != null">
+                    project_id = #{projectId}
+                </if>
+                and is_deleted = 'N'
+            </where>
+        </trim>
+        ) projectJoin on projectJoin.task_id = ftask.uuid
+        where ftask.is_deleted = 'N'
+        union all
+        select
+        <include refid="Base_Column_List">
+            <property name="replace" value="ftask"/>
+        </include>
+        from fruits_task ftask
+        right join (select plan_id,task_id from task_plan_relation where is_deleted = 'N') taskJoin on taskJoin.task_id
+        = ftask.uuid
+        right join (select plan_id,project_id from plan_project_relation
+        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
+            <where>
+                <if test="projectId != null">
+                    project_id = #{projectId}
+                </if>
+                and is_deleted = 'N'
+            </where>
+        </trim>
+        ) planJoin on planJoin.plan_id = taskJoin.plan_id
+        where ftask.is_deleted = 'N'
+        ) task
+        right join (select `user_id`,`fruit_uuid` from fruits_logs
+        <where>
+            fruit_type = 'TASK' and `operate_type` = 'ADD' and is_deleted = 'N' and user_id = #{userId}
+        </where>
+        ) flog on flog.fruit_uuid = task.uuid
         <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
             <where>
                 <include refid="Base_Example_Where_Clause">

@@ -11,7 +11,7 @@ import java.util.List;
 public class FruitTeamUser extends FruitUser {
     private transient String teamRole;
 
-    private String teamId;
+    private transient String teamId;
 
     private List<FruitNotepadDao> multiNotepad;
 

@@ -32,6 +32,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static java.util.stream.Collectors.*;
 
@@ -73,9 +74,11 @@ public abstract class AbstractDaoTask implements InterfaceDao {
 
     protected abstract Map<String, LinkedList<FruitLogsDao>> findJoinLogsByTask(List<String> taskIds);
 
-    protected abstract List<FruitTaskDao> myTask(FruitTaskDao dao);
+    protected abstract List<FruitTaskDao> myTask(Consumer<FruitTaskExample> taskExampleConsumer, String projectId);
 
-    protected abstract List<FruitTaskDao> myCreateTask(FruitTaskDao dao);
+    protected abstract List<FruitTaskDao> myCreateTask(Consumer<FruitTaskExample> taskExampleConsumer, String projectId);
+
+    protected abstract List<FruitTaskDao> findByUserIdAndProjectId(Consumer<FruitTaskExample> exampleConsumer, List<String> userIds, String projectId);
 
     protected abstract void insertTransfer(Consumer<FruitTransferLogs.Insert> insertConsumer);
 
@@ -306,53 +309,54 @@ public abstract class AbstractDaoTask implements InterfaceDao {
                 .execute(this.plugList(Lists.newArrayList(taskInfo)))
                 .get();
         return taskInfo;
+    }
 
+    public List<FruitTaskDao> findContainUserListByUserIdByProjectId(Consumer<FruitTaskExample> exampleConsumer, List<String> userIds, String projectId) {
+        return Optional.of(this.findByUserIdAndProjectId(exampleConsumer, userIds, projectId)).filter(tasks -> !tasks.isEmpty()).map(tasks -> {
+            try {
+                this.plugUser(tasks).call();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return tasks;
+        }).orElseGet(ArrayList::new);
     }
 
     /************************************************************************************************
      *                                       个人中心专供                                            *
      ************************************************************************************************/
     public List<FruitTaskDao> myTask(FruitTaskVo vo) {
-        List<FruitTaskDao> tasks = this.myTask(TaskTemplate.newInstance(vo).findTemplate());
-        myTaskPlug(tasks);
-        return tasks;
-    }
-
-    public LinkedList<TaskTemplate.EndTasks> myTaskByEnd(FruitTaskVo vo) {
-        long start = System.currentTimeMillis();
-        vo.setTaskStatus(FruitDict.TaskDict.COMPLETE.name());
-        List<FruitTaskDao> fruitTaskDaos = myTask(vo);
-        long end = System.currentTimeMillis();
-        logger.info(String.valueOf(end - start));
-        start = System.currentTimeMillis();
-        LinkedList<TaskTemplate.EndTasks> endTasks = TaskTemplate.formatByEndDate(fruitTaskDaos);
-        end = System.currentTimeMillis();
-        logger.info(String.valueOf(end - start));
-        return endTasks;
+        return Optional.of(this.myTask(example -> {
+            FruitTaskExample.Criteria criteria = example.createCriteria();
+            if (StringUtils.isNotBlank(vo.getTitle()))
+                criteria.andTitleLike(MessageFormat.format("%{0}%", vo.getTitle()));
+            if (StringUtils.isNotBlank(vo.getTaskStatus()))
+                criteria.andTaskStatusEqualTo(vo.getTaskStatus());
+            example.setOrderByClause(Optional.ofNullable(vo.sortConstrue("task")).filter(StringUtils::isNotBlank).orElse("task.create_date_time desc"));
+        }, vo.getProjectId())).filter(tasks -> !tasks.isEmpty()).map(tasks -> {
+            DaoThread thread = DaoThread.getFixed();
+            thread.execute(this.plugUtil(tasks))
+                    .execute(this.plugUser(tasks))
+                    .execute(this.plugList(tasks)).get().shutdown();
+            return tasks;
+        }).orElseGet(ArrayList::new);
     }
 
     public List<FruitTaskDao> myCreateTask(FruitTaskVo vo) {
-        List<FruitTaskDao> task = this.myCreateTask(TaskTemplate.newInstance(vo).findTemplate());
-        myTaskPlug(task);
-        return task;
-    }
-
-    private void myTaskPlug(List<FruitTaskDao> tasks) {
-        try {
-            if (tasks == null || tasks.isEmpty()) return;
+        return Optional.of(this.myCreateTask(example -> {
+            FruitTaskExample.Criteria criteria = example.createCriteria();
+            if (StringUtils.isNotBlank(vo.getTitle()))
+                criteria.andTitleLike(MessageFormat.format("%{0}%", vo.getTitle()));
+            if (StringUtils.isNotBlank(vo.getTaskStatus()))
+                criteria.andTaskStatusEqualTo(vo.getTaskStatus());
+            example.setOrderByClause(Optional.ofNullable(vo.sortConstrue("task")).filter(StringUtils::isNotBlank).orElse("task.create_date_time desc"));
+        }, vo.getProjectId())).filter(tasks -> !tasks.isEmpty()).map(tasks -> {
             DaoThread thread = DaoThread.getFixed();
-            thread
-                    .execute(this.plugLogs(tasks))
-                    .execute(this.plugProject(tasks))
-                    .execute(this.plugPlanJoinProject(tasks))
+            thread.execute(this.plugUtil(tasks))
                     .execute(this.plugUser(tasks))
-                    .execute(this.plugList(tasks))
-                    .execute(this.plugPlan(tasks))
-                    .execute(this.plugUtil(tasks)).get();
-            thread.shutdown();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+                    .execute(this.plugList(tasks)).get().shutdown();
+            return tasks;
+        }).orElseGet(ArrayList::new);
     }
 
     private Callable plugLogs(final List<FruitTaskDao> tasks) {
@@ -414,18 +418,24 @@ public abstract class AbstractDaoTask implements InterfaceDao {
     public Callable plugUser(final List<FruitTaskDao> tasks) {
         return () -> {
             if (tasks == null || tasks.isEmpty()) return false;
-            Map<String, LinkedList<FruitUserDao>> userMap = this.findJoinUserByTaskIds(tasks.parallelStream().map(FruitTaskDao::getUuid).collect(toList()))
+            this.plugUserSupplier(tasks).get().ifPresent(userMap -> tasks.forEach((task) -> task.setUsers(userMap.get(task.getUuid()))));
+            return true;
+        };
+    }
+
+    public Supplier<Optional<Map<String, LinkedList<FruitUserDao>>>> plugUserSupplier(final List<? extends FruitTask> tasks) {
+        return () -> {
+            if (tasks == null || tasks.isEmpty()) return Optional.empty();
+            return Optional.of(this.findJoinUserByTaskIds(tasks.parallelStream().map(FruitTask::getUuid).collect(toList()))
                     .stream()
-                    .collect(toMap(FruitTaskDao::getUuid, task -> {
+                    .collect(toMap(FruitTask::getUuid, task -> {
                         LinkedList<FruitUserDao> userList = Lists.newLinkedList();
                         userList.addAll(task.getUsers());
                         return userList;
                     }, (l, r) -> {
                         r.addAll(l);
                         return r;
-                    }));
-            tasks.forEach((task) -> task.setUsers(userMap.get(task.getUuid())));
-            return true;
+                    })));
         };
     }
 
@@ -583,7 +593,6 @@ public abstract class AbstractDaoTask implements InterfaceDao {
         FruitTaskDao findTemplate() {
             dao.setTitle(vo.getTitle());
             dao.setTaskStatus(vo.getTaskStatus());
-            dao.setProjectIds(vo.getProjectIds());
             dao.setAsc(vo.getAsc());
             dao.setDesc(vo.getDesc());
             return dao;

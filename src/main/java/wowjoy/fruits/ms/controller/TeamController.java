@@ -37,7 +37,7 @@ public class TeamController {
     }
 
     /**
-     * @api {get} /v1/team/current 团队信息查询【当前用户】
+     * @api {get} /v1/team/current 当前用户-团队信息
      * @apiVersion 0.1.0
      * @apiGroup team
      */
@@ -47,7 +47,7 @@ public class TeamController {
     }
 
     /**
-     * @api {get} /v1/team/{uuid} 团队详情查询
+     * @api {get} /v1/team/{uuid} 团队详情
      * @apiVersion 0.1.0
      * @apiGroup team
      */

@@ -179,8 +179,11 @@ public class TaskDaoImpl extends AbstractDaoTask {
         }, FruitDict.Parents.TASK);
     }
 
-    public List<FruitTaskDao> findByExampleAndUserIdByProjectId(FruitTaskExample example, String projectId, List<String> userIds) {
-        return taskMapper.selectByExampleAndUserIdAndProjectId(example, projectId, userIds);
+    @Override
+    public List<FruitTaskDao> findByUserIdAndProjectId(Consumer<FruitTaskExample> exampleConsumer, List<String> userIds, String projectId) {
+        FruitTaskExample example = new FruitTaskExample();
+        exampleConsumer.accept(example);
+        return taskMapper.myTaskByExample(example, userIds, projectId);
     }
 
     @Override
@@ -293,15 +296,17 @@ public class TaskDaoImpl extends AbstractDaoTask {
      ************************************************************************************************/
 
     @Override
-    protected List<FruitTaskDao> myTask(FruitTaskDao dao) {
-        String projectId = dao.getProjectIds() != null && !dao.getProjectIds().isEmpty() ? dao.getProjectIds().get(0) : null;
-//        PageHelper.startPage(dao.getPageNum(), dao.getPageSize());
-        return taskMapper.myTaskByExample(myTaskTemplate(dao), ApplicationContextUtils.getCurrentUser().getUserId(), projectId);
+    protected List<FruitTaskDao> myTask(Consumer<FruitTaskExample> taskExampleConsumer, String projectId) {
+        FruitTaskExample example = new FruitTaskExample();
+        taskExampleConsumer.accept(example);
+        return taskMapper.myTaskByExample(example, Lists.newArrayList(ApplicationContextUtils.getCurrentUser().getUserId()), projectId);
     }
 
     @Override
-    protected List<FruitTaskDao> myCreateTask(FruitTaskDao dao) {
-        return taskMapper.myCreateTask(myTaskTemplate(dao), ApplicationContextUtils.getCurrentUser().getUserId());
+    protected List<FruitTaskDao> myCreateTask(Consumer<FruitTaskExample> taskExampleConsumer, String projectId) {
+        FruitTaskExample example = new FruitTaskExample();
+        taskExampleConsumer.accept(example);
+        return taskMapper.myCreateTask(example, ApplicationContextUtils.getCurrentUser().getUserId(), projectId);
     }
 
     private FruitTaskExample myTaskTemplate(FruitTaskDao dao) {

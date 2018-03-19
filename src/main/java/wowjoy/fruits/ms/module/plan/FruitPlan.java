@@ -3,11 +3,14 @@ package wowjoy.fruits.ms.module.plan;
 
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.module.AbstractEntity;
+import wowjoy.fruits.ms.module.EntityUtils;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by wangziwen on 2017/8/24.
@@ -100,11 +103,58 @@ public class FruitPlan extends AbstractEntity {
         this.setEndDate(Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant()));
     }
 
+    /*添加*/
+    public static class Insert extends FruitPlan implements EntityUtils {
+        public Insert() {
+            this.setUuid(obtainUUID());
+        }
+
+        private Map<FruitDict.Systems, List<String>> userRelation;
+        private Map<FruitDict.Systems, List<String>> projectRelation;
+
+        public Map<FruitDict.Systems, List<String>> getUserRelation() {
+            return userRelation;
+        }
+
+        public Map<FruitDict.Systems, List<String>> getProjectRelation() {
+            return projectRelation;
+        }
+
+        public void setUserRelation(Map<FruitDict.Systems, List<String>> userRelation) {
+            this.userRelation = userRelation;
+        }
+
+        public void setProjectRelation(Map<FruitDict.Systems, List<String>> projectRelation) {
+            this.projectRelation = projectRelation;
+        }
+
+    }
+
+    /*修改*/
+    public static class Update extends FruitPlan {
+        public Update() {
+            this.setUuid(null);
+        }
+        private Map<FruitDict.Systems, List<String>> userRelation;
+
+        public void setUserRelation(Map<FruitDict.Systems, List<String>> userRelation) {
+            this.userRelation = userRelation;
+        }
+
+        public Map<FruitDict.Systems, List<String>> getUserRelation() {
+            return userRelation;
+        }
+    }
+
     /********
      * 实例  *
      ********/
-    public static FruitPlanEmpty newEmpty(String msg) {
-        return new FruitPlanEmpty(msg);
+    public static FruitPlan.Insert newInsert() {
+        return new FruitPlan.Insert();
+    }
+
+    public static FruitPlan.Update newUpdate() {
+        return new FruitPlan.Update();
     }
 
     public static FruitPlan getInstance() {

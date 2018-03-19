@@ -5,6 +5,6 @@ package wowjoy.fruits.ms.exception;
  */
 public class CheckException extends ExceptionSupport {
     public CheckException(String message) {
-        super("【Check exception】" + message);
+        super(message);
     }
 }

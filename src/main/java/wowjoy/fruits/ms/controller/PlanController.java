@@ -34,7 +34,7 @@ public class PlanController {
     }
 
     /**
-     * @api {get} /v1/plan/week/{year} 查询一年中每周的开始和结束时间
+     * @api {get} /v1/plan/week/{year} 每周的开始和结束时间
      * @apiVersion 0.1.0
      * @apiGroup plan
      */
@@ -44,7 +44,7 @@ public class PlanController {
     }
 
     /**
-     * @api {get} /v1/plan/month/{year} 查询一年中每月的开始和结束时间
+     * @api {get} /v1/plan/month/{year} 每月的开始和结束时间
      * @apiVersion 0.1.0
      * @apiGroup plan
      */
@@ -54,9 +54,10 @@ public class PlanController {
     }
 
     /**
-     * @api {get} /v1/plan/{uuid} 查询计划详情
+     * @api {get} /v1/plan/{uuid} 计划详情
      * @apiVersion 0.1.0
      * @apiGroup plan
+     * @apiParam {String} uuid 计划uuid
      */
     @RequestMapping(value = "{uuid}", method = RequestMethod.GET)
     public RestResult findByUUID(@PathVariable("uuid") String uuid) {
@@ -66,9 +67,10 @@ public class PlanController {
     }
 
     /**
-     * @api {get} /v1/plan/project/composite/{uuid} 计划综合查询【项目查询】
+     * @api {get} /v1/plan/project/composite/{uuid} 项目-计划综合查询
      * @apiVersion 0.1.0
      * @apiGroup plan
+     * @apiParam {String} uuid 项目uuid
      * @apiParam title String 根据目标名称查询，前后模糊查询
      */
     @RequestMapping(value = "/project/composite/{uuid}", method = RequestMethod.GET)
@@ -78,9 +80,10 @@ public class PlanController {
     }
 
     /**
-     * @api {get} /v1/plan/project/{uuid} 计划查询【项目查询】
+     * @api {get} /v1/plan/project/{projectId} 项目-计划查询
      * @apiVersion 0.1.0
      * @apiGroup plan
+     * @apiParam {String} projectId 项目uuid
      * @apiParam title String 根据目标名称查询，前后模糊查询
      * @apiParam planStatus String 状态查询，支持多查询。多个以逗号隔开：STAY_PENDING,PENDING,COMPLETE,COMPLETE
      */
@@ -91,7 +94,7 @@ public class PlanController {
     }
 
     /**
-     * @api {post} /v1/plan 【项目】计划添加
+     * @api {post} /v1/plan 项目-计划添加
      * @apiVersion 0.1.0
      * @apiGroup plan
      * @apiParamExample {json} 计划添加:
@@ -116,9 +119,10 @@ public class PlanController {
     }
 
     /**
-     * @api {put} /v1/plan/{uuid} 计划修改接口
+     * @api {put} /v1/plan/{uuid} 计划修改
      * @apiVersion 0.1.0
      * @apiGroup plan
+     * @apiParam {String} uuid 计划uuid
      */
     @LogInfo(uuid = "uuidVo", type = FruitDict.Parents.PLAN, operateType = FruitDict.LogsDict.UPDATE)
     @RequestMapping(value = "{uuid}", method = RequestMethod.PUT)
@@ -132,6 +136,7 @@ public class PlanController {
      * @api {put} /v1/plan/complete/{uuid} 修改状态【完成】
      * @apiVersion 0.1.0
      * @apiGroup plan
+     * @apiParam {String} uuid 计划uuid
      * @apiParam startDate Date 待执行直接跳转到已完成，需要填写实际开始时间
      * @apiParam statusDescription String 若目标延期，需要填写延期说明
      * @apiParam endDate Date 若目标延期，可选择更新实际结束时间，不能大于当前。若不填写，默认当前时间

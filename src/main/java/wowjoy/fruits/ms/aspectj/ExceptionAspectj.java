@@ -1,5 +1,6 @@
 package wowjoy.fruits.ms.aspectj;
 
+import com.google.gson.JsonParser;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -38,7 +39,7 @@ public class ExceptionAspectj {
             if (ex instanceof CheckException)
                 return RestResult.newError(500, ex.getMessage());
             if (ex instanceof MessageException)
-                return RestResult.newError(412, ex.getMessage());
+                return RestResult.newError(412, "服务器驳回请求", new JsonParser().parse(ex.getMessage()));
         } catch (RuntimeException e) {
             e.printStackTrace();
             return RestResult.newError(500, "发生了未捕获的异常，等待处理");

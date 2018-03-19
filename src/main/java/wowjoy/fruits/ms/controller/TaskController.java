@@ -173,9 +173,10 @@ public class TaskController {
 
 
     /**
-     * @api {get} /v1/task/project/{uuid} 根据指定项目id查询对应的任务列表
+     * @api {get} /v1/task/project/{uuid} 查询任务，携带所属列表
      * @apiVersion 0.1.0
      * @apiGroup task
+     * @apiParam {String} uuid 项目uuid
      * @apiParam {String} listTitle 列表名称查询，支持前后模糊
      * @apiParam {String} title 任务名称查询，支持前后模糊
      */
@@ -186,9 +187,10 @@ public class TaskController {
     }
 
     /**
-     * @api {get} /v1/task/{uuid} 根据任务UUID查询任务详情
+     * @api {get} /v1/task/{uuid} 任务详情
      * @apiVersion 0.1.0
      * @apiGroup task
+     * @apiParam {String} uuid 任务uuid
      */
     @RequestMapping(value = "{uuid}", method = RequestMethod.GET)
     public RestResult findTaskInfo(@PathVariable("uuid") String uuid) {
@@ -199,6 +201,7 @@ public class TaskController {
      * @api {put} /v1/task/transfer/{uuid} 任务转交
      * @apiVersion 2.5.0
      * @apiGroup task
+     * @apiParam {String} uuid 任务uuid
      * @apiParamExample {json} 转交栗子：
      * {
      * "reason":"神兽保佑",
@@ -218,7 +221,7 @@ public class TaskController {
      ************************************************************************************************/
 
     /**
-     * @api {get} /v1/task/current 查询当前登录用户的所有任务列表
+     * @api {get} /v1/task/current 当前用户-所有任务列表
      * @apiVersion 0.1.0
      * @apiGroup task
      */
@@ -228,17 +231,7 @@ public class TaskController {
     }
 
     /**
-     * @api {get} /v1/task/currente/end 查询当前登录用户，所有已完成的任务列表
-     * @apiVersion 0.1.0
-     * @apiGroup task
-     */
-    @RequestMapping(value = "/current/end", method = RequestMethod.GET)
-    public RestResult myTaskByEnd(@JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
-        return getInstance().setData(daoTask.myTaskByEnd(vo));
-    }
-
-    /**
-     * @api {get} /v1/task/current_create 查询当前登录用户创建的任务
+     * @api {get} /v1/task/current_create 当前用户-创建的任务
      * @apiVersion 0.1.0
      * @apiGroup task
      */

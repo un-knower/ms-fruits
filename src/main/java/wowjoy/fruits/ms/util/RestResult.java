@@ -70,4 +70,8 @@ public class RestResult<T> {
     public static RestResult newError(int code, String msg) {
         return new RestResult(code, msg, null, false);
     }
+
+    public static <T> RestResult<T> newError(int code, String msg, T data) {
+        return new RestResult(code, msg, data, false);
+    }
 }
