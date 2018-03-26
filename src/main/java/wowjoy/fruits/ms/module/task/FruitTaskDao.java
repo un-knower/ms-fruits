@@ -3,14 +3,12 @@ package wowjoy.fruits.ms.module.task;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import wowjoy.fruits.ms.module.list.FruitListDao;
-import wowjoy.fruits.ms.module.logs.FruitLogsDao;
+import wowjoy.fruits.ms.module.logs.FruitLogs;
 import wowjoy.fruits.ms.module.plan.FruitPlanDao;
-import wowjoy.fruits.ms.module.project.FruitProjectDao;
 import wowjoy.fruits.ms.module.relation.entity.TaskListRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskPlanRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskProjectRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskUserRelation;
-import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.text.SimpleDateFormat;
@@ -37,23 +35,31 @@ public class FruitTaskDao extends FruitTask {
     private transient Integer pageNum = 1;
     private transient Integer pageSize = 10;
 
-    private List<FruitLogsDao> logs;
-    private List<FruitUserDao> users = Lists.newLinkedList();
+    private List<FruitLogs.Info> logs;
+    private List<FruitTaskUser> users;
     private FruitPlanDao plan;
-    private FruitProjectDao project;
+    private FruitTaskProject project;
     private FruitListDao list;
-
-    public List<FruitLogsDao> getLogs() {
-        return logs;
-    }
-
-    public void setLogs(List<FruitLogsDao> logs) {
-        this.logs = logs;
-    }
 
     private Integer days;
 
     private transient String listId;
+
+    public List<FruitTaskUser> getUsers() {
+        return users;
+    }
+
+    public void setUsers(List<FruitTaskUser> users) {
+        this.users = users;
+    }
+
+    public List<FruitLogs.Info> getLogs() {
+        return logs;
+    }
+
+    public void setLogs(List<FruitLogs.Info> logs) {
+        this.logs = logs;
+    }
 
     public FruitListDao getList() {
         return list;
@@ -65,11 +71,11 @@ public class FruitTaskDao extends FruitTask {
 
     private transient String planId;
 
-    public FruitProjectDao getProject() {
+    public FruitTaskProject getProject() {
         return project;
     }
 
-    public void setProject(FruitProjectDao project) {
+    public void setProject(FruitTaskProject project) {
         this.project = project;
     }
 
@@ -140,16 +146,6 @@ public class FruitTaskDao extends FruitTask {
 
     }
 
-    public List<FruitUserDao> getUsers() {
-        if (users == null || users.isEmpty())
-            users = Lists.newLinkedList();
-        return users;
-    }
-
-    public void setUsers(List<FruitUserDao> users) {
-        this.users = users;
-    }
-
     public FruitTaskDao sortUsers() {
         Collections.sort(users, Comparator.comparing(o -> o.getCreateDateTime().toInstant()));
         return this;
@@ -193,8 +189,10 @@ public class FruitTaskDao extends FruitTask {
         return projectRelation;
     }
 
-    public void setProjectRelation(Map<FruitDict.Systems, List<TaskProjectRelation>> projectRelation) {
-        this.projectRelation = projectRelation;
+    public void setProjectRelation(FruitDict.Systems systems, List<TaskProjectRelation> projects) {
+        if (projectRelation == null)
+            projectRelation = Maps.newLinkedHashMap();
+        this.projectRelation.put(systems, projects);
     }
 
     public void setTaskProjectRelation(FruitDict.Systems parents, List<TaskProjectRelation> value) {

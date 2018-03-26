@@ -20,6 +20,7 @@
         <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
         <result column="user_id" jdbcType="VARCHAR" property="userId"/>
         <result column="user_name" jdbcType="VARCHAR" property="userName"/>
+        <result column="status" jdbcType="VARCHAR" property="status"/>
         <result column="birthday" jdbcType="TIMESTAMP" property="birthday"/>
         <result column="user_email" jdbcType="VARCHAR" property="userEmail"/>
         <result column="user_sex" jdbcType="VARCHAR" property="userSex"/>
@@ -74,6 +75,7 @@
         ${replace}.uuid as ${prefix}uuid,
         ${replace}.user_id as ${prefix}user_id,
         ${replace}.user_name as ${prefix}user_name,
+        ${replace}.status as ${prefix}status,
         ${replace}.birthday as ${prefix}birthday,
         ${replace}.user_email as ${prefix}user_email,
         ${replace}.user_sex as ${prefix}user_sex,

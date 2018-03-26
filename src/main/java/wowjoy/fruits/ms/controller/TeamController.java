@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import wowjoy.fruits.ms.dao.team.AbstractDaoTeam;
-import wowjoy.fruits.ms.module.team.FruitTeam;
 import wowjoy.fruits.ms.module.team.FruitTeamVo;
 import wowjoy.fruits.ms.util.JsonArgument;
 import wowjoy.fruits.ms.util.RestResult;
@@ -33,7 +32,7 @@ public class TeamController {
      */
     @RequestMapping(value = "/relation", method = RequestMethod.GET)
     public RestResult findRelation(@JsonArgument(type = FruitTeamVo.class) FruitTeamVo vo) {
-        return RestResult.getInstance().setData(teamDao.findTeams(vo));
+        return RestResult.newSuccess().setData(teamDao.findTeams(vo));
     }
 
     /**
@@ -43,7 +42,7 @@ public class TeamController {
      */
     @RequestMapping(value = "/current", method = RequestMethod.GET)
     public RestResult findCurrent() {
-        return RestResult.getInstance().setData(teamDao.findCurrent());
+        return RestResult.newSuccess().setData(teamDao.findCurrent());
     }
 
     /**
@@ -53,7 +52,7 @@ public class TeamController {
      */
     @RequestMapping(value = "/{uuid}", method = RequestMethod.GET)
     public RestResult findRelation(@PathVariable("uuid") String uuid) {
-        return RestResult.getInstance().setData(teamDao.findInfo(uuid));
+        return RestResult.newSuccess().setData(teamDao.findInfo(uuid));
     }
 
     /**
@@ -64,7 +63,7 @@ public class TeamController {
     @RequestMapping(method = RequestMethod.POST)
     public RestResult insert(@JsonArgument(type = FruitTeamVo.class) FruitTeamVo vo) {
         teamDao.insert(vo);
-        return RestResult.getInstance().setData(vo.getUuid());
+        return RestResult.newSuccess().setData(vo.getUuid());
     }
 
     /**
@@ -76,7 +75,7 @@ public class TeamController {
     public RestResult update(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTeamVo.class) FruitTeamVo vo) {
         vo.setUuidVo(uuid);
         teamDao.update(vo);
-        return RestResult.getInstance().setData(uuid);
+        return RestResult.newSuccess().setData(uuid);
     }
 
     /**
@@ -87,7 +86,7 @@ public class TeamController {
     @RequestMapping(value = "{uuid}", method = RequestMethod.DELETE)
     public RestResult delete(@PathVariable("uuid") String uuid) {
         teamDao.delete(uuid);
-        return RestResult.getInstance().setData(uuid);
+        return RestResult.newSuccess().setData(uuid);
     }
 
 }

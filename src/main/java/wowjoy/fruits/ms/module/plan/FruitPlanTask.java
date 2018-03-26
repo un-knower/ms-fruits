@@ -8,6 +8,7 @@ import wowjoy.fruits.ms.module.task.FruitTaskDao;
 public class FruitPlanTask extends FruitTaskDao {
     public FruitPlanTask() {
         setUuid(null);
+        setIsDeleted(null);
     }
 
     private transient String planId;

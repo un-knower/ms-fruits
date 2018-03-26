@@ -1,7 +1,9 @@
 package wowjoy.fruits.ms.module.logs;
 
+import com.google.common.reflect.TypeToken;
 import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
+import wowjoy.fruits.ms.util.GsonUtils;
 
 public class FruitLogs extends AbstractEntity {
 
@@ -71,5 +73,32 @@ public class FruitLogs extends AbstractEntity {
 
     public static FruitLogsDao getDao() {
         return new FruitLogsDao();
+    }
+
+    public static class Info extends FruitLogs {
+        public Info() {
+            setUuid(null);
+            setIsDeleted(null);
+        }
+
+        private String msg;
+
+        public String getMsg() {
+            return msg;
+        }
+
+        public void setMsg(String msg) {
+            this.msg = msg;
+        }
+    }
+
+    public Info toInfo() {
+        Info info = GsonUtils.newGson().fromJson(GsonUtils.newGson().toJsonTree(this), TypeToken.of(Info.class).getType());
+        info.setFruitUuid(this.getFruitUuid());
+        return info;
+    }
+
+    public static Info newInfo() {
+        return new Info();
     }
 }

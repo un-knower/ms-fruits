@@ -36,22 +36,7 @@ public class ElasticsearchController {
     @RequestMapping(value = "/global", method = RequestMethod.POST)
     public RestResult globalDateLoading() {
         globalSearchEs.loading();
-        return RestResult.getInstance().setMsg("加载完成");
-    }
-
-    /**
-     * 提供es全局搜索接口
-     *
-     * @param vo
-     * @return
-     */
-    @RequestMapping(method = RequestMethod.GET)
-    public RestResult globalSearch(@JsonArgument(type = GlobalSearchVo.class) GlobalSearchVo vo) {
-        final SearchHits data = globalSearchEs.finds(vo);
-        final LinkedList<GlobalSearchDao> globals = Lists.newLinkedList();
-        for (SearchHit hit : data.getHits())
-            globals.add(GlobalSearch.newDao(hit));
-        return RestResult.newPage(vo.getPage(), vo.getSize(), data.getTotalHits(), globals);
+        return RestResult.newSuccess().setMsg("加载完成");
     }
 
 }

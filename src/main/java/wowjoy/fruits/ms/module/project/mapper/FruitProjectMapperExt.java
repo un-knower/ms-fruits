@@ -4,7 +4,11 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import wowjoy.fruits.ms.module.project.FruitProjectDao;
 import wowjoy.fruits.ms.module.project.FruitProjectExample;
+import wowjoy.fruits.ms.module.project.FruitProjectTeam;
+import wowjoy.fruits.ms.module.project.FruitProjectUser;
+import wowjoy.fruits.ms.module.user.example.FruitUserExample;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -12,12 +16,9 @@ import java.util.List;
  */
 @Mapper
 public interface FruitProjectMapperExt {
-    @Deprecated
-    List<FruitProjectDao> selectUserRelationByExample(@Param("example") FruitProjectExample example);
+    ArrayList<FruitProjectUser> selectUserByProjectId(@Param("example") FruitUserExample example, @Param("projectIds") List<String> ids);
 
-    List<FruitProjectDao> selectUserByProjectId(@Param("projectIds") List<String> ids);
+    List<FruitProjectTeam> selectTeamByProjectId(@Param("projectIds") List<String> ids);
 
-    List<FruitProjectDao> selectTeamByProjectId(@Param("projectIds") List<String> ids);
-
-    List<FruitProjectDao> selectCurrentUserByExample(@Param("example") FruitProjectExample example, @Param("userId") String userId);
+    List<FruitProjectDao> selectByUserIdAndExample(@Param("example") FruitProjectExample example, @Param("userId") String userId);
 }

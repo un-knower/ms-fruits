@@ -24,8 +24,6 @@ public class FruitPlanDao extends FruitPlan {
     private Date startDateDao;
     private Date endDateDao;
 
-    private List<FruitUserDao> users;
-    private List<FruitLogsDao> logs;
     private List<FruitPlanTask> tasks;
 
     private Map<FruitDict.Systems, List<String>> userRelation;
@@ -44,14 +42,6 @@ public class FruitPlanDao extends FruitPlan {
 
     public void setTasks(List<FruitPlanTask> tasks) {
         this.tasks = tasks;
-    }
-
-    public List<FruitLogsDao> getLogs() {
-        return logs;
-    }
-
-    public void setLogs(List<FruitLogsDao> logs) {
-        this.logs = logs;
     }
 
     public List<String> getParentIds() {
@@ -104,14 +94,6 @@ public class FruitPlanDao extends FruitPlan {
 
     public void setProjectRelation(Map<FruitDict.Systems, List<String>> projectRelation) {
         this.projectRelation = projectRelation;
-    }
-
-    public List<FruitUserDao> getUsers() {
-        return users;
-    }
-
-    public void setUsers(List<FruitUserDao> users) {
-        this.users = users;
     }
 
     public Date getStartDateDao() {

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="wowjoy.fruits.ms.module.plan.mapper.FruitPlanMapperExt">
-    <resultMap id="BaseResultMap" type="wowjoy.fruits.ms.module.plan.FruitPlanDao">
+    <resultMap id="BaseResultMap" type="wowjoy.fruits.ms.module.plan.FruitPlan">
         <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
         <result column="title" jdbcType="VARCHAR" property="title"/>
         <result column="plan_status" jdbcType="VARCHAR" property="planStatus"/>
@@ -15,17 +15,15 @@
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
         <result column="task_id" jdbcType="VARCHAR" property="taskId"/>
-        <collection property="logs" resultMap="LogsResultMap" columnPrefix="flogs_"/>
-        <collection property="users" ofType="wowjoy.fruits.ms.module.user.FruitUserDao" resultMap="UserResultMap"
-                    columnPrefix="user_"/>
     </resultMap>
-    <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="wowjoy.fruits.ms.module.plan.FruitPlanDao">
+    <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="wowjoy.fruits.ms.module.plan.FruitPlan">
         <result column="description" jdbcType="LONGVARCHAR" property="description"/>
     </resultMap>
-    <resultMap id="UserResultMap" type="wowjoy.fruits.ms.module.user.FruitUserDao">
+    <resultMap id="UserResultMap" type="wowjoy.fruits.ms.module.plan.FruitPlanUser">
         <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
         <result column="user_id" jdbcType="VARCHAR" property="userId"/>
         <result column="user_name" jdbcType="VARCHAR" property="userName"/>
+        <result column="status" jdbcType="VARCHAR" property="status"/>
         <result column="birthday" jdbcType="TIMESTAMP" property="birthday"/>
         <result column="user_email" jdbcType="VARCHAR" property="userEmail"/>
         <result column="user_sex" jdbcType="VARCHAR" property="userSex"/>
@@ -36,17 +34,8 @@
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
         <!-- 扩展字段 -->
         <result column="pu_role" jdbcType="VARCHAR" property="planRole"/>
-    </resultMap>
-    <resultMap id="LogsResultMap" type="wowjoy.fruits.ms.module.logs.FruitLogsDao">
-        <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
-        <result column="user_id" jdbcType="VARCHAR" property="userId"/>
-        <result column="fruit_uuid" jdbcType="VARCHAR" property="fruitUuid"/>
-        <result column="fruit_type" jdbcType="VARCHAR" property="fruitType"/>
-        <result column="json_object" jdbcType="LONGVARCHAR" property="jsonObject"/>
-        <result column="operate_type" jdbcType="VARCHAR" property="operateType"/>
-        <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
-        <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
-        <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
+        <result column="plan_id" jdbcType="VARCHAR" property="planId"/>
+
     </resultMap>
     <resultMap id="TaskResultMap" type="wowjoy.fruits.ms.module.plan.FruitPlanTask">
         <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
@@ -93,44 +82,30 @@
         </foreach>
     </sql>
     <sql id="Base_Column_List">
-    ${replace}.uuid,
-    ${replace}.title,
-    ${replace}.plan_status,
-    ${replace}.percent,
-    ${replace}.start_date,
-    ${replace}.end_date,
-    ${replace}.estimated_start_date,
-    ${replace}.estimated_end_date,
-    ${replace}.parent_id,
-    ${replace}.modify_date_time,
-    ${replace}.create_date_time,
-    ${replace}.is_deleted,
-    ${replace}.description
-  </sql>
-    <sql id="User_Column_List">
-    ${replace}.uuid as ${prefix}uuid,
-    ${replace}.user_id as ${prefix}user_id,
-    ${replace}.user_name as ${prefix}user_name,
-    ${replace}.birthday as ${prefix}birthday,
-    ${replace}.user_email as ${prefix}user_email,
-    ${replace}.user_sex as ${prefix}user_sex,
-    ${replace}.job_title as ${prefix}job_title,
-    ${replace}.description as ${prefix}description,
-    ${replace}.modify_date_time as ${prefix}modify_date_time,
-    ${replace}.create_date_time as ${prefix}create_date_time,
-    ${replace}.is_deleted as ${prefix}is_deleted
-  </sql>
-    <sql id="user_Base_Column_List">
-        uuid, user_id, user_name, birthday, user_email, user_sex, job_title, description,
-        modify_date_time, create_date_time, is_deleted
+        ${replace}.uuid,
+        ${replace}.title,
+        ${replace}.plan_status,
+        ${replace}.percent,
+        ${replace}.start_date,
+        ${replace}.end_date,
+        ${replace}.estimated_start_date,
+        ${replace}.estimated_end_date,
+        ${replace}.parent_id,
+        ${replace}.modify_date_time,
+        ${replace}.create_date_time,
+        ${replace}.is_deleted,
+        ${replace}.description
     </sql>
-    <sql id="Logs_Column_List">
+    <sql id="User_Column_List">
         ${replace}.uuid as ${prefix}uuid,
         ${replace}.user_id as ${prefix}user_id,
-        ${replace}.fruit_uuid as ${prefix}fruit_uuid,
-        ${replace}.fruit_type as ${prefix}fruit_type,
-        ${replace}.json_object as ${prefix}json_object,
-        ${replace}.operate_type as ${prefix}operate_type,
+        ${replace}.user_name as ${prefix}user_name,
+        ${replace}.status as ${prefix}status,
+        ${replace}.birthday as ${prefix}birthday,
+        ${replace}.user_email as ${prefix}user_email,
+        ${replace}.user_sex as ${prefix}user_sex,
+        ${replace}.job_title as ${prefix}job_title,
+        ${replace}.description as ${prefix}description,
         ${replace}.modify_date_time as ${prefix}modify_date_time,
         ${replace}.create_date_time as ${prefix}create_date_time,
         ${replace}.is_deleted as ${prefix}is_deleted
@@ -147,10 +122,6 @@
         ${replace}.modify_date_time as ${prefix}modify_date_time,
         ${replace}.create_date_time as ${prefix}create_date_time,
         ${replace}.is_deleted as ${prefix}is_deleted
-    </sql>
-    <sql id="Task_Base_Column_List">
-        uuid, title, task_status, status_description, task_level, estimated_end_date, end_date,
-        description, modify_date_time, create_date_time, is_deleted
     </sql>
     <select id="selectByProjectId" parameterType="wowjoy.fruits.ms.module.plan.example.FruitPlanExample"
             resultMap="ResultMapWithBLOBs">
@@ -177,38 +148,40 @@
         </if>
     </select>
 
-    <select id="selectUserByPlanIds" resultMap="BaseResultMap">
+    <select id="selectUserByPlanIds" resultMap="UserResultMap">
         select
-        <include refid="Base_Column_List">
-            <property name="replace" value="plan"/>
+        <include refid="User_Column_List">
+            <property name="replace" value="fuser"/>
+            <property name="prefix" value=""/>
         </include>
         ,
-        <include refid="User_Column_List">
-            <property name="replace" value="fruitUser"/>
-            <property name="prefix" value="user_"/>
-        </include>
-        from fruits_plan plan
-        inner join (
-        select plan_id,user_id from plan_user_relation
-        where
-        plan_id in
-        <foreach collection="planIds" item="id" close=")" open="(" separator=",">
-            #{id}
-        </foreach>
-        AND
-        is_deleted = 'N'
-        ) userRelation on userRelation.plan_id = plan.uuid
-        RIGHT join (
+        userSon.pu_role,
+        userSon.plan_id
+        from (
+        select userJoin.pu_role,userJoin.user_id,userJoin.plan_id from fruits_plan fplan
+        right join (select pu_role,user_id,plan_id from plan_user_relation where is_deleted = 'N') userJoin on
+        userJoin.plan_id = fplan.uuid
+        <where>
+            fplan.uuid in
+            <foreach collection="planIds" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+            and fplan.is_deleted = 'N'
+        </where>
+        group by userJoin.pu_role,userJoin.user_id,userJoin.plan_id
+        ) userSon
+        left join (
         select
-        <include refid="user_Base_Column_List"/>
-        from fruits_user where is_deleted = 'N'
-        ) fruitUser on fruitUser.user_id = userRelation.user_id
-        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
-            <where>
-                plan.is_deleted = 'N'
-            </where>
-        </trim>
-        order by fruitUser.user_id = #{userId} desc
+        <include refid="User_Column_List">
+            <property name="replace" value="fuser"/>
+            <property name="prefix" value=""/>
+        </include>
+        from fruits_user fuser where fuser.is_deleted = 'N') fuser on fuser.user_id = userSon.user_id
+        <where>
+            fuser.user_id is not null
+            and fuser.is_deleted = 'N'
+        </where>
+        order by fuser.user_id = #{userId} desc
     </select>
 
     <select id="selectTaskByPlanIds" resultMap="TaskResultMap">
@@ -239,34 +212,49 @@
         </trim>
     </select>
 
-    <select id="selectByExampleAndUserIdAndProjectId" resultMap="BaseResultMap">
+    <select id="selectUserByPlanExampleAndUserIdAndProjectId" resultMap="UserResultMap">
         select
-        <include refid="Base_Column_List">
-            <property name="replace" value="plan"/>
+        <include refid="User_Column_List">
+            <property name="replace" value="fuser"/>
+            <property name="prefix" value=""/>
         </include>
         ,
-        <include refid="User_Column_List">
-            <property name="replace" value="fruitUser"/>
-            <property name="prefix" value="user_"/>
-        </include>
-        from fruits_plan plan
-        left join (select plan_id,project_id from plan_project_relation where project_id=#{projectId} and
-        is_deleted='N') projectJoin on projectJoin.plan_id = plan.uuid
-        left join plan_user_relation userJoin on userJoin.plan_id = plan.uuid and userJoin.is_deleted = 'N'
-        left join (select
-        <include refid="user_Base_Column_List"/>
-        from fruits_user where user_id in
-        <foreach collection="userIds" item="id" open="(" close=")" separator=",">
-            #{id}
-        </foreach>
-        and is_deleted = 'N') fruitUser on fruitUser.user_id = userJoin.user_id
+        userSon.plan_id,userSon.pu_role
+        from (
+        select planJoin.pu_role,planJoin.user_id,planJoin.plan_id,projectJoin.project_id from plan_user_relation
+        planJoin
+        right join (select plan_id,project_id from plan_project_relation
+        <where>
+            project_id = #{projectId}
+            and is_deleted = 'N'
+        </where>
+        ) projectJoin on projectJoin.plan_id = planJoin.plan_id
+        right join (select uuid from fruits_plan fplan
         <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
             <where>
                 <include refid="Example_Where_Clause">
-                    <property name="replace" value="plan"/>
+                    <property name="replace" value="fplan"/>
                 </include>
-                and projectJoin.plan_id is not null and userJoin.plan_id is not null
+                and is_deleted = 'N'
             </where>
         </trim>
+        ) fplan on fplan.uuid = projectJoin.plan_id
+        <where>
+            planJoin.user_id in
+            <foreach collection="userIds" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+            and planJoin.is_deleted = 'N'
+        </where>
+        group by planJoin.pu_role,planJoin.user_id,planJoin.plan_id,projectJoin.project_id
+        ) userSon
+        left join (
+        select
+        <include refid="User_Column_List">
+            <property name="replace" value="fuser"/>
+            <property name="prefix" value=""/>
+        </include>
+        from fruits_user fuser where fuser.is_deleted = 'N') fuser on fuser.user_id = userSon.user_id
+        where fuser.user_id is not null
     </select>
 </mapper>

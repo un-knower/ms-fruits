@@ -15,35 +15,6 @@
         <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
-        <association property="user" resultMap="UserResultMap" columnPrefix="fuser_"/>
-        <collection property="logs" ofType="wowjoy.fruits.ms.module.logs.FruitLogsDao" resultMap="LogsResultMap"
-                    columnPrefix="flogs_"/>
-    </resultMap>
-    <resultMap id="UserResultMap" type="wowjoy.fruits.ms.module.user.FruitUserDao">
-        <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
-        <result column="user_id" jdbcType="VARCHAR" property="userId"/>
-        <result column="user_name" jdbcType="VARCHAR" property="userName"/>
-        <result column="birthday" jdbcType="TIMESTAMP" property="birthday"/>
-        <result column="user_email" jdbcType="VARCHAR" property="userEmail"/>
-        <result column="user_sex" jdbcType="VARCHAR" property="userSex"/>
-        <result column="job_title" jdbcType="VARCHAR" property="jobTitle"/>
-        <result column="description" jdbcType="VARCHAR" property="description"/>
-        <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
-        <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
-        <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
-        <!-- 扩展字段 -->
-        <result column="pu_role" jdbcType="VARCHAR" property="planRole"/>
-    </resultMap>
-    <resultMap id="LogsResultMap" type="wowjoy.fruits.ms.module.logs.FruitLogsDao">
-        <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
-        <result column="user_id" jdbcType="VARCHAR" property="userId"/>
-        <result column="fruit_uuid" jdbcType="VARCHAR" property="fruitUuid"/>
-        <result column="fruit_type" jdbcType="VARCHAR" property="fruitType"/>
-        <result column="json_object" jdbcType="LONGVARCHAR" property="jsonObject"/>
-        <result column="operate_type" jdbcType="VARCHAR" property="operateType"/>
-        <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
-        <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
-        <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
     </resultMap>
     <sql id="Example_Where_Clause">
         <foreach collection="example.oredCriteria" item="criteria" separator="or">
@@ -84,43 +55,6 @@
         ${replace}.modify_date_time,
         ${replace}.create_date_time,
         ${replace}.is_deleted
-    </sql>
-    <sql id="User_Column_List">
-        ${replace}.uuid as ${prefix}uuid,
-        ${replace}.user_id as ${prefix}user_id,
-        ${replace}.user_name as ${prefix}user_name,
-        ${replace}.birthday as ${prefix}birthday,
-        ${replace}.user_email as ${prefix}user_email,
-        ${replace}.user_sex as ${prefix}user_sex,
-        ${replace}.job_title as ${prefix}job_title,
-        ${replace}.description as ${prefix}description,
-        ${replace}.modify_date_time as ${prefix}modify_date_time,
-        ${replace}.create_date_time as ${prefix}create_date_time,
-        ${replace}.is_deleted as ${prefix}is_deleted
-     </sql>
-    <sql id="User_v2_Column_List">
-       ${replace}.uuid,
-        ${replace}.user_id,
-        ${replace}.user_name,
-        ${replace}.birthday,
-        ${replace}.user_email,
-        ${replace}.user_sex,
-        ${replace}.job_title,
-        ${replace}.description,
-        ${replace}.modify_date_time,
-        ${replace}.create_date_time,
-        ${replace}.is_deleted
-    </sql>
-    <sql id="Logs_Column_List">
-        ${replace}.uuid as ${prefix}uuid,
-        ${replace}.user_id as ${prefix}user_id,
-        ${replace}.fruit_uuid as ${prefix}fruit_uuid,
-        ${replace}.fruit_type as ${prefix}fruit_type,
-        ${replace}.json_object as ${prefix}json_object,
-        ${replace}.operate_type as ${prefix}operate_type,
-        ${replace}.modify_date_time as ${prefix}modify_date_time,
-        ${replace}.create_date_time as ${prefix}create_date_time,
-        ${replace}.is_deleted as ${prefix}is_deleted
     </sql>
 
     <select id="selectByTeamIds" resultMap="BaseResultMap">

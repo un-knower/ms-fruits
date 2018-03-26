@@ -36,7 +36,7 @@ public class ListController {
     public RestResult update(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitListVo.class) FruitListVo vo) {
         vo.setUuidVo(uuid);
         listDao.update(vo);
-        return RestResult.getInstance().setData(vo.getUuidVo());
+        return RestResult.newSuccess().setData(vo.getUuidVo());
     }
 
     /**
@@ -50,7 +50,7 @@ public class ListController {
         FruitListVo vo = FruitList.getVo();
         vo.setUuidVo(uuid);
         listDao.delete(vo);
-        return RestResult.getInstance().setData(vo.getUuidVo());
+        return RestResult.newSuccess().setData(vo.getUuidVo());
     }
 
     /**
@@ -69,6 +69,6 @@ public class ListController {
     @RequestMapping(value = "project", method = RequestMethod.POST)
     public RestResult insertProject(@JsonArgument(type = FruitListVo.class) FruitListVo vo) {
         listDao.insertProject(vo);
-        return RestResult.getInstance().setData(vo);
+        return RestResult.newSuccess().setData(vo);
     }
 }

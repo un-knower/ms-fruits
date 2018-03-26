@@ -1,14 +1,22 @@
 package wowjoy.fruits.ms.module.task;
 
 
+import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.AbstractEntity;
+import wowjoy.fruits.ms.module.EntityUtils;
+import wowjoy.fruits.ms.module.relation.entity.TaskListRelation;
+import wowjoy.fruits.ms.module.relation.entity.TaskPlanRelation;
+import wowjoy.fruits.ms.module.relation.entity.TaskProjectRelation;
+import wowjoy.fruits.ms.module.relation.entity.TaskUserRelation;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by wangziwen on 2017/8/24.
@@ -89,6 +97,100 @@ public class FruitTask extends AbstractEntity {
 
     public static FruitTaskEmpty getEmpty() {
         return new FruitTaskEmpty();
+    }
+
+    public static class Insert extends FruitTask implements EntityUtils {
+        public Insert() {
+            super.setUuid(obtainUUID());
+        }
+
+        private Map<FruitDict.Systems, List<TaskPlanRelation>> planRelation;
+        private Map<FruitDict.Systems, List<TaskProjectRelation>> projectRelation;
+        private Map<FruitDict.Systems, List<TaskUserRelation>> userRelation;
+        private Map<FruitDict.Systems, List<TaskListRelation>> listRelation;
+
+        public Map<FruitDict.Systems, List<TaskPlanRelation>> getPlanRelation() {
+            return planRelation;
+        }
+
+        public void setPlanRelation(FruitDict.Systems parents, List<TaskPlanRelation> value) {
+            if (this.planRelation == null)
+                this.planRelation = Maps.newLinkedHashMap();
+            this.planRelation.put(parents, value);
+        }
+
+        public Map<FruitDict.Systems, List<TaskProjectRelation>> getProjectRelation() {
+            return projectRelation;
+        }
+
+        public void setProjectRelation(FruitDict.Systems systems, List<TaskProjectRelation> projects) {
+            if (projectRelation == null)
+                projectRelation = Maps.newLinkedHashMap();
+            this.projectRelation.put(systems, projects);
+        }
+
+        public Map<FruitDict.Systems, List<TaskUserRelation>> getUserRelation() {
+            return userRelation;
+        }
+
+        public void setUserRelation(Map<FruitDict.Systems, List<TaskUserRelation>> userRelation) {
+            this.userRelation = userRelation;
+        }
+
+        public Map<FruitDict.Systems, List<TaskListRelation>> getListRelation() {
+            return listRelation;
+        }
+
+        public void setListRelation(Map<FruitDict.Systems, List<TaskListRelation>> listRelation) {
+            this.listRelation = listRelation;
+        }
+    }
+
+    public static class Update extends FruitTask {
+        public Update() {
+            super.setUuid(null);
+        }
+
+        private Map<FruitDict.Systems, List<TaskPlanRelation>> planRelation;
+        private Map<FruitDict.Systems, List<TaskProjectRelation>> projectRelation;
+        private Map<FruitDict.Systems, List<TaskUserRelation>> userRelation;
+        private Map<FruitDict.Systems, List<TaskListRelation>> listRelation;
+
+        public Map<FruitDict.Systems, List<TaskPlanRelation>> getPlanRelation() {
+            return planRelation;
+        }
+
+        public void setPlanRelation(FruitDict.Systems parents, List<TaskPlanRelation> value) {
+            if (this.planRelation == null)
+                this.planRelation = Maps.newLinkedHashMap();
+            this.planRelation.put(parents, value);
+        }
+
+        public Map<FruitDict.Systems, List<TaskProjectRelation>> getProjectRelation() {
+            return projectRelation;
+        }
+
+        public void setProjectRelation(FruitDict.Systems systems, List<TaskProjectRelation> projects) {
+            if (projectRelation == null)
+                projectRelation = Maps.newLinkedHashMap();
+            this.projectRelation.put(systems, projects);
+        }
+
+        public Map<FruitDict.Systems, List<TaskUserRelation>> getUserRelation() {
+            return userRelation;
+        }
+
+        public void setUserRelation(Map<FruitDict.Systems, List<TaskUserRelation>> userRelation) {
+            this.userRelation = userRelation;
+        }
+
+        public Map<FruitDict.Systems, List<TaskListRelation>> getListRelation() {
+            return listRelation;
+        }
+
+        public void setListRelation(Map<FruitDict.Systems, List<TaskListRelation>> listRelation) {
+            this.listRelation = listRelation;
+        }
     }
 
 }

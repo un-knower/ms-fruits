@@ -1,6 +1,7 @@
 package wowjoy.fruits.ms.dao.notepad;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,7 +10,7 @@ import wowjoy.fruits.ms.dao.logs.service.ServiceLogs;
 import wowjoy.fruits.ms.dao.team.AbstractDaoTeam;
 import wowjoy.fruits.ms.dao.user.UserDaoImpl;
 import wowjoy.fruits.ms.exception.CheckException;
-import wowjoy.fruits.ms.module.logs.FruitLogsDao;
+import wowjoy.fruits.ms.module.logs.FruitLogs;
 import wowjoy.fruits.ms.module.notepad.FruitNotepadDao;
 import wowjoy.fruits.ms.module.notepad.FruitNotepadExample;
 import wowjoy.fruits.ms.module.notepad.mapper.FruitNotepadMapper;
@@ -87,7 +88,8 @@ public class NotepadDaoImpl extends AbstractDaoNotepad {
     }
 
     @Override
-    protected Map<String, LinkedList<FruitLogsDao>> joinLogs(LinkedList<String> ids) {
+    protected Map<String, LinkedList<FruitLogs.Info>> joinLogs(LinkedList<String> ids) {
+        if (ids == null || ids.isEmpty()) return Maps.newHashMap();
         return daoLogs.findLogs(example -> {
             example.createCriteria().andFruitTypeEqualTo(FruitDict.Parents.NOTEPAD.name()).andFruitUuidIn(ids);
             example.setOrderByClause("flogs.create_date_time desc");
@@ -96,6 +98,7 @@ public class NotepadDaoImpl extends AbstractDaoNotepad {
 
     @Override
     protected List<FruitUserDao> joinUser(LinkedList<String> ids) {
+        if (ids == null || ids.isEmpty()) return Lists.newArrayList();
         return userDaoImpl.findExample(example -> example.createCriteria().andUserIdIn(ids).andIsDeletedEqualTo(FruitDict.Systems.N.name()));
     }
 

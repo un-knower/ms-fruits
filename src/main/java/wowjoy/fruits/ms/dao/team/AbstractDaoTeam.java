@@ -78,6 +78,7 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
 
     private Callable plugUser(List<FruitTeamDao> teamDaoList, Consumer<FruitUserExample> userExampleConsumer) {
         return () -> {
+
             Map<String, ArrayList<FruitTeamUser>> userMap = this.findUserByTeamIds(teamDaoList.parallelStream().map(FruitTeamDao::getUuid).collect(toList()), userExampleConsumer)
                     .parallelStream().collect(groupingBy(FruitTeamUser::getTeamId, toCollection(ArrayList::new)));
             teamDaoList.parallelStream().forEach(fruitTeamDao -> {

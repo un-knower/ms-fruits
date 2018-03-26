@@ -37,7 +37,7 @@ public class ProjectController {
      */
     @RequestMapping(value = "/list/{uuid}", method = RequestMethod.GET)
     public RestResult findList(@PathVariable("uuid") String uuid) {
-        return RestResult.getInstance().setData(projectDaoImpl.findListByProjectId(uuid));
+        return RestResult.newSuccess().setData(projectDaoImpl.findListByProjectId(uuid));
     }
 
     /**
@@ -47,17 +47,7 @@ public class ProjectController {
      */
     @RequestMapping(value = "/relation", method = RequestMethod.GET)
     public RestResult findRelation(@JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
-        return RestResult.getInstance().setData(projectDaoImpl.finds(vo));
-    }
-
-    /**
-     * @api {get} /v1/project/current 当前用户-项目查询
-     * @apiVersion 0.1.0
-     * @apiGroup project
-     */
-    @RequestMapping(value = "/current", method = RequestMethod.GET)
-    public RestResult findCurrent(@JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
-        return RestResult.getInstance().setData(projectDaoImpl.findsCurrentUser(vo));
+        return RestResult.newSuccess().setData(projectDaoImpl.finds(vo));
     }
 
     /**
@@ -68,7 +58,7 @@ public class ProjectController {
      */
     @RequestMapping(value = "/user/{uuid}", method = RequestMethod.GET)
     public RestResult treeTeamUserList(@PathVariable("uuid") String uuid) {
-        return RestResult.getInstance().setData(projectDaoImpl.treeTeamUserList(uuid));
+        return RestResult.newSuccess().setData(projectDaoImpl.treeTeamUserList(uuid));
     }
 
     /**
@@ -80,7 +70,7 @@ public class ProjectController {
     public RestResult findByUUID(@PathVariable("uuid") String uuid) {
         FruitProjectVo projectVo = FruitProject.getVo();
         projectVo.setUuidVo(uuid);
-        return RestResult.getInstance().setData(projectDaoImpl.find(projectVo));
+        return RestResult.newSuccess().setData(projectDaoImpl.find(projectVo));
     }
 
     /**
@@ -92,7 +82,7 @@ public class ProjectController {
     @RequestMapping(method = RequestMethod.POST)
     public RestResult insert(@JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
         projectDaoImpl.add(vo);
-        return RestResult.getInstance().setData(vo.getUuid());
+        return RestResult.newSuccess().setData(vo.getUuid());
     }
 
     /**
@@ -105,7 +95,7 @@ public class ProjectController {
     public RestResult update(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
         vo.setUuidVo(uuid);
         projectDaoImpl.modify(vo);
-        return RestResult.getInstance().setData(vo.getUuid());
+        return RestResult.newSuccess().setData(vo.getUuid());
     }
 
     /**
@@ -118,7 +108,7 @@ public class ProjectController {
     public RestResult updateStatus(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
         vo.setUuidVo(uuid);
         projectDaoImpl.complete(vo);
-        return RestResult.getInstance().setData(uuid);
+        return RestResult.newSuccess().setData(uuid);
     }
 
     /**
@@ -132,6 +122,30 @@ public class ProjectController {
         FruitProjectVo vo = FruitProject.getVo();
         vo.setUuidVo(uuid);
         projectDaoImpl.delete(vo);
-        return RestResult.getInstance().setData(uuid);
+        return RestResult.newSuccess().setData(uuid);
+    }
+
+    /*****************
+     * 当前用户接口    *
+     *****************/
+
+    /**
+     * @api {get} /v1/project/current 当前用户-项目查询
+     * @apiVersion 2.5.0
+     * @apiGroup project
+     */
+    @RequestMapping(value = "/current", method = RequestMethod.GET)
+    public RestResult findCurrent(@JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
+        return RestResult.newSuccess().setData(projectDaoImpl.findsCurrentUser(vo));
+    }
+
+    /**
+     * @api {get} /v1/project/create-task-come-from-projects 当前用户-创建的任务所在的项目列表
+     * @apiVersion 2.5.0
+     * @apiGroup project
+     */
+    @RequestMapping(value = "/create-task-come-from-projects", method = RequestMethod.GET)
+    public RestResult createTaskComeFromProjects() {
+        return RestResult.newSuccess().setData(projectDaoImpl.myCreateTaskFromProjects());
     }
 }

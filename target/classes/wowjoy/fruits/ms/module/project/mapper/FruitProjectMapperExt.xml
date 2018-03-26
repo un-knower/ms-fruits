@@ -13,17 +13,12 @@
         <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
-        <collection resultMap="UserResultMap" property="users"
-                    columnPrefix="user_">
-        </collection>
-        <collection resultMap="TeamResultMap" property="teams"
-                    columnPrefix="team_">
-        </collection>
     </resultMap>
-    <resultMap id="UserResultMap" type="wowjoy.fruits.ms.module.user.FruitUserDao">
+    <resultMap id="UserResultMap" type="wowjoy.fruits.ms.module.project.FruitProjectUser">
         <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
         <result column="user_id" jdbcType="VARCHAR" property="userId"/>
         <result column="user_name" jdbcType="VARCHAR" property="userName"/>
+        <result column="status" jdbcType="VARCHAR" property="status"/>
         <result column="birthday" jdbcType="TIMESTAMP" property="birthday"/>
         <result column="user_email" jdbcType="VARCHAR" property="userEmail"/>
         <result column="user_sex" jdbcType="VARCHAR" property="userSex"/>
@@ -34,8 +29,9 @@
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
         <!-- 扩展字段 -->
         <result column="up_role" jdbcType="VARCHAR" property="projectRole"/>
+        <result column="project_id" jdbcType="VARCHAR" property="projectId"/>
     </resultMap>
-    <resultMap id="TeamResultMap" type="wowjoy.fruits.ms.module.team.FruitTeamDao">
+    <resultMap id="TeamResultMap" type="wowjoy.fruits.ms.module.project.FruitProjectTeam">
         <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
         <result column="title" jdbcType="VARCHAR" property="title"/>
         <result column="description" jdbcType="VARCHAR" property="description"/>
@@ -44,6 +40,7 @@
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
         <!-- 扩展字段 -->
         <result column="tp_role" jdbcType="VARCHAR" property="projectRole"/>
+        <result column="project_id" jdbcType="VARCHAR" property="projectId"/>
     </resultMap>
     <sql id="Example_Where_Clause">
         <!--
@@ -96,6 +93,7 @@
         ${replace}.uuid as ${prefix}uuid,
         ${replace}.user_id as ${prefix}user_id,
         ${replace}.user_name as ${prefix}user_name,
+        ${replace}.status as ${prefix}status,
         ${replace}.birthday as ${prefix}birthday,
         ${replace}.user_email as ${prefix}user_email,
         ${replace}.user_sex as ${prefix}user_sex,
@@ -113,109 +111,102 @@
         ${replace}.create_date_time as ${prefix}create_date_time,
         ${replace}.is_deleted as ${prefix}is_deleted
     </sql>
-    <select id="selectUserRelationByExample" parameterType="wowjoy.fruits.ms.module.project.FruitProjectExample"
-            resultMap="BaseResultMap">
-        select
-        <include refid="Base_Column_List">
-            <property name="replace" value="p"/>
-        </include>
-        ,
-        <include refid="User_Column_List">
-            <property name="replace" value="u"/>
-            <property name="prefix" value="user_"/>
-        </include>
-        ,
-        <include refid="team_Column_List">
-            <property name="replace" value="fteam"/>
-            <property name="prefix" value="team_"/>
-        </include>
-        ,
-        upr.up_role as user_up_role,
-        ptr.tp_role as team_tp_role
-        from fruits_project p
-        LEFT JOIN (user_project_relation upr,fruits_user u,project_team_relation ptr,fruits_team fteam)
-        on upr.user_id = u.user_id and upr.project_id = p.uuid and ptr.project_id = p.uuid and fteam.uuid = ptr.team_id
-        <if test="_parameter != null">
-            <where>
-                <include refid="Example_Where_Clause">
-                    <property name="replace" value="p"/>
-                </include>
-                and upr.is_deleted = 'N'
-                and u.is_deleted = 'N'
-                and fteam.is_deleted = 'N'
-                and ptr.is_deleted = 'N'
-            </where>
-        </if>
-        <if test="orderByClause != null">
-            order by p.${orderByClause}
-        </if>
-    </select>
 
-    <select id="selectUserByProjectId" resultMap="BaseResultMap">
+    <select id="selectUserByProjectId" resultMap="UserResultMap">
         select
-        <include refid="Base_Column_List">
-            <property name="replace" value="fproject"/>
-        </include>
-        ,
         <include refid="User_Column_List">
             <property name="replace" value="fuser"/>
-            <property name="prefix" value="user_"/>
+            <property name="prefix" value=""/>
         </include>
         ,
-        upr.up_role as user_up_role
-        from fruits_project fproject
-        left join user_project_relation upr on upr.project_id = fproject.uuid
-        left join fruits_user fuser on fuser.user_id = upr.user_id
+        userJoin.up_role,
+        userJoin.project_id
+        from (
+        select userJoin.user_id,userJoin.project_id,userJoin.up_role from user_project_relation userJoin
         <where>
-            and fproject.uuid in
+            userJoin.project_id in
             <foreach collection="projectIds" item="id" open="(" close=")" separator=",">
                 #{id}
             </foreach>
-            and fproject.is_deleted = 'N'
-            and upr.is_deleted = 'N'
-            and fuser.is_deleted = 'N'
+            and
+            userJoin.is_deleted = 'N'
         </where>
-    </select>
-    <select id="selectTeamByProjectId" resultMap="BaseResultMap">
-        select
-        <include refid="Base_Column_List">
-            <property name="replace" value="fproject"/>
+        group by userJoin.user_id,userJoin.project_id,userJoin.up_role
+        ) userJoin
+        left join (select
+        <include refid="User_Column_List">
+            <property name="replace" value="fuser"/>
+            <property name="prefix" value=""/>
         </include>
-        ,
+        from fruits_user fuser
+        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
+            <where>
+                <include refid="Example_Where_Clause">
+                    <property name="replace" value="fuser"/>
+                </include>
+                and fuser.is_deleted = 'N'
+            </where>
+        </trim>
+        ) fuser on fuser.user_id =
+        userJoin.user_id
+        where fuser.user_id is not null
+    </select>
+    <select id="selectTeamByProjectId" resultMap="TeamResultMap">
+        select
         <include refid="team_Column_List">
             <property name="replace" value="fteam"/>
-            <property name="prefix" value="team_"/>
+            <property name="prefix" value=""/>
         </include>
         ,
-        ptr.tp_role as team_tp_role
-        from fruits_project fproject
-        left join project_team_relation ptr on ptr.project_id = fproject.uuid
-        left join fruits_team fteam on fteam.uuid = ptr.team_id
+        teamJoin.project_id,teamJoin.tp_role
+        from (
+        select teamJoin.project_id,teamJoin.team_id,teamJoin.tp_role from project_team_relation teamJoin
         <where>
-            and fproject.uuid in
+            teamJoin.project_id in
             <foreach collection="projectIds" item="id" open="(" close=")" separator=",">
                 #{id}
             </foreach>
-            and fproject.is_deleted = 'N'
-            and ptr.is_deleted = 'N'
-            and fteam.is_deleted = 'N'
+            and teamJoin.is_deleted = 'N'
         </where>
+        group by teamJoin.project_id,teamJoin.team_id,teamJoin.tp_role
+        ) teamJoin
+        left join (select
+        <include refid="team_Column_List">
+            <property name="replace" value="fteam"/>
+            <property name="prefix" value=""/>
+        </include>
+        from fruits_team fteam where fteam.is_deleted = 'N') fteam on fteam.uuid = teamJoin.team_id
+        where fteam.uuid is not null
     </select>
-    <select id="selectCurrentUserByExample" resultMap="BaseResultMap">
+    <select id="selectByUserIdAndExample" resultMap="BaseResultMap">
         SELECT
         <include refid="Base_Column_List">
             <property name="replace" value="fproject"/>
         </include>
-        FROM fruits_project fproject
-        right join (select project_id,user_id,up_role from user_project_relation where user_id = #{userId} and
-        is_deleted = 'N') upr on upr.project_id = fproject.uuid
+        from (select
+        <include refid="Base_Column_List">
+            <property name="replace" value="fproject"/>
+        </include>
+        from fruits_project fproject
+        right join (select team_id,project_id from project_team_relation where is_deleted = 'N') teamJoin on
+        teamJoin.project_id = fproject.uuid
+        right join (select team_id,user_id from user_team_relation where user_id = #{userId} and is_deleted = 'N')
+        userJoin on userJoin.team_id = teamJoin.team_id
+        where fproject.is_deleted = 'N' and fproject.uuid is not null
+        union
+        select
+        <include refid="Base_Column_List">
+            <property name="replace" value="fproject"/>
+        </include>
+        from fruits_project fproject
+        right join (select user_id,project_id from user_project_relation where user_id = #{userId} and is_deleted = 'N')
+        userJoin on userJoin.project_id = fproject.uuid
+        where fproject.is_deleted = 'N' and fproject.uuid is not null) fproject
         <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
             <where>
                 <include refid="Example_Where_Clause">
                     <property name="replace" value="fproject"/>
                 </include>
-                AND fproject.is_deleted = 'N'
-                and fproject.uuid is not null
             </where>
         </trim>
     </select>

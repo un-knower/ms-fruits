@@ -5,6 +5,8 @@ import org.apache.ibatis.annotations.Param;
 import wowjoy.fruits.ms.module.list.FruitListExample;
 import wowjoy.fruits.ms.module.task.FruitTaskDao;
 import wowjoy.fruits.ms.module.task.FruitTaskExample;
+import wowjoy.fruits.ms.module.task.FruitTaskProject;
+import wowjoy.fruits.ms.module.task.FruitTaskUser;
 
 import java.util.List;
 
@@ -15,17 +17,15 @@ import java.util.List;
 public interface FruitTaskMapperExt {
     List<FruitTaskDao> selectByListExampleAndProjectId(@Param("example") FruitTaskExample example, @Param("listExample") FruitListExample listExample, @Param("projectId") String projectId);
 
-    List<FruitTaskDao> selectJoinUserByTaskIds(@Param("ids") List<String> example);
+    List<FruitTaskUser> selectJoinUserByTaskIds(@Param("ids") List<String> example);
 
     List<FruitTaskDao> selectPlanByTask(@Param("example") FruitTaskExample example);
 
-    List<FruitTaskDao> selectProjectByTask(@Param("example") FruitTaskExample example);
-
-    List<FruitTaskDao> selectPlanJoinProjectByTask(@Param("taskIds") List<String> taskIds);
+    List<FruitTaskProject> selectProjectByTask(@Param("example") FruitTaskExample example, @Param("taskIds") List<String> taskIds);
 
     List<FruitTaskDao> selectListByTask(@Param("example") FruitTaskExample example);
 
-    List<FruitTaskDao> selectByExampleAndUserIdAndProjectId(@Param("example") FruitTaskExample example, @Param("projectId") String projectId, @Param("userIds") List<String> userIds);
+    List<FruitTaskUser> findUserByProjectIdAndUserIdAndTaskExample(@Param("example") FruitTaskExample example, @Param("userIds") List<String> userIds, @Param("projectId") String projectId);
 
     /************************************************************************************************
      *                                       个人中心专供                                            *
@@ -33,5 +33,7 @@ public interface FruitTaskMapperExt {
     List<FruitTaskDao> myTaskByExample(@Param("example") FruitTaskExample example, @Param("userIds") List<String> userIds, @Param("projectId") String projectId);
 
     List<FruitTaskDao> myCreateTask(@Param("example") FruitTaskExample example, @Param("userId") String userId, @Param("projectId") String projectId);
+
+    List<FruitTaskProject> myCreateTaskFromProjects(@Param("userId") String userId);
 
 }

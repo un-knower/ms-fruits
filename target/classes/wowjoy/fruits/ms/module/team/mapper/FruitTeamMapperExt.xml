@@ -13,6 +13,7 @@
         <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
         <result column="user_id" jdbcType="VARCHAR" property="userId"/>
         <result column="user_name" jdbcType="VARCHAR" property="userName"/>
+        <result column="status" jdbcType="VARCHAR" property="status"/>
         <result column="birthday" jdbcType="TIMESTAMP" property="birthday"/>
         <result column="user_email" jdbcType="VARCHAR" property="userEmail"/>
         <result column="user_sex" jdbcType="VARCHAR" property="userSex"/>
@@ -66,6 +67,7 @@
         ${replace}.uuid as ${prefix}uuid,
         ${replace}.user_id as ${prefix}user_id,
         ${replace}.user_name as ${prefix}user_name,
+        ${replace}.status as ${prefix}status,
         ${replace}.birthday as ${prefix}birthday,
         ${replace}.user_email as ${prefix}user_email,
         ${replace}.user_sex as ${prefix}user_sex,
@@ -75,10 +77,6 @@
         ${replace}.create_date_time as ${prefix}create_date_time,
         ${replace}.is_deleted as ${prefix}is_deleted
     </sql>
-    <sql id="User_Base_Column_List">
-        uuid, user_id, user_name, birthday, user_email, user_sex, job_title, description,
-        modify_date_time, create_date_time, is_deleted
-    </sql>
 
     <select id="selectUserByTeamId" resultMap="UserResultMap">
         SELECT
@@ -86,19 +84,34 @@
             <property name="replace" value="fuser"/>
             <property name="prefix" value=""/>
         </include>
-        ,utr.team_id,utr.ut_role as user_ut_role
-        FROM fruits_user fuser
-        right JOIN (select team_id,user_id,ut_role from user_team_relation where is_deleted = 'N' and team_id in
-        <foreach collection="teamIds" open="(" close=")" separator="," item="id">
-            #{id}
-        </foreach>) utr on fuser.user_id = utr.`user_id`
+        ,userJoin.team_id,userJoin.ut_role
+        from (
+        select team_id,user_id,ut_role from user_team_relation
+        <where>
+            team_id in
+            <foreach collection="teamIds" open="(" close=")" separator="," item="id">
+                #{id}
+            </foreach>
+            and is_deleted = 'N'
+        </where>
+        group by team_id,user_id,ut_role
+        ) userJoin
+        left join (
+        select
+        <include refid="User_Column_List">
+            <property name="replace" value="fuser"/>
+            <property name="prefix" value=""/>
+        </include>
+        from fruits_user fuser
         <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
             <where>
                 <include refid="Example_Where_Clause">
                     <property name="prefix" value="fuser"/>
                 </include>
-                AND fuser.uuid is not null
+                and fuser.is_deleted = 'N'
             </where>
         </trim>
+        ) fuser on fuser.user_id = userJoin.user_id
+        where fuser.user_id is not null
     </select>
 </mapper>

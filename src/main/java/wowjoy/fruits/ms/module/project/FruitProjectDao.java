@@ -13,7 +13,6 @@ import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -31,34 +30,42 @@ public class FruitProjectDao extends FruitProject {
     private Map<FruitDict.Systems, List<UserProjectRelation>> userRelation;
     private Map<FruitDict.Systems, List<ProjectListRelation>> listRelation;
 
-    private List<FruitUserDao> users;
-    private List<FruitTeamDao> teams;
-    private FruitTeamDao principalTeam;
-    private FruitUserDao principalUser;
+    private List<FruitProjectUser> users;
+    private List<FruitProjectTeam> teams;
+    private FruitProjectTeam principalTeam;
+    private FruitProjectUser principalUser;
 
     private Integer days;
 
-    public FruitTeamDao getPrincipalTeam() {
-        return principalTeam;
-    }
-
-    public void setPrincipalTeam(FruitTeamDao principalTeam) {
-        this.principalTeam = principalTeam;
-    }
-
-    public List<FruitTeamDao> getTeams() {
+    public List<FruitProjectTeam> getTeams() {
         return teams;
     }
 
-    public void setTeams(List<FruitTeamDao> teams) {
+    public void setTeams(List<FruitProjectTeam> teams) {
         this.teams = teams;
     }
 
-    public FruitUserDao getPrincipalUser() {
+    public List<FruitProjectUser> getUsers() {
+        return users;
+    }
+
+    public void setUsers(List<FruitProjectUser> users) {
+        this.users = users;
+    }
+
+    public FruitProjectTeam getPrincipalTeam() {
+        return principalTeam;
+    }
+
+    public void setPrincipalTeam(FruitProjectTeam principalTeam) {
+        this.principalTeam = principalTeam;
+    }
+
+    public FruitProjectUser getPrincipalUser() {
         return principalUser;
     }
 
-    public void setPrincipalUser(FruitUserDao principalUser) {
+    public void setPrincipalUser(FruitProjectUser principalUser) {
         this.principalUser = principalUser;
     }
 
@@ -112,14 +119,6 @@ public class FruitProjectDao extends FruitProject {
         this.days = days;
     }
 
-    public List<FruitUserDao> getUsers() {
-        return users;
-    }
-
-    public void setUsers(List<FruitUserDao> users) {
-        this.users = users;
-    }
-
     @Override
     public void setTitle(String title) {
         if (StringUtils.isNotBlank(title))
@@ -162,7 +161,7 @@ public class FruitProjectDao extends FruitProject {
      */
     public FruitProjectDao seekPrincipalUser() {
         if (this.getUsers().isEmpty()) return this;
-        for (FruitUserDao user : this.getUsers()) {
+        for (FruitProjectUser user : this.getUsers()) {
             if (FruitDict.UserProjectDict.PRINCIPAL.name().equals(user.getProjectRole())) {
                 this.setPrincipalUser(user);
                 this.getUsers().remove(user);
@@ -177,7 +176,7 @@ public class FruitProjectDao extends FruitProject {
      */
     public FruitProjectDao seekPrincipalTeam() {
         if (this.getTeams().isEmpty()) return this;
-        for (FruitTeamDao teamDao : this.getTeams()) {
+        for (FruitProjectTeam teamDao : this.getTeams()) {
             if (FruitDict.ProjectTeamDict.PRINCIPAL.name().equals(teamDao.getProjectRole())) {
                 this.setPrincipalTeam(teamDao);
                 this.getTeams().remove(teamDao);

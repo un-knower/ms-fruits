@@ -1,5 +1,6 @@
 package wowjoy.fruits.ms.dao.team;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -37,6 +38,7 @@ public class TeamDaoImpl extends AbstractDaoTeam {
 
     @Override
     public List<FruitTeamUser> findUserByTeamIds(List<String> teamIds, Consumer<FruitUserExample> userExampleConsumer) {
+        if (teamIds == null || teamIds.isEmpty()) return Lists.newLinkedList();
         FruitUserExample userExample = new FruitUserExample();
         userExampleConsumer.accept(userExample);
         return mapper.selectUserByTeamId(userExample, teamIds);

@@ -28,17 +28,17 @@ public class UserController {
 
     @RequestMapping(method = RequestMethod.POST)
     public RestResult finds() {
-        return RestResult.getInstance().setData(ApplicationContextUtils.getCurrentUser());
+        return RestResult.newSuccess().setData(ApplicationContextUtils.getCurrentUser());
     }
 
     @RequestMapping(value = "/account", method = RequestMethod.GET)
     public RestResult account(@JsonArgument(type = FruitAccountVo.class) FruitAccountVo vo) {
-        return RestResult.getInstance().setData(daoAccount.findByAccount(vo));
+        return RestResult.newSuccess().setData(daoAccount.findByAccount(vo));
     }
 
     @RequestMapping(method = RequestMethod.GET)
     public RestResult finds(@JsonArgument(type = FruitUserVo.class) FruitUserVo vo) {
-        return RestResult.getInstance().setData(userDao.finds(vo));
+        return RestResult.newSuccess().setData(userDao.finds(vo));
     }
 
 }

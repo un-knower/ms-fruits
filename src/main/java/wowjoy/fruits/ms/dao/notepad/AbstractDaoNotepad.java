@@ -3,7 +3,7 @@ package wowjoy.fruits.ms.dao.notepad;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
-import wowjoy.fruits.ms.module.logs.FruitLogsDao;
+import wowjoy.fruits.ms.module.logs.FruitLogs;
 import wowjoy.fruits.ms.module.notepad.FruitNotepad;
 import wowjoy.fruits.ms.module.notepad.FruitNotepadDao;
 import wowjoy.fruits.ms.module.notepad.FruitNotepadExample;
@@ -42,7 +42,7 @@ public abstract class AbstractDaoNotepad implements InterfaceDao {
 
     protected abstract List<FruitNotepadDao> findsByExampleAndCustom(Consumer<FruitNotepadExample> exampleConsumer, Consumer<List<String>> customConsumer);
 
-    protected abstract Map<String, LinkedList<FruitLogsDao>> joinLogs(LinkedList<String> ids);
+    protected abstract Map<String, LinkedList<FruitLogs.Info>> joinLogs(LinkedList<String> ids);
 
     protected abstract List<FruitUserDao> joinUser(LinkedList<String> ids);
 
@@ -161,7 +161,7 @@ public abstract class AbstractDaoNotepad implements InterfaceDao {
         return teamInfo;
     }
 
-    public final Optional<FruitTeamDao> findNotepadMonthByTeamId(LocalDate date, String teamId,FruitNotepadVo vo) {
+    public final Optional<FruitTeamDao> findNotepadMonthByTeamId(LocalDate date, String teamId, FruitNotepadVo vo) {
         if (date == null) return Optional.empty();
         LocalDate startDate = LocalDate.of(date.getYear(), date.getMonth(), 1);
         LocalDate endDate = LocalDate.of(date.getYear(), date.getMonth(), date.lengthOfMonth());
@@ -173,7 +173,7 @@ public abstract class AbstractDaoNotepad implements InterfaceDao {
     private Callable plugLogs(List<FruitNotepadDao> notepads) {
         return () -> {
             if (notepads == null || notepads.isEmpty()) return false;
-            Map<String, LinkedList<FruitLogsDao>> logs = this.joinLogs(notepads.parallelStream().map(FruitNotepadDao::getUuid).collect(toCollection(LinkedList::new)));
+            Map<String, LinkedList<FruitLogs.Info>> logs = this.joinLogs(notepads.parallelStream().map(FruitNotepadDao::getUuid).collect(toCollection(LinkedList::new)));
             notepads.parallelStream().forEach(notepad -> notepad.setLogs(logs.get(notepad.getUuid())));
             return true;
         };

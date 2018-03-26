@@ -532,4 +532,32 @@ public class FruitDict extends AbstractEntity {
         }
     }
 
+    public enum UserDict {
+        ACTIVE("在职"),
+        STILL("离职");
+        private String parentCode;
+        private String value;
+
+        public String getParentCode() {
+            return parentCode;
+        }
+
+        private void setParentCode(String parentCode) {
+            this.parentCode = parentCode;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        private void setValue(String value) {
+            this.value = value;
+        }
+
+        UserDict(String value) {
+            this.parentCode = Parents.USER.name();
+            this.value = value;
+        }
+    }
+
 }

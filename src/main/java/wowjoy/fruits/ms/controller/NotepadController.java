@@ -45,7 +45,7 @@ public class NotepadController {
     @RequestMapping(method = RequestMethod.POST)
     public RestResult insert(@JsonArgument(type = FruitNotepadVo.class) FruitNotepadVo vo) {
         daoNotepad.insert(vo);
-        return RestResult.getInstance().setData(vo.getUuid());
+        return RestResult.newSuccess().setData(vo.getUuid());
     }
 
     /**
@@ -62,7 +62,7 @@ public class NotepadController {
     public RestResult update(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitNotepadVo.class) FruitNotepadVo vo) {
         vo.setUuidVo(uuid);
         daoNotepad.update(vo);
-        return RestResult.getInstance().setData(vo.getUuidVo());
+        return RestResult.newSuccess().setData(vo.getUuidVo());
     }
 
     /**
@@ -75,7 +75,7 @@ public class NotepadController {
     @RequestMapping(value = "{uuid}", method = RequestMethod.DELETE)
     public RestResult delete(@PathVariable("uuid") String uuid) {
         daoNotepad.delete(uuid);
-        return RestResult.getInstance().setData(uuid);
+        return RestResult.newSuccess().setData(uuid);
     }
 
     /**
@@ -88,7 +88,7 @@ public class NotepadController {
      */
     @RequestMapping(value = "current", method = RequestMethod.GET)
     public RestResult findNotepadByCurrentUserId(@JsonArgument(type = FruitNotepadVo.class) FruitNotepadVo vo) {
-        return RestResult.getInstance().setData(daoNotepad.findNotepadByCurrentUserId(vo));
+        return RestResult.newSuccess().setData(daoNotepad.findNotepadByCurrentUserId(vo));
     }
 
     /**
@@ -102,7 +102,7 @@ public class NotepadController {
      */
     @RequestMapping(value = "team/{teamId}", method = RequestMethod.GET)
     public RestResult findNotepadByTeamId(@PathVariable("teamId") String teamId, @JsonArgument(type = FruitNotepadVo.class) FruitNotepadVo vo) {
-        return RestResult.getInstance().setData(daoNotepad.findNotepadByTeamId(vo, teamId));
+        return RestResult.newSuccess().setData(daoNotepad.findNotepadByTeamId(vo, teamId));
     }
 
     /**
@@ -120,7 +120,7 @@ public class NotepadController {
                                                @JsonArgument(type = FruitNotepadVo.class) FruitNotepadVo vo) {
         try {
             return RestResult
-                    .getInstance()
+                    .newSuccess()
                     .setData(daoNotepad.findNotepadMonthByTeamId(LocalDate.parse(MessageFormat.format("{0}-{1}-01", year, month)), teamId, vo).orElse(null));
         } catch (DateTimeParseException datetime) {
             throw new CheckException("日期格式：yyyy-MM-dd");

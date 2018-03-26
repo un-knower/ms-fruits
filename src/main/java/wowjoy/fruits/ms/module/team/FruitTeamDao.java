@@ -2,13 +2,15 @@ package wowjoy.fruits.ms.module.team;
 
 import com.google.common.collect.Lists;
 import wowjoy.fruits.ms.module.relation.entity.UserTeamRelation;
-import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * Created by wangziwen on 2017/9/14.
@@ -41,7 +43,13 @@ public class FruitTeamDao extends FruitTeam {
      * @return
      */
     public void searchLeader() {
-        this.setLeader(this.findUsers().orElseGet(LinkedList::new).parallelStream().filter(user -> FruitDict.UserTeamDict.LEADER.name().equals(user.getTeamRole())).findAny().orElse(null));
+        Predicate<FruitTeamUser> leaderFilter = user -> FruitDict.UserTeamDict.LEADER.name().equals(user.getTeamRole());
+        this.setLeader(this.findUsers().orElseGet(LinkedList::new)
+                .parallelStream()
+                .filter(leaderFilter).findAny().orElse(null));
+        this.setUsers(this.findUsers().orElseGet(LinkedList::new).parallelStream()
+                .filter(leaderFilter.and(user -> user.getUserId().equals(this.getLeader().getUserId())).negate())
+                .collect(toList()));
     }
 
     public String getProjectRole() {

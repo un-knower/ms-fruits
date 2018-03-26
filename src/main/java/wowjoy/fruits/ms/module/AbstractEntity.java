@@ -35,8 +35,12 @@ public abstract class AbstractEntity implements InterfaceEntity {
     private String isDeleted;
     private String description;
 
-    private String desc;
-    private String asc;
+    private transient String desc;
+    private transient String asc;
+
+    public void setCreateDateTime(Date createDateTime) {
+        this.createDateTime = createDateTime;
+    }
 
     private transient Supplier<FruitDict.LogsDict> operateTypeSupplier;
 

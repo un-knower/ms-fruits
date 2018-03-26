@@ -17,11 +17,9 @@
         <association property="plan" resultMap="PlanResultMap" columnPrefix="plan_"/>
         <association property="project" resultMap="ProjectResultMap" columnPrefix="project_"/>
         <association property="list" resultMap="ListResultMap" columnPrefix="list_"/>
-        <collection resultMap="UserResultMap" property="users" columnPrefix="user_"/>
-        <collection property="logs" resultMap="LogsResultMap" columnPrefix="flogs_"/>
     </resultMap>
 
-    <resultMap id="ProjectResultMap" type="wowjoy.fruits.ms.module.project.FruitProjectDao">
+    <resultMap id="ProjectResultMap" type="wowjoy.fruits.ms.module.task.FruitTaskProject">
         <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
         <result column="title" jdbcType="VARCHAR" property="title"/>
         <result column="project_status" jdbcType="VARCHAR" property="projectStatus"/>
@@ -33,12 +31,15 @@
         <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
+
+        <result column="task_id" jdbcType="VARCHAR" property="taskId"/>
     </resultMap>
 
-    <resultMap id="UserResultMap" type="wowjoy.fruits.ms.module.user.FruitUserDao">
+    <resultMap id="UserResultMap" type="wowjoy.fruits.ms.module.task.FruitTaskUser">
         <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
         <result column="user_id" jdbcType="VARCHAR" property="userId"/>
         <result column="user_name" jdbcType="VARCHAR" property="userName"/>
+        <result column="status" jdbcType="VARCHAR" property="status"/>
         <result column="birthday" jdbcType="TIMESTAMP" property="birthday"/>
         <result column="user_email" jdbcType="VARCHAR" property="userEmail"/>
         <result column="user_sex" jdbcType="VARCHAR" property="userSex"/>
@@ -47,6 +48,9 @@
         <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
+
+        <result column="task_id" jdbcType="VARCHAR" property="taskId"/>
+        <result column="user_role" jdbcType="VARCHAR" property="userRole"/>
     </resultMap>
 
     <resultMap id="ListResultMap" type="wowjoy.fruits.ms.module.list.FruitListDao">
@@ -69,18 +73,6 @@
         <result column="estimated_end_date" jdbcType="TIMESTAMP" property="estimatedEndDate"/>
         <result column="end_date" jdbcType="TIMESTAMP" property="endDate"/>
         <result column="parent_id" jdbcType="VARCHAR" property="parentId"/>
-        <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
-        <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
-        <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
-    </resultMap>
-
-    <resultMap id="LogsResultMap" type="wowjoy.fruits.ms.module.logs.FruitLogsDao">
-        <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
-        <result column="user_id" jdbcType="VARCHAR" property="userId"/>
-        <result column="fruit_uuid" jdbcType="VARCHAR" property="fruitUuid"/>
-        <result column="fruit_type" jdbcType="VARCHAR" property="fruitType"/>
-        <result column="json_object" jdbcType="LONGVARCHAR" property="jsonObject"/>
-        <result column="operate_type" jdbcType="VARCHAR" property="operateType"/>
         <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
@@ -162,6 +154,7 @@
        ${replace}.uuid as ${prefix}uuid,
         ${replace}.user_id as ${prefix}user_id,
         ${replace}.user_name as ${prefix}user_name,
+        ${replace}.status as ${prefix}status,
         ${replace}.birthday as ${prefix}birthday,
         ${replace}.user_email as ${prefix}user_email,
         ${replace}.user_sex as ${prefix}user_sex,
@@ -170,11 +163,6 @@
         ${replace}.modify_date_time as ${prefix}modify_date_time,
         ${replace}.create_date_time as ${prefix}create_date_time,
         ${replace}.is_deleted as ${prefix}is_deleted
-    </sql>
-
-    <sql id="user_Base_Column_List">
-        uuid, user_id, user_name, birthday, user_email, user_sex, job_title, description,
-        modify_date_time, create_date_time, is_deleted
     </sql>
 
     <sql id="Plan_Column_List">
@@ -193,11 +181,6 @@
         ${replace}.description as ${prefix}description
     </sql>
 
-    <sql id="plan_Base_Column_List">
-        uuid, title, plan_status, status_description, percent, estimated_start_date, estimated_end_date,
-        end_date, parent_id, modify_date_time, create_date_time, is_deleted,description
-    </sql>
-
     <sql id="Project_Column_List">
         ${replace}.uuid as ${prefix}uuid,
         ${replace}.title as ${prefix}title,
@@ -212,27 +195,11 @@
         ${replace}.is_deleted as ${prefix}is_deleted
     </sql>
 
-    <sql id="Project_Base_Column_List">
-        uuid, title, project_status, status_description, predict_start_date, predict_end_date,
-        end_date, description, modify_date_time, create_date_time, is_deleted
-    </sql>
-
     <sql id="List_Column_List">
         ${replace}.uuid as ${prefix}uuid,
         ${replace}.title as ${prefix}title,
         ${replace}.l_type as ${prefix}l_type,
         ${replace}.description as ${prefix}description,
-        ${replace}.modify_date_time as ${prefix}modify_date_time,
-        ${replace}.create_date_time as ${prefix}create_date_time,
-        ${replace}.is_deleted as ${prefix}is_deleted
-    </sql>
-    <sql id="Logs_Column_List">
-        ${replace}.uuid as ${prefix}uuid,
-        ${replace}.user_id as ${prefix}user_id,
-        ${replace}.fruit_uuid as ${prefix}fruit_uuid,
-        ${replace}.fruit_type as ${prefix}fruit_type,
-        ${replace}.json_object as ${prefix}json_object,
-        ${replace}.operate_type as ${prefix}operate_type,
         ${replace}.modify_date_time as ${prefix}modify_date_time,
         ${replace}.create_date_time as ${prefix}create_date_time,
         ${replace}.is_deleted as ${prefix}is_deleted
@@ -266,6 +233,7 @@
                     <property name="replace" value="task"/>
                 </include>
                 AND task.is_deleted = 'N'
+                and task.uuid is not null
             </where>
         </trim>
         <if test="example.orderByClause != null">
@@ -273,33 +241,35 @@
         </if>
     </select>
 
-    <select id="selectJoinUserByTaskIds" resultMap="BaseResultMap">
+    <select id="selectJoinUserByTaskIds" resultMap="UserResultMap">
         select
-        <include refid="Base_Column_List">
-            <property name="replace" value="task"/>
-        </include>
-        ,
         <include refid="User_Column_List">
             <property name="replace" value="fuser"/>
-            <property name="prefix" value="user_"/>
+            <property name="prefix" value=""/>
         </include>
-        from fruits_task task
-        right join (
-        select task_id,user_id from task_user_relation
-        where is_deleted='N'
-        and task_id in
-        <foreach collection="ids" open="(" close=")" item="id" separator=",">
-            #{id}
-        </foreach>
-        ) userRelation on userRelation.task_id = task.uuid
+        ,
+        userJoin.user_role,userJoin.task_id
+        from (select userJoin.user_role,userJoin.task_id,userJoin.user_id from fruits_task ftask
+        right join (select task_id,user_id,user_role from task_user_relation
+        <where>
+            task_id in
+            <foreach collection="ids" open="(" close=")" item="id" separator=",">
+                #{id}
+            </foreach>
+            and is_deleted = 'N'
+        </where>
+        ) userJoin on userJoin.task_id = ftask.uuid
+        <where>
+            ftask.is_deleted = 'N'
+        </where>
+        group by userJoin.user_role,userJoin.task_id,userJoin.user_id) userJoin
         left join (select
-        <include refid="user_Base_Column_List"/>
-        from fruits_user where is_deleted = 'N') fuser on fuser.user_id = userRelation.user_id
-        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
-            <where>
-                task.is_deleted = 'N'
-            </where>
-        </trim>
+        <include refid="User_Column_List">
+            <property name="replace" value="fuser"/>
+            <property name="prefix" value=""/>
+        </include>
+        from fruits_user fuser where fuser.is_deleted = 'N') fuser on fuser.user_id = userJoin.user_id
+        where fuser.user_id is not null
     </select>
 
     <select id="selectPlanByTask" resultMap="BaseResultMap">
@@ -316,8 +286,11 @@
         RIGHT join (select task_id,plan_id from task_plan_relation where is_deleted = 'N') planRelation on
         planRelation.task_id = task.uuid
         RIGHT join (select
-        <include refid="plan_Base_Column_List"/>
-        from fruits_plan where is_deleted = 'N') plan on planRelation.plan_id = plan.uuid
+        <include refid="Plan_Column_List">
+            <property name="replace" value="plan"/>
+            <property name="prefix" value=""/>
+        </include>
+        from fruits_plan plan where plan.is_deleted = 'N') plan on planRelation.plan_id = plan.uuid
         <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
             <where>
                 <include refid="Base_Example_Where_Clause">
@@ -328,57 +301,62 @@
     </select>
 
     <!-- 查询任务关联项目 -->
-    <select id="selectProjectByTask" resultMap="BaseResultMap">
+    <select id="selectProjectByTask" resultMap="ProjectResultMap">
         SELECT
-        <include refid="Base_Column_List">
-            <property name="replace" value="task"/>
+        <include refid="Project_Column_List">
+            <property name="replace" value="fproject"/>
+            <property name="prefix" value=""/>
         </include>
         ,
-        <include refid="Project_Column_List">
-            <property name="replace" value="project"/>
-            <property name="prefix" value="project_"/>
+        task.uuid as task_id
+        from (
+        select
+        <include refid="Base_Column_List">
+            <property name="replace" value="ftask"/>
         </include>
-        from fruits_task task
-        RIGHT join (select task_id,project_id from task_project_relation where is_deleted = 'N') projectRelation on
-        projectRelation.task_id = task.uuid
-        RIGHT join (select
-        <include refid="Project_Base_Column_List"/>
-        from fruits_project where is_deleted = 'N') project on project.uuid = projectRelation.project_id
+        ,
+        projectJoin.project_id
+        from fruits_task ftask
+        right join (select task_id,project_id from task_project_relation where is_deleted = 'N') projectJoin on
+        projectJoin.task_id = ftask.uuid
+        <where>
+            ftask.uuid in
+            <foreach collection="taskIds" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+            and ftask.is_deleted = 'N'
+        </where>
+        union all
+        select
+        <include refid="Base_Column_List">
+            <property name="replace" value="ftask"/>
+        </include>
+        ,
+        planJoin.project_id
+        from fruits_task ftask
+        right join (select plan_id,task_id from task_plan_relation where is_deleted = 'N') taskJoin on taskJoin.task_id
+        = ftask.uuid
+        right join (select plan_id,project_id from plan_project_relation WHERE is_deleted = 'N' ) planJoin on
+        planJoin.plan_id = taskJoin.plan_id
+        <where>
+            ftask.uuid in
+            <foreach collection="taskIds" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+            and ftask.is_deleted = 'N'
+        </where>
+        ) task
+        left join (select
+        <include refid="Project_Column_List">
+            <property name="replace" value="fproject"/>
+            <property name="prefix" value=""/>
+        </include>
+        from fruits_project fproject where fproject.is_deleted = 'N') fproject on fproject.uuid = task.project_id
         <trim suffixOverrides="AND | OR" prefixOverrides="AND | OR ">
             <where>
                 <include refid="Base_Example_Where_Clause">
                     <property name="replace" value="task"/>
                 </include>
-            </where>
-        </trim>
-    </select>
-
-    <!-- 根据关联计划，查询出任务关联项目 -->
-    <select id="selectPlanJoinProjectByTask" resultMap="BaseResultMap">
-        SELECT
-        <include refid="Base_Column_List">
-            <property name="replace" value="task"/>
-        </include>
-        ,
-        <include refid="Project_Column_List">
-            <property name="replace" value="project"/>
-            <property name="prefix" value="project_"/>
-        </include>
-        from fruits_task task
-        RIGHT join (select task_id,plan_id from task_plan_relation where
-        task_id in
-        <foreach collection="taskIds" item="id" close=")" open="(" separator=",">
-            #{id}
-        </foreach>
-        and is_deleted = 'N') planRelation on planRelation.task_id = task.uuid
-        RIGHT join (select plan_id,project_id from plan_project_relation where is_deleted = 'N') projectRelation on
-        projectRelation.plan_id = planRelation.plan_id
-        RIGHT join (select
-        <include refid="Project_Base_Column_List"/>
-        from fruits_project where is_deleted = 'N') project on project.uuid = projectRelation.project_id
-        <trim suffixOverrides="AND | OR" prefixOverrides="AND | OR ">
-            <where>
-                task.is_deleted = 'N'
             </where>
         </trim>
     </select>
@@ -409,6 +387,86 @@
         </trim>
     </select>
 
+    <select id="findUserByProjectIdAndUserIdAndTaskExample" resultMap="UserResultMap">
+        select
+        <include refid="User_Column_List">
+            <property name="replace" value="fuser"/>
+            <property name="prefix" value=""/>
+        </include>
+        ,
+        userTask.user_role,
+        userTask.uuid as task_id
+        from (
+        SELECT userJoin.user_id,task.uuid,userJoin.user_role
+        from (
+        select
+        <include refid="Base_Column_List">
+            <property name="replace" value="ftask"/>
+        </include>
+        from fruits_task ftask
+        right join (select task_id,project_id from task_project_relation
+        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
+            <where>
+                <if test="projectId != null">
+                    project_id = #{projectId}
+                </if>
+                and is_deleted = 'N'
+            </where>
+        </trim>
+        ) projectJoin on
+        projectJoin.task_id = ftask.uuid
+        where ftask.is_deleted = 'N'
+        union all
+        select
+        <include refid="Base_Column_List">
+            <property name="replace" value="ftask"/>
+        </include>
+        from fruits_task ftask
+        right join (select plan_id,task_id from task_plan_relation where is_deleted = 'N') taskJoin on taskJoin.task_id
+        = ftask.uuid
+        right join (select plan_id,project_id from plan_project_relation
+        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
+            <where>
+                <if test="projectId != null">
+                    project_id = #{projectId}
+                </if>
+                and is_deleted = 'N'
+            </where>
+        </trim>
+        ) planJoin on
+        planJoin.plan_id = taskJoin.plan_id
+        where ftask.is_deleted = 'N'
+        ) task
+        left join (select uuid,task_id,user_id,user_role from task_user_relation
+        <where>
+            user_id in
+            <foreach collection="userIds" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+            and is_deleted = 'N'
+        </where>
+        ) userJoin on
+        userJoin.task_id = task.uuid
+        <trim suffixOverrides="AND | OR" prefixOverrides="AND | OR ">
+            <where>
+                <include refid="Base_Example_Where_Clause">
+                    <property name="replace" value="task"/>
+                </include>
+                and task.uuid is not null
+            </where>
+        </trim>
+        group by userJoin.user_id,task.uuid,userJoin.user_role
+        ) userTask
+        left join (select
+        <include refid="User_Column_List">
+            <property name="replace" value="fuser"/>
+            <property name="prefix" value=""/>
+        </include>
+        from fruits_user fuser where fuser.is_deleted = 'N'
+        ) fuser on fuser.user_id = userTask.user_id
+        where fuser.user_id is not null
+    </select>
+
 
     <!--/************************************************************************************************-->
     <!--*                                       个人中心专供                                            *-->
@@ -435,7 +493,7 @@
             </where>
         </trim>
         ) projectJoin on projectJoin.task_id = ftask.uuid
-        where ftask.is_deleted = 'N'
+        where ftask.is_deleted = 'N' and ftask.uuid is not null
         union all
         select
         <include refid="Base_Column_List">
@@ -454,7 +512,7 @@
             </where>
         </trim>
         ) planJoin on planJoin.plan_id = taskJoin.plan_id
-        where ftask.is_deleted = 'N'
+        where ftask.is_deleted = 'N' and ftask.uuid is not null
         ) task
         right join (select uuid,task_id,user_id from task_user_relation
         <where>
@@ -500,7 +558,7 @@
             </where>
         </trim>
         ) projectJoin on projectJoin.task_id = ftask.uuid
-        where ftask.is_deleted = 'N'
+        where ftask.is_deleted = 'N' and ftask.uuid is not null
         union all
         select
         <include refid="Base_Column_List">
@@ -519,7 +577,7 @@
             </where>
         </trim>
         ) planJoin on planJoin.plan_id = taskJoin.plan_id
-        where ftask.is_deleted = 'N'
+        where ftask.is_deleted = 'N' and ftask.uuid is not null
         ) task
         right join (select `user_id`,`fruit_uuid` from fruits_logs
         <where>
@@ -539,41 +597,37 @@
         </if>
     </select>
 
-    <select id="selectByExampleAndUserIdAndProjectId" resultMap="BaseResultMap">
+    <select id="myCreateTaskFromProjects" resultMap="ProjectResultMap">
         select
-        <include refid="Base_Column_List">
-            <property name="replace" value="task"/>
+        <include refid="Project_Column_List">
+            <property name="replace" value="fproject"/>
+            <property name="prefix" value=""/>
         </include>
-        ,
-        <include refid="User_Column_List">
-            <property name="replace" value="fruitUser"/>
-            <property name="prefix" value="user_"/>
-        </include>
-        from fruits_task task
-        left join (select tpr.task_id,projectRelation.project_id from task_plan_relation tpr
-        right join (select plan_id,project_id from plan_project_relation where project_id = #{projectId} and is_deleted
-        = 'N') projectRelation on projectRelation.plan_id = tpr.plan_id where tpr.task_id is not null and tpr.is_deleted
-        = 'N'
-        ) tpr on tpr.task_id = task.uuid
-        left join (select task_id,project_id from task_project_relation where project_id = #{projectId} and is_deleted =
-        'N') projectRelation on projectRelation.task_id = task.uuid
-        left join task_user_relation userRelation on userRelation.task_id = task.uuid and userRelation.is_deleted='N'
+        from (select projectJoin.project_id from fruits_task ftask
+        right join (select `fruit_uuid` from fruits_logs where user_id = #{userId} and fruit_type = 'TASK' and
+        `operate_type` = 'ADD' and is_deleted = 'N') userJoin on userJoin.fruit_uuid = ftask.uuid
+        right join (select task_id,project_id from task_project_relation where is_deleted = 'N') projectJoin on
+        projectJoin.task_id = userJoin.fruit_uuid
+        where ftask.is_deleted = 'N'
+        group by projectJoin.project_id
+        union
+        select planJoin.project_id from fruits_task ftask
+        right join (select `fruit_uuid` from fruits_logs where user_id = #{userId} and fruit_type = 'TASK' and
+        `operate_type` = 'ADD' and is_deleted = 'N') userJoin on userJoin.fruit_uuid = ftask.uuid
+        right join (select plan_id,task_id from task_plan_relation where is_deleted = 'N') taskJoin on taskJoin.task_id
+        = userJoin.fruit_uuid
+        right join (select plan_id,project_id from plan_project_relation where is_deleted = 'N') planJoin on
+        planJoin.plan_id = taskJoin.plan_id
+        where ftask.is_deleted = 'N'
+        group by planJoin.project_id
+        ) project
         left join (select
-        <include refid="user_Base_Column_List"/>
-        from fruits_user where user_id in
-        <foreach collection="userIds" item="id" open="(" close=")" separator=",">
-            #{id}
-        </foreach>
-        and is_deleted = 'N') fruitUser on fruitUser.user_id = userRelation.user_id
-        <trim suffixOverrides="AND | OR" prefixOverrides="AND | OR">
-            <where>
-                <include refid="Base_Example_Where_Clause">
-                    <property name="replace" value="task"/>
-                </include>
-                and task.is_deleted = 'N' and userRelation.task_id is not null and (tpr.project_id is not null or
-                projectRelation.project_id is not null)
-            </where>
-        </trim>
+        <include refid="Project_Column_List">
+            <property name="replace" value="fproject"/>
+            <property name="prefix" value=""/>
+        </include>
+        from fruits_project fproject where fproject.is_deleted = 'N') fproject on fproject.uuid = project.project_id
+        where fproject.uuid is not null
     </select>
 
 </mapper>

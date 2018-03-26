@@ -10,17 +10,21 @@ import wowjoy.fruits.ms.module.relation.entity.TaskUserRelation;
 import wowjoy.fruits.ms.module.relation.example.TaskUserRelationExample;
 import wowjoy.fruits.ms.module.relation.mapper.TaskUserRelationMapper;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
+import wowjoy.fruits.ms.module.util.entity.FruitDict.Systems;
 
 import java.text.MessageFormat;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * Created by wangziwen on 2017/9/12.
  */
 @Service
 @Transactional
-public class TaskUserDaoImpl<T extends TaskUserRelation,E extends TaskUserRelationExample> implements RelationInterface<T,E> {
+public class TaskUserDaoImpl<T extends TaskUserRelation, E extends TaskUserRelationExample> implements RelationInterface<T, E> {
     @Autowired
     private TaskUserRelationMapper mapper;
 
@@ -29,6 +33,17 @@ public class TaskUserDaoImpl<T extends TaskUserRelation,E extends TaskUserRelati
         if (StringUtils.isBlank(relation.getUserId()) || StringUtils.isBlank(relation.getTaskId()) || StringUtils.isBlank(relation.getUserRole()))
             throw new CheckException(MessageFormat.format(checkMsg, "任务-用户"));
         mapper.insertSelective(relation);
+    }
+
+    @Override
+    public void insert(Consumer<T> tConsumer) {
+        TaskUserRelation taskUserRelation = new TaskUserRelation();
+        tConsumer.accept((T) taskUserRelation);
+        taskUserRelation.setUserRole(FruitDict.TaskUserDict.EXECUTOR);
+        Optional<TaskUserRelation> optional = Optional.of(taskUserRelation);
+        optional.map(TaskUserRelation::getUserId).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException("task -> user userId can't null"));
+        optional.map(TaskUserRelation::getTaskId).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException("task -> user taskId can't null"));
+        mapper.insertSelective(taskUserRelation);
     }
 
     @Override
@@ -65,8 +80,22 @@ public class TaskUserDaoImpl<T extends TaskUserRelation,E extends TaskUserRelati
     @Override
     public void deleted(TaskUserRelation relation) {
         TaskUserRelation delete = TaskUserRelation.getInstance();
-        delete.setIsDeleted(FruitDict.Systems.Y.name());
+        delete.setIsDeleted(Systems.Y.name());
         mapper.updateByExampleSelective(delete, removeTemplate(relation));
+    }
+
+    @Override
+    public void deleted(Consumer<E> tConsumer) {
+        TaskUserRelationExample example = new TaskUserRelationExample();
+        tConsumer.accept((E) example);
+        Optional.of(example.getOredCriteria())
+                /*检查列表元素是否为空*/
+                .map(criteriaList -> criteriaList.stream().filter(TaskUserRelationExample.Criteria::isValid).collect(toList()))
+                .filter(criteriaList -> !criteriaList.isEmpty())
+                .orElseThrow(() -> new CheckException("必须携带条件"));
+        TaskUserRelation instance = TaskUserRelation.getInstance();
+        instance.setIsDeleted(Systems.Y.name());
+        mapper.updateByExampleSelective(instance, example);
     }
 
     public List<TaskUserRelation> findByExample(Consumer<TaskUserRelationExample> exampleConsumer) {
