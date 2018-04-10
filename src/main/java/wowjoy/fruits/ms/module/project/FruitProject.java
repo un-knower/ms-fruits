@@ -2,10 +2,15 @@ package wowjoy.fruits.ms.module.project;
 
 
 import wowjoy.fruits.ms.module.AbstractEntity;
+import wowjoy.fruits.ms.module.relation.entity.ProjectTeamRelation;
+import wowjoy.fruits.ms.module.relation.entity.UserProjectRelation;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by wangziwen on 2017/8/24.
@@ -87,6 +92,32 @@ public class FruitProject extends AbstractEntity {
 
     public static FruitProject getEmpty() {
         return new FruitProjectEmpty();
+    }
+
+    public static class Update extends FruitProject {
+        public Update() {
+            setUuid(null);
+            setIsDeleted(null);
+        }
+
+        private Map<FruitDict.Systems, List<ProjectTeamRelation>> teamRelation;
+        private Map<FruitDict.Systems, List<UserProjectRelation>> userRelation;
+
+        public Map<FruitDict.Systems, List<ProjectTeamRelation>> getTeamRelation() {
+            return teamRelation;
+        }
+
+        public void setTeamRelation(Map<FruitDict.Systems, List<ProjectTeamRelation>> teamRelation) {
+            this.teamRelation = teamRelation;
+        }
+
+        public Map<FruitDict.Systems, List<UserProjectRelation>> getUserRelation() {
+            return userRelation;
+        }
+
+        public void setUserRelation(Map<FruitDict.Systems, List<UserProjectRelation>> userRelation) {
+            this.userRelation = userRelation;
+        }
     }
 
 }

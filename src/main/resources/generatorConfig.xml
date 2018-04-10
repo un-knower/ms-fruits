@@ -18,20 +18,20 @@
             <property name="forceBigDecimals" value="false"/>
         </javaTypeResolver>
 
-        <javaModelGenerator targetPackage="wowjoy.fruits.ms.module.user" targetProject="MAVEN">
+        <javaModelGenerator targetPackage="wowjoy.fruits.ms.module.resource" targetProject="MAVEN">
             <property name="enableSubPackages" value="true"/>
             <property name="trimStrings" value="true"/>
         </javaModelGenerator>
 
-        <sqlMapGenerator targetPackage="wowjoy.fruits.ms.module.user.mapper" targetProject="MAVEN">
+        <sqlMapGenerator targetPackage="wowjoy.fruits.ms.module.resource.mapper" targetProject="MAVEN">
             <property name="enableSubPackages" value="true"/>
         </sqlMapGenerator>
 
-        <javaClientGenerator type="XMLMAPPER" targetPackage="wowjoy.fruits.ms.module.user.mapper" targetProject="MAVEN">
+        <javaClientGenerator type="XMLMAPPER" targetPackage="wowjoy.fruits.ms.module.resource.mapper" targetProject="MAVEN">
             <property name="enableSubPackages" value="true"/>
         </javaClientGenerator>
 
-        <table schema="fruitUser" tableName="fruits_user" domainObjectName="FruitUser">
+        <table schema="fruitResource" tableName="fruits_resource" domainObjectName="FruitResource">
             <ignoreColumn column="inc_id"/>
         </table>
 

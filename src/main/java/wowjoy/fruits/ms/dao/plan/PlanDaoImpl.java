@@ -24,11 +24,16 @@ import wowjoy.fruits.ms.module.relation.entity.PlanProjectRelation;
 import wowjoy.fruits.ms.module.relation.entity.PlanUserRelation;
 import wowjoy.fruits.ms.module.relation.example.PlanProjectRelationExample;
 import wowjoy.fruits.ms.module.relation.example.PlanUserRelationExample;
+import wowjoy.fruits.ms.module.task.FruitTask;
+import wowjoy.fruits.ms.module.task.FruitTaskDao;
 import wowjoy.fruits.ms.module.task.FruitTaskExample;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.module.util.entity.FruitDict.Systems;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -71,10 +76,11 @@ public class PlanDaoImpl extends AbstractDaoPlan {
     public List<FruitPlan> findByExample(Consumer<FruitPlanExample> exampleConsumer) {
         FruitPlanExample example = new FruitPlanExample();
         exampleConsumer.accept(example);
-        return mapper.selectByExample(example);
+        return mapper.selectByExampleWithBLOBs(example);
     }
 
     public List<FruitPlanUser> findUserByPlanExampleAndUserIdAndProjectId(Consumer<FruitPlanExample> exampleConsumer, String projectId, List<String> userIds) {
+        Optional.ofNullable(userIds).filter(ids -> !ids.isEmpty()).orElseThrow(() -> new CheckException("userIds can't null"));
         Optional.ofNullable(projectId).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException("projectId can't null"));
         FruitPlanExample example = new FruitPlanExample();
         exampleConsumer.accept(example);
@@ -88,7 +94,7 @@ public class PlanDaoImpl extends AbstractDaoPlan {
     }
 
     @Override
-    protected Optional<Map<String, ArrayList<FruitPlanTask>>> findTaskByTaskExampleAndPlanIds(Consumer<FruitTaskExample> taskConsumer, List<String> planIds) {
+    protected Optional<Map<String, ArrayList<FruitTask.Info>>> findTaskByTaskExampleAndPlanIds(Consumer<FruitTaskExample> taskConsumer, List<String> planIds, String userId) {
         Optional<List<FruitPlanTask>> optionalTask = Optional.ofNullable(planIds)
                 .filter(planList -> !planList.isEmpty())
                 .map(planList -> {
@@ -97,22 +103,29 @@ public class PlanDaoImpl extends AbstractDaoPlan {
                     return mapper.selectTaskByPlanIds(example, planIds);
                 });
         return optionalTask.filter(tasks -> !tasks.isEmpty())
-                .map(tasks -> CompletableFuture.supplyAsync(daoTask.plugUserSupplier(tasks)))
+                .map(tasks -> CompletableFuture.supplyAsync(daoTask.plugUserSupplier(tasks.stream().map(FruitTask::getUuid).collect(toList()))))
                 .map(CompletableFuture::join)
-                .flatMap(optionalUserByTaskId -> {
+                .flatMap(userByTaskId -> {
                     optionalTask.ifPresent(tasks -> tasks.forEach(task -> {
-                        task.setUsers(optionalUserByTaskId.filter(userByTaskId -> userByTaskId.containsKey(task.getUuid())).map(userByTaskId -> userByTaskId.get(task.getUuid())).orElseGet(LinkedList::new));
+                        Optional.ofNullable(userByTaskId.get(task.getUuid())).map(users -> {
+                            users.sort((l, r) -> l.getUserId().equals(userId) ? -1 : 1);
+                            return users;
+                        }).ifPresent(task::setUsers);
                     }));
                     return optionalTask;
-                }).map(tasks -> tasks.stream().collect(groupingBy(FruitPlanTask::getPlanId, toCollection(ArrayList::new))));
+                }).map(tasks -> tasks.stream().collect(groupingBy(FruitPlanTask::getPlanId, toCollection(ArrayList::new))))
+                .map(planTaskMap->{
+                    Map<String,ArrayList<FruitTask.Info>> sortTask = Maps.newHashMap();
+                    planTaskMap.forEach((planId,tasks)-> sortTask.put(planId,daoTask.sortDuet(tasks)));
+                    return sortTask;
+                });
     }
 
     @Override
-    protected Map<String, LinkedList<FruitLogs.Info>> findLogsByPlanIds(List<String> planIds) {
+    protected Map<String, ArrayList<FruitLogs.Info>> findLogsByPlanIds(List<String> planIds) {
         if (planIds == null || planIds.isEmpty()) return Maps.newHashMap();
         return logsDaoImpl.findLogs(example -> {
-            example
-                    .createCriteria().andFruitUuidIn(planIds)
+            example.createCriteria().andFruitUuidIn(planIds)
                     .andFruitTypeEqualTo(FruitDict.Parents.PLAN.name());
             example.setOrderByClause("flogs.create_date_time desc");
         }, FruitDict.Parents.PLAN);
@@ -163,8 +176,8 @@ public class PlanDaoImpl extends AbstractDaoPlan {
     @Override
     public void update(Consumer<FruitPlan.Update> planDaoConsumer, Consumer<FruitPlanExample> exampleConsumer) {
         final FruitPlanExample example = new FruitPlanExample();
-        final FruitPlan.Update dao = FruitPlan.newUpdate();
-        planDaoConsumer.accept(dao);
+        final FruitPlan.Update update = FruitPlan.newUpdate();
+        planDaoConsumer.accept(update);
         exampleConsumer.accept(example);
         Optional.of(example.getOredCriteria())
                 /*检查列表元素是否为空*/
@@ -172,33 +185,40 @@ public class PlanDaoImpl extends AbstractDaoPlan {
                 .filter(criteriaList -> !criteriaList.isEmpty())
                 .orElseThrow(() -> new CheckException("修改计划时，必须携带条件"));
         /*更新用户关联信息*/
-        Optional.ofNullable(dao.getUserRelation())
+        Optional.ofNullable(update.getUserRelation())
                 .filter(userMap -> userMap.containsKey(Systems.DELETE))
                 .map(userMap -> userMap.get(Systems.DELETE))
-                .ifPresent(users -> users.parallelStream().forEach(user -> userRelation.deleted(userRelationExample -> {
-                    PlanUserRelationExample.Criteria criteria = userRelationExample.createCriteria();
-                    Optional.ofNullable(user)
-                            .filter(StringUtils::isNotBlank)
-                            .ifPresent(criteria::andUserIdEqualTo);
-                    criteria.andPlanIdEqualTo(Optional.ofNullable(dao.getUuid())
-                            .filter(StringUtils::isNotBlank)
-                            .orElseThrow(() -> new CheckException("planId can't null")));
-                })));
-        Optional.ofNullable(dao.getUserRelation())
+                .ifPresent(users -> {
+                    Optional.ofNullable(update.getUuid()).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException("planId can't null"));
+                    users.parallelStream().forEach(user -> userRelation.deleted(userRelationExample -> {
+                        PlanUserRelationExample.Criteria criteria = userRelationExample.createCriteria();
+                        Optional.ofNullable(user)
+                                .filter(StringUtils::isNotBlank)
+                                .ifPresent(criteria::andUserIdEqualTo);
+                        criteria.andPlanIdEqualTo(update.getUuid());
+                    }));
+                });
+        Optional.ofNullable(update.getUserRelation())
                 .filter(userMap -> userMap.containsKey(Systems.ADD))
                 .map(userMap -> userMap.get(Systems.ADD))
-                .ifPresent(users -> users.parallelStream().forEach(user -> userRelation.insert(planUserRelation -> {
-                    planUserRelation.setPlanId(dao.getUuid());
-                    planUserRelation.setUserId(user);
-                })));
-        mapper.updateByExampleSelective(dao, example);
+                .ifPresent(users -> {
+                    Optional.ofNullable(update.getUuid()).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException("planId can't null"));
+                    users.parallelStream().forEach(user -> userRelation.insert(planUserRelation -> {
+                        planUserRelation.setPlanId(update.getUuid());
+                        planUserRelation.setUserId(user);
+                    }));
+                });
+        mapper.updateByExampleSelective(update, example);
     }
 
     @Override
-    public Optional<List<FruitPlan>> batchUpdateStatusAndReturnResult(Consumer<FruitPlan.Update> planDaoConsumer, Consumer<FruitPlanExample> fruitPlanExampleConsumer) {
-        Optional<List<FruitPlan>> optionalPlans = Optional.ofNullable(this.findByExample(fruitPlanExampleConsumer));
-        optionalPlans.filter(planList -> !planList.isEmpty()).ifPresent(planList -> this.update(planDaoConsumer, example -> example.createCriteria().andUuidIn(planList.stream().map(FruitPlan::getUuid).collect(toList()))));
-        return optionalPlans;
+    public List<FruitPlan> batchUpdateStatusAndReturnResult(Consumer<FruitPlan.Update> planDaoConsumer, Consumer<FruitPlanExample> fruitPlanExampleConsumer) {
+        return Optional.ofNullable(this.findByExample(fruitPlanExampleConsumer))
+                .filter(plans -> !plans.isEmpty())
+                .map(plans -> {
+                    this.update(planDaoConsumer, example -> example.createCriteria().andUuidIn(plans.stream().map(FruitPlan::getUuid).collect(toList())));
+                    return plans;
+                }).orElseGet(Lists::newArrayList);
     }
 
     @Override

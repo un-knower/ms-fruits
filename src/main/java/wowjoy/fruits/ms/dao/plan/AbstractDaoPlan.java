@@ -2,7 +2,6 @@ package wowjoy.fruits.ms.dao.plan;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -16,13 +15,14 @@ import wowjoy.fruits.ms.module.logs.FruitLogs;
 import wowjoy.fruits.ms.module.logs.FruitLogsVo;
 import wowjoy.fruits.ms.module.plan.*;
 import wowjoy.fruits.ms.module.plan.example.FruitPlanExample;
+import wowjoy.fruits.ms.module.task.FruitTask;
 import wowjoy.fruits.ms.module.task.FruitTaskExample;
 import wowjoy.fruits.ms.module.task.FruitTaskUser;
 import wowjoy.fruits.ms.module.user.FruitUser;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
+import wowjoy.fruits.ms.module.util.entity.FruitDict.PlanDict;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;
 import wowjoy.fruits.ms.util.DateUtils;
-import wowjoy.fruits.ms.util.GsonUtils;
 
 import java.text.MessageFormat;
 import java.time.Duration;
@@ -49,9 +49,9 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
 
     protected abstract List<FruitPlanUser> findUserByPlanIds(List<String> planIds, String currentUserId);
 
-    protected abstract Optional<Map<String, ArrayList<FruitPlanTask>>> findTaskByTaskExampleAndPlanIds(Consumer<FruitTaskExample> taskConsumer, List<String> planIds);
+    protected abstract Optional<Map<String, ArrayList<FruitTask.Info>>> findTaskByTaskExampleAndPlanIds(Consumer<FruitTaskExample> taskConsumer, List<String> planIds, String userId);
 
-    protected abstract Map<String, LinkedList<FruitLogs.Info>> findLogsByPlanIds(List<String> planIds);
+    protected abstract Map<String, ArrayList<FruitLogs.Info>> findLogsByPlanIds(List<String> planIds);
 
     protected abstract void insertLogs(Consumer<FruitLogsVo> vo);
 
@@ -61,7 +61,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
 
     protected abstract void update(Consumer<FruitPlan.Update> planDaoConsumer, Consumer<FruitPlanExample> exampleConsumer);
 
-    protected abstract Optional<List<FruitPlan>> batchUpdateStatusAndReturnResult(Consumer<FruitPlan.Update> planDaoConsumer, Consumer<FruitPlanExample> fruitPlanExampleConsumer);
+    protected abstract List<FruitPlan> batchUpdateStatusAndReturnResult(Consumer<FruitPlan.Update> planDaoConsumer, Consumer<FruitPlanExample> fruitPlanExampleConsumer);
 
     protected abstract void delete(String uuid);
 
@@ -87,8 +87,6 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
             criteria.andParentIdIsNull();
             if (Objects.nonNull(query.getStartDate()) && Objects.nonNull(query.getEndDate()))
                 criteria.andEstimatedEndDateBetween(query.getStartDate(), query.getEndDate());
-            if (StringUtils.isNotBlank(query.getPlanStatus()))
-                criteria.andPlanStatusIn(Arrays.asList(query.getPlanStatus().split(",")));
             if (StringUtils.isNotBlank(query.getTitle()))
                 criteria.andTitleLike(MessageFormat.format("%{0}%", query.getTitle()));
             criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
@@ -98,13 +96,17 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         }, query.getProjectId(), 1, 10, false);
         if (planMonthList.isEmpty()) return Lists.newArrayList();
         /*plan -> planInfo*/
-        final List<FruitPlan.Info> planInfoMonth = planMonthList.parallelStream().map(FruitPlan::toInfo).collect(toList());
+        final List<FruitPlan.Info> planInfoMonthList = planMonthList.parallelStream().map(FruitPlan::toInfo).collect(toList());
+        /*SYSTEM Default Or Mysql Order*/
+        List<FruitPlan.Info> sortAfterPlanMonth = Optional.ofNullable(query.sortConstrue()).filter(StringUtils::isNotBlank).map(construe -> planInfoMonthList).orElseGet(() -> this.sortDuet(planInfoMonthList));
         /*month - user*/
         CompletableFuture.allOf(CompletableFuture.supplyAsync(
-                this.plugUser(planInfoMonth.parallelStream().map(FruitPlan::getUuid).collect(toList()), currentUser.getUserId()))
-                        .thenAccept(planUsers -> planInfoMonth.parallelStream()
-                                .filter(info -> planUsers.containsKey(info.getUuid()))
-                                .forEach(info -> info.setUsers(planUsers.get(info.getUuid())))),
+                this.plugUser(sortAfterPlanMonth.parallelStream().map(FruitPlan::getUuid).collect(toList()), currentUser.getUserId()))
+                        .thenAccept(planUsers -> sortAfterPlanMonth.parallelStream()
+                                .forEach(info -> Optional.ofNullable(planUsers.get(info.getUuid())).map(users -> {
+                                    users.sort((l, r) -> l.getUserId().equals(currentUser.getUserId()) ? -1 : 1);
+                                    return users;
+                                }).ifPresent(info::setUsers))),
                 /*plan - week*/
                 CompletableFuture.supplyAsync(() -> this.findByProjectId(
                         example -> {
@@ -112,10 +114,10 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
                             if (StringUtils.isNotBlank(query.getTitle()))
                                 criteria.andTitleLike(MessageFormat.format("%{0}%", query.getTitle()));
                             if (StringUtils.isNotBlank(query.getPlanStatus()))
-                                criteria.andPlanStatusEqualTo(query.getPlanStatus());
+                                criteria.andPlanStatusIn(Arrays.asList(query.getPlanStatus().split(",")));
                             criteria.andParentIdIsNotNull();
                             criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name());
-                            criteria.andParentIdIn(planInfoMonth.parallelStream().filter(Objects::nonNull).map(FruitPlan::getUuid).collect(toList()));
+                            criteria.andParentIdIn(sortAfterPlanMonth.parallelStream().filter(Objects::nonNull).map(FruitPlan::getUuid).collect(toList()));
                             example.setOrderByClause("create_date_time desc");
                             if (StringUtils.isNotBlank(query.sortConstrue()))
                                 example.setOrderByClause(query.sortConstrue());
@@ -128,20 +130,33 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
                         /*week - user*/
                         CompletableFuture.supplyAsync(() -> {
                             final List<FruitPlan.Info> weekPlanInfo = weekPlan.parallelStream().map(FruitPlan::toInfo).collect(toList());
-                            final Map<String, LinkedList<FruitPlanUser>> planUsers = this.plugUser(weekPlan.parallelStream().map(FruitPlan::getUuid).collect(toList()), currentUser.getUserId()).get();
-                            return weekPlanInfo.parallelStream().filter(plan -> planUsers.containsKey(plan.getUuid())).map(plan -> {
-                                plan.setUsers(planUsers.get(plan.getUuid()));
+                            Map<String, LinkedList<FruitPlanUser>> userMap = this.plugUser(weekPlan.parallelStream().map(FruitPlan::getUuid).collect(toList()), currentUser.getUserId()).get();
+                            /*sort + composite user info*/
+                            return weekPlanInfo.parallelStream().map(plan -> {
+                                Optional.ofNullable(userMap.get(plan.getUuid())).map(users -> {
+                                    users.sort((l, r) -> l.getUserId().equals(currentUser.getUserId()) ? -1 : 1);
+                                    return users;
+                                }).ifPresent(plan::setUsers);
                                 return plan;
                             }).collect(toList());
+                        }).thenAccept(weekPlanInfo -> {
+                            Map<String, ArrayList<FruitPlan.Info>> parentPlans = weekPlanInfo.stream().collect(groupingBy(FruitPlan.Info::getParentId, toCollection(ArrayList::new)));
+                            sortAfterPlanMonth.parallelStream()
+                                    .filter(info -> parentPlans.containsKey(info.getUuid()))
+                                    .forEach(info -> info.setWeeks(Optional.ofNullable(query.sortConstrue()).filter(StringUtils::isNotBlank).map(construe -> parentPlans.get(info.getUuid())).orElseGet(() -> this.sortDuet(parentPlans.get(info.getUuid())))));
                         })
-                ).thenAccept(weekPlanInfo -> {
-                    Map<String, ArrayList<FruitPlan.Info>> parentPlans = weekPlanInfo.stream().collect(groupingBy(FruitPlan.Info::getParentId, toCollection(ArrayList::new)));
-                    planInfoMonth.parallelStream().filter(info -> parentPlans.containsKey(info.getUuid())).forEach(info -> info.setWeeks(parentPlans.get(info.getUuid())));
-                })
-        ).join();
-        return wherePlan(planInfoMonth, query);
+                )).join();
+        return wherePlan(sortAfterPlanMonth, query);
     }
 
+    /**
+     * 如果目标子集存在数据，则保留子集。若不存在，判断父目标状态是否和查询状态相匹配
+     * 如果匹配保留目标，不匹配过滤目标
+     *
+     * @param planDaoListSource
+     * @param query
+     * @return
+     */
     private List<FruitPlan.Info> wherePlan(List<FruitPlan.Info> planDaoListSource, FruitPlan.Query query) {
         final Predicate<FruitPlan.Info> planWeekFilter = plan -> plan.getWeeks() != null && !plan.getWeeks().isEmpty();
         Predicate<FruitPlan.Info> chain = plan -> !planWeekFilter.test(plan);
@@ -151,6 +166,31 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
             chain = chain.and(plan -> plan.getTitle().contains(query.getTitle()));
         final Predicate<FruitPlan.Info> planFilter = chain;
         return planDaoListSource.parallelStream().filter(plan -> planWeekFilter.test(plan) || planFilter.test(plan)).collect(toList());
+    }
+
+    private ArrayList<FruitPlan.Info> sortDuet(List<FruitPlan.Info> infos) {
+        Map<String, LinkedList<FruitPlan.Info>> oneConcert = infos.parallelStream().collect(groupingBy(FruitPlan.Info::getPlanStatus, toCollection(Lists::newLinkedList)));
+        ArrayList<FruitPlan.Info> sortAfterPlans = Optional.ofNullable(oneConcert.get(PlanDict.STAY_PENDING.name()))
+                .map(stayPendingList -> {
+                    stayPendingList.sort((l, r) -> r.getEstimatedEndDate().compareTo(l.getEstimatedEndDate()));
+                    return new ArrayList<>(stayPendingList);
+                }).orElseGet(Lists::newArrayList);
+        sortAfterPlans.addAll(Optional.ofNullable(oneConcert.get(PlanDict.PENDING.name()))
+                .map(pendingList -> {
+                    pendingList.sort((l, r) -> r.getEstimatedEndDate().compareTo(l.getEstimatedEndDate()));
+                    return new ArrayList<>(pendingList);
+                }).orElseGet(Lists::newArrayList));
+        sortAfterPlans.addAll(Optional.ofNullable(oneConcert.get(PlanDict.COMPLETE.name()))
+                .map(completeList -> {
+                    completeList.sort((l, r) -> r.getEstimatedEndDate().compareTo(l.getEstimatedEndDate()));
+                    return new ArrayList<>(completeList);
+                }).orElseGet(Lists::newArrayList));
+        sortAfterPlans.addAll(Optional.ofNullable(oneConcert.get(PlanDict.END.name()))
+                .map(endList -> {
+                    endList.sort((l, r) -> r.getEstimatedEndDate().compareTo(l.getEstimatedEndDate()));
+                    return new ArrayList<>(endList);
+                }).orElseGet(Lists::newArrayList));
+        return sortAfterPlans;
     }
 
     private Supplier<Map<String, LinkedList<FruitPlanUser>>> plugUser(List<String> planIds, String userId) {
@@ -163,18 +203,18 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
                 ).orElseGet(HashMap::new);
     }
 
-    private Supplier<Map<String, LinkedList<FruitLogs.Info>>> plugLogs(List<String> planIds) {
+    private Supplier<Map<String, ArrayList<FruitLogs.Info>>> plugLogs(List<String> planIds) {
         return () -> Optional.ofNullable(planIds)
                 .filter(ids -> !ids.isEmpty())
                 .map(this::findLogsByPlanIds)
                 .orElseGet(HashMap::new);
     }
 
-    private Supplier<Map<String, ArrayList<FruitPlanTask>>> plugTask(List<String> planIds) {
+    private Supplier<Map<String, ArrayList<FruitTask.Info>>> plugTask(List<String> planIds, String userId) {
         return () -> Optional.ofNullable(planIds)
                 .filter(ids -> !ids.isEmpty())
                 .flatMap(ids -> this.findTaskByTaskExampleAndPlanIds(example -> {
-                }, ids))
+                }, ids, userId))
                 .orElseGet(HashMap::new);
     }
 
@@ -185,24 +225,24 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
      */
     private void dataCount(List<FruitPlan.Info> plans, Result result) {
         /*状态等于进行中的 and 待执行的*/
-        Predicate<FruitPlan.Info> delay = plan -> FruitDict.PlanDict.PENDING.name().equals(plan.getPlanStatus())
-                || FruitDict.PlanDict.STAY_PENDING.name().equals(plan.getPlanStatus());
+        Predicate<FruitPlan.Info> delay = plan -> PlanDict.PENDING.name().equals(plan.getPlanStatus())
+                || PlanDict.STAY_PENDING.name().equals(plan.getPlanStatus());
         /*状态等于终止*/
-        Predicate<FruitPlan.Info> end = plan -> FruitDict.PlanDict.END.name().equals(plan.getPlanStatus());
+        Predicate<FruitPlan.Info> end = plan -> PlanDict.END.name().equals(plan.getPlanStatus());
         /*状态等于完成*/
-        Predicate<FruitPlan.Info> complete = plan -> FruitDict.PlanDict.COMPLETE.name().equals(plan.getPlanStatus());
+        Predicate<FruitPlan.Info> complete = plan -> PlanDict.COMPLETE.name().equals(plan.getPlanStatus());
         /*延期*/
         Predicate<FruitPlan.Info> day = plan -> plan.getDays() < 0;
         plans.forEach(plan -> {
             if (plan.getWeeks() != null && !plan.getWeeks().isEmpty()) dataCount(plan.getWeeks(), result);
             plan.computeDays();
-            if (end.test(plan)) result.addStateType(FruitDict.PlanDict.END);
-            else if (delay.and(day).test(plan)) result.addStateType(FruitDict.PlanDict.DELAY);
+            if (end.test(plan)) result.addStateType(PlanDict.END);
+            else if (delay.and(day).test(plan)) result.addStateType(PlanDict.DELAY);
             else if (complete.test(plan))
                 if (day.test(plan)) {
-                    result.addStateType(FruitDict.PlanDict.DELAY_COMPLETE);
+                    result.addStateType(PlanDict.DELAY_COMPLETE);
                 } else {
-                    result.addStateType(FruitDict.PlanDict.COMPLETE);
+                    result.addStateType(PlanDict.COMPLETE);
                 }
         });
     }
@@ -247,9 +287,11 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         FruitPlan.Info planInfo = this.findByUUID(planId).map(FruitPlan::toInfo).orElseThrow(() -> new CheckException("计划不存在"));
         CompletableFuture.allOf(
                 CompletableFuture.supplyAsync(this.plugUser(Lists.newArrayList(planInfo.getUuid()), currentUser.getUserId())) //查询用户信息
-                        .thenAccept(userMap -> Optional.ofNullable(userMap)
-                                .filter(map -> map.containsKey(planInfo.getUuid()))
-                                .map(map -> map.get(planInfo.getUuid()))
+                        .thenAccept(userMap -> Optional.ofNullable(userMap.get(planInfo.getUuid()))
+                                .map(users -> {
+                                    users.sort((l, r) -> l.getUserId().equals(currentUser.getUserId()) ? -1 : 1);
+                                    return users;
+                                })
                                 .ifPresent(planInfo::setUsers)
                         ),
                 CompletableFuture.supplyAsync(this.plugLogs(Lists.newArrayList(planInfo.getUuid()))) //查询日志信息
@@ -257,7 +299,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
                                 .filter(map -> map.containsKey(planInfo.getUuid()))
                                 .map(map -> map.get(planInfo.getUuid()))
                                 .ifPresent(planInfo::setLogs)),
-                CompletableFuture.supplyAsync(this.plugTask(Lists.newArrayList(planInfo.getUuid()))) //查询任务信息
+                CompletableFuture.supplyAsync(this.plugTask(Lists.newArrayList(planInfo.getUuid()), currentUser.getUserId())) //查询任务信息
                         .thenAccept(taskMap -> Optional.ofNullable(taskMap)
                                 .filter(map -> map.containsKey(planInfo.getUuid()))
                                 .map(map -> map.get(planInfo.getUuid()))
@@ -280,7 +322,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
             optionalVo.filter(plan -> plan.getProjectRelation().containsKey(FruitDict.Systems.ADD))
                     .filter(plan -> !plan.getProjectRelation().get(FruitDict.Systems.ADD).isEmpty())
                     .orElseThrow(() -> new CheckException("一个计划只能关联一个项目"));
-            insert.setPlanStatus(FruitDict.PlanDict.STAY_PENDING.name());
+            insert.setPlanStatus(PlanDict.STAY_PENDING.name());
             insert.setEstimatedStartDate(insert.getEstimatedStartDate() != null ? insert.getEstimatedStartDate() : new Date());
             this.insert(insert);
         } catch (ExceptionSupport ex) {
@@ -294,19 +336,18 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
     /**
      * 修改计划
      */
-    public final void modify(FruitPlanVo vo) {
+    public final void modify(FruitPlan.Update update) {
         try {
-            this.findByUUID(vo.getUuidVo()).orElseThrow(() -> new CheckException("计划不存在，拒绝修改"));
-            Optional.of(vo).map(FruitPlanVo::getTitle).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException("标题不能为空名"));
-            this.update(update -> {
-                update.setUuid(vo.getUuidVo());
-                update.setTitle(vo.getTitle());
-                update.setDescription(vo.getDescription());
-                update.setEstimatedStartDate(vo.getEstimatedStartDate());
-                update.setEstimatedEndDate(vo.getEstimatedEndDate());
-                update.setPercent(vo.getPercent());
-                update.setUserRelation(vo.getUserRelation());
-            }, fruitPlanExample -> fruitPlanExample.createCriteria().andUuidEqualTo(vo.getUuidVo()));
+            this.findByUUID(update.getUuid()).orElseThrow(() -> new CheckException("计划不存在，拒绝修改"));
+            this.update(dao -> {
+                dao.setUuid(update.getUuid());
+                dao.setTitle(update.getTitle());
+                dao.setDescription(update.getDescription());
+                dao.setEstimatedStartDate(update.getEstimatedStartDate());
+                dao.setEstimatedEndDate(update.getEstimatedEndDate());
+                dao.setPercent(update.getPercent());
+                dao.setUserRelation(update.getUserRelation());
+            }, fruitPlanExample -> fruitPlanExample.createCriteria().andUuidEqualTo(update.getUuid()));
         } catch (ExceptionSupport ex) {
             throw ex;
         } catch (RuntimeException ex) {
@@ -318,52 +359,50 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
     /**
      * 终止计划
      */
-    public final void end(FruitPlanVo vo) {
-        Optional<FruitPlanVo> optionalPlanVo = Optional.ofNullable(vo);
-        Optional<FruitPlan> optionalPlan = this.findByUUID(vo.getUuidVo());
-        optionalPlan.orElseThrow(() -> new CheckException("计划不存在"));
+    public final void end(FruitPlan.Update intoUpdate) {
+        Optional<FruitPlan> optionalPlan = Optional.ofNullable(intoUpdate.getUuid())
+                .filter(StringUtils::isNotBlank)
+                .map(this::findByUUID).orElseThrow(() -> new CheckException("planId can't null Or plan not exists"));
         optionalPlan.map(FruitPlan::getPlanStatus)
-                .filter(status -> !FruitDict.PlanDict.END.name().equals(status))
-                .filter(status -> !FruitDict.PlanDict.COMPLETE.name().equals(status))
-                .orElseThrow(() -> new CheckException("生命周期已结束，无法继续变更状态"));
-        optionalPlanVo.filter(planVo -> StringUtils.isNotBlank(planVo.getStatusDescription())).orElseThrow(() -> new CheckException("状态描述不能为空"));
+                .filter(status -> !PlanDict.END.name().equals(status))
+                .filter(status -> !PlanDict.COMPLETE.name().equals(status))
+                .orElseThrow(() -> new CheckException("plan can't change status"));
+        Optional.of(intoUpdate).filter(plan -> StringUtils.isNotBlank(plan.getStatusDescription())).orElseThrow(() -> new CheckException("状态描述不能为空"));
         /*校验是否是批量终止*/
         final FruitUser currentUser = ApplicationContextUtils.getCurrentUser();
         final LocalDateTime endDate = LocalDateTime.now();
         final Gson gson = new Gson();
         List<FruitPlan> planList = this.batchUpdateStatusAndReturnResult(update -> {
-                    update.setPlanStatus(FruitDict.PlanDict.END.name());
-                    update.setEndDate(endDate);
-                    update.setStatusDescription(vo.getStatusDescription());
-                }, fruitPlanExample -> fruitPlanExample.createCriteria()
-                        .andParentIdEqualTo(vo.getUuidVo())
-                        .andIsDeletedEqualTo(FruitDict.Systems.N.name())
-                        .andPlanStatusIn(Lists.newArrayList(FruitDict.PlanDict.STAY_PENDING.name(), FruitDict.PlanDict.PENDING.name())) //查询出所有待完成、进行中的计划
-        ).orElseGet(ArrayList::new);
+            update.setPlanStatus(PlanDict.END.name());
+            update.setEndDate(endDate);
+            update.setStatusDescription(intoUpdate.getStatusDescription());
+        }, fruitPlanExample -> fruitPlanExample.createCriteria()
+                .andParentIdEqualTo(intoUpdate.getUuid())
+                .andIsDeletedEqualTo(FruitDict.Systems.N.name())
+                .andPlanStatusIn(Lists.newArrayList(PlanDict.STAY_PENDING.name(), PlanDict.PENDING.name()))); //查询出所有待完成、进行中的计划
 
         this.checkThePlanInToBeCompleteTasks(Optional.ofNullable(planList
                 .stream()
                 .map(FruitPlan::getUuid).collect(toCollection(ArrayList::new)))
                 .filter(plans -> !plans.isEmpty())
                 .map(plans -> {
-                    plans.add(vo.getUuidVo());
+                    plans.add(intoUpdate.getUuid());
                     return plans;
-                }).orElseGet(ArrayList::new)
-        ); //检查计划中是否有未完成或未终止的任务
+                }).orElseGet(ArrayList::new), currentUser.getUserId()); //检查计划中是否有未完成或未终止的任务
         ArrayList<CompletableFuture<Boolean>> endPlanFutures = planList.stream().map(plan -> CompletableFuture.supplyAsync(() -> {
             this.insertLogs(logsVo -> {
                 logsVo.setUserId(currentUser.getUserId());
                 logsVo.setFruitUuid(plan.getUuid());
                 logsVo.setFruitType(FruitDict.Parents.PLAN);
                 logsVo.setOperateType(FruitDict.LogsDict.END);
-                plan.setStatusDescription(vo.getStatusDescription());
+                plan.setStatusDescription(intoUpdate.getStatusDescription());
                 plan.setEndDate(endDate);
                 logsVo.setJsonObject(gson.toJsonTree(plan).toString());
-                logsVo.setVoObject(Optional.ofNullable(gson.toJsonTree(vo))
+                logsVo.setVoObject(Optional.ofNullable(gson.toJsonTree(intoUpdate))
                         .filter(json -> !json.isJsonNull())
                         .map(JsonElement::getAsJsonObject)
                         .map(json -> {
-                            json.addProperty("uuidVo", plan.getUuid());
+                            json.addProperty("uuid", plan.getUuid());
                             return json;
                         }).orElseGet(JsonObject::new).toString()
                 );
@@ -373,12 +412,12 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         /*主计划终止函数加入到线程队列中*/
         endPlanFutures.add(CompletableFuture.supplyAsync(() -> {
             this.update(update -> {
-                update.setPlanStatus(FruitDict.PlanDict.END.name());
+                update.setPlanStatus(PlanDict.END.name());
                 update.setEndDate(endDate);
-                update.setStatusDescription(vo.getStatusDescription());
+                update.setStatusDescription(intoUpdate.getStatusDescription());
             }, fruitPlanExample -> fruitPlanExample.createCriteria()
-                    .andUuidEqualTo(vo.getUuidVo())
-                    .andPlanStatusIn(Lists.newArrayList(FruitDict.PlanDict.STAY_PENDING.name(), FruitDict.PlanDict.PENDING.name())));
+                    .andUuidEqualTo(intoUpdate.getUuid())
+                    .andPlanStatusIn(Lists.newArrayList(PlanDict.STAY_PENDING.name(), PlanDict.PENDING.name())));
             return true;
         }));
 
@@ -391,38 +430,36 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
      * 1、目标没有待完成的任务才能完成，否则返回提示信息
      * lambda
      */
-    public final void complete(FruitPlanVo vo) {
-        Optional<FruitPlanVo> optionalPlanVo = Optional.of(vo);
-        Optional<FruitPlan> optionalPlanDao = this.findByUUID(vo.getUuidVo());
-        optionalPlanDao.orElseThrow(() -> new CheckException("计划不存在"));
+    public final void complete(FruitPlan.Update intoUpdate) {
+        Optional<FruitPlan> optionalPlan = this.findByUUID(intoUpdate.getUuid());
+        optionalPlan.orElseThrow(() -> new CheckException("计划不存在"));
         /*若结束时间不为空，那么结束时间必须小于等于当前*/
-        optionalPlanVo.filter(planVo -> !(planVo.getEndDate() != null && Duration.between(LocalDate.now().atTime(0, 0, 0), LocalDateTime.ofInstant(planVo.getEndDate().toInstant(), ZoneId.systemDefault()).withHour(0).withMinute(0).withSecond(0)).toDays() > 0))
+        Optional.of(intoUpdate).filter(plan -> !(plan.getEndDate() != null && Duration.between(LocalDate.now().atTime(0, 0, 0), LocalDateTime.ofInstant(plan.getEndDate().toInstant(), ZoneId.systemDefault()).withHour(0).withMinute(0).withSecond(0)).toDays() > 0))
                 .orElseThrow(() -> new CheckException("实际结束时间不能大于今天"));
         /*等于已终止、已完成、待执行都拒绝执行*/
-        optionalPlanDao.map(FruitPlan::getPlanStatus)
-                .filter(status -> !FruitDict.PlanDict.END.name().equals(status))
-                .filter(status -> !FruitDict.PlanDict.COMPLETE.name().equals(status))
-                .filter(status -> !FruitDict.PlanDict.STAY_PENDING.name().equals(status))
+        optionalPlan.map(FruitPlan::getPlanStatus)
+                .filter(status -> !PlanDict.END.name().equals(status))
+                .filter(status -> !PlanDict.COMPLETE.name().equals(status))
+                .filter(status -> !PlanDict.STAY_PENDING.name().equals(status))
                 .orElseThrow(() -> new CheckException("当前目标状态无法切换到已完成"));
         /*如果延期，必须填写延期说明*/
-        final FruitPlan.Info planInfo = optionalPlanDao.map(FruitPlan::toInfo)
-                .filter(plan -> !(plan.computeDays().getDays() < 0 && StringUtils.isBlank(vo.getStatusDescription())))
+        final FruitPlan.Info planInfo = optionalPlan.map(FruitPlan::toInfo)
+                .filter(plan -> !(plan.computeDays().getDays() < 0 && StringUtils.isBlank(intoUpdate.getStatusDescription())))
                 .orElseThrow(() -> new CheckException("计划延期完成，需要填写延期说明"));
 
-        this.checkThePlanInToBeCompleteTasks(Lists.newArrayList(planInfo.getUuid())); //检查计划中是否有未完成或未终止的任务
+        this.checkThePlanInToBeCompleteTasks(Lists.newArrayList(planInfo.getUuid()), ApplicationContextUtils.getCurrentUser().getUserId()); //检查计划中是否有未完成或未终止的任务
         this.update(update -> {
-            update.setUuid(vo.getUuidVo());
-            update.setPlanStatus(FruitDict.PlanDict.COMPLETE.name());
-            update.setEndDate(vo.getEndDate() == null ? LocalDateTime.now() : LocalDateTime.ofInstant(vo.getEndDate().toInstant(), ZoneId.systemDefault()));
-            update.setStatusDescription(vo.getStatusDescription());
-        }, fruitPlanExample -> fruitPlanExample.createCriteria().andUuidEqualTo(vo.getUuidVo()));
+            update.setPlanStatus(PlanDict.COMPLETE.name());
+            update.setEndDate(intoUpdate.getEndDate() == null ? LocalDateTime.now() : LocalDateTime.ofInstant(intoUpdate.getEndDate().toInstant(), ZoneId.systemDefault()));
+            update.setStatusDescription(intoUpdate.getStatusDescription());
+        }, fruitPlanExample -> fruitPlanExample.createCriteria().andUuidEqualTo(intoUpdate.getUuid()));
     }
 
     /*检查计划中待完成的任务*/
-    private void checkThePlanInToBeCompleteTasks(ArrayList<String> planIds) {
+    private void checkThePlanInToBeCompleteTasks(ArrayList<String> planIds, String userId) {
         Optional.ofNullable(planIds)
                 .filter(ids -> !ids.isEmpty())
-                .flatMap(ids -> this.findTaskByTaskExampleAndPlanIds(example -> example.createCriteria().andTaskStatusIn(Lists.newArrayList(FruitDict.TaskDict.START.name())), ids))
+                .flatMap(ids -> this.findTaskByTaskExampleAndPlanIds(example -> example.createCriteria().andTaskStatusIn(Lists.newArrayList(FruitDict.TaskDict.START.name())), ids, userId))
                 .flatMap(planOfTasks -> planIds.stream().filter(planOfTasks::containsKey).map(planOfTasks::get).reduce((l, r) -> {
                     l.addAll(r);
                     return l;
@@ -437,29 +474,27 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
     /**
      * 待进行 -> 进行中
      */
-    public final void pending(FruitPlanVo vo) {
-        Optional<FruitPlan> optionalPlanDao = this.findByUUID(vo.getUuidVo());
-        optionalPlanDao.orElseThrow(() -> new CheckException("计划不存在"));
+    public final void pending(String uuid) {
+        Optional<FruitPlan> optionalPlanDao = Optional.ofNullable(uuid).filter(StringUtils::isNotBlank).map(this::findByUUID).orElseThrow(() -> new CheckException("planId can't null Or plan not exists"));
         /*不等于待执行的状态都拒绝*/
         optionalPlanDao.map(FruitPlan::getPlanStatus)
-                .filter(status -> FruitDict.PlanDict.STAY_PENDING.name().equals(status))
-                .orElseThrow(() -> new CheckException("只能种待执行变更到进行中"));
+                .filter(status -> PlanDict.STAY_PENDING.name().equals(status))
+                .orElseThrow(() -> new CheckException("plan can but will status be 'STAY_PENDING' change to 'PENDING'"));
         this.update(update -> {
-            update.setUuid(vo.getUuidVo());
-            update.setPlanStatus(FruitDict.PlanDict.PENDING.name());
+            update.setPlanStatus(PlanDict.PENDING.name());
             update.setStartDate(new Date());
-        }, fruitPlanExample -> fruitPlanExample.createCriteria().andUuidEqualTo(vo.getUuidVo()));
+        }, fruitPlanExample -> fruitPlanExample.createCriteria().andUuidEqualTo(uuid));
     }
 
     public static class Result {
         private final List<FruitPlan.Info> plans = Lists.newLinkedList();
-        private final Map<FruitDict.PlanDict, Integer> dataCount = Maps.newLinkedHashMap();
+        private final Map<PlanDict, Integer> dataCount = Maps.newLinkedHashMap();
 
-        public Map<FruitDict.PlanDict, Integer> getDataCount() {
+        public Map<PlanDict, Integer> getDataCount() {
             return dataCount;
         }
 
-        public void setDataCount(Map<FruitDict.PlanDict, Integer> dataCount) {
+        public void setDataCount(Map<PlanDict, Integer> dataCount) {
             this.dataCount.putAll(dataCount);
         }
 
@@ -471,7 +506,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
             this.plans.addAll(plans);
         }
 
-        void addStateType(FruitDict.PlanDict planDict) {
+        void addStateType(PlanDict planDict) {
             if (!dataCount.containsKey(planDict))
                 dataCount.put(planDict, 1);
             else
@@ -481,10 +516,6 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
 
         public static Result getInstance() {
             return new Result();
-        }
-
-        public Result deepCopy() {
-            return GsonUtils.newGson().fromJson(GsonUtils.newGson().toJsonTree(this), TypeToken.of(this.getClass()).getType());
         }
     }
 

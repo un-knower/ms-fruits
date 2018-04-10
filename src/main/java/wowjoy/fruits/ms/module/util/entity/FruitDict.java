@@ -21,6 +21,8 @@ public class FruitDict extends AbstractEntity {
 
         GIRLS("女"),
 
+        BEFORE("提交前记录"),
+
         DELETE("删除标识"), ADD("添加标识"), SEARCH("查询"), UPDATE("更新"),
 
         DESC("倒序"), ASC("升序"),
@@ -53,7 +55,6 @@ public class FruitDict extends AbstractEntity {
         START("开始"),
         END("结束"),
         CLOSE("关闭"),
-        STAFF_CHANGE("人员变动"),
         TRANSFER("转移");
 
         private String parentCode;

@@ -6,12 +6,16 @@ import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.EntityUtils;
+import wowjoy.fruits.ms.module.logs.FruitLogs;
 import wowjoy.fruits.ms.module.relation.entity.TaskListRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskPlanRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskProjectRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskUserRelation;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
+import wowjoy.fruits.ms.util.GsonUtils;
 
+import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -191,6 +195,84 @@ public class FruitTask extends AbstractEntity {
         public void setListRelation(Map<FruitDict.Systems, List<TaskListRelation>> listRelation) {
             this.listRelation = listRelation;
         }
+    }
+
+    public static class Info extends FruitTask {
+        public Info() {
+            setUuid(null);
+            setIsDeleted(null);
+        }
+
+        private int days;
+
+        private List<FruitLogs.Info> logs;
+        private List<FruitTaskUser> users;
+        private FruitTaskPlan plan;
+        private FruitTaskProject project;
+        private FruitTaskList list;
+
+        public int getDays() {
+            return days;
+        }
+
+        public void setDays(int days) {
+            this.days = days;
+        }
+
+        public FruitTaskList getList() {
+            return list;
+        }
+
+        public void setList(FruitTaskList list) {
+            this.list = list;
+        }
+
+        public FruitTaskProject getProject() {
+            return project;
+        }
+
+        public void setProject(FruitTaskProject project) {
+            this.project = project;
+        }
+
+        public FruitTaskPlan getPlan() {
+            return plan;
+        }
+
+        public void setPlan(FruitTaskPlan plan) {
+            this.plan = plan;
+        }
+
+        public List<FruitLogs.Info> getLogs() {
+            return logs;
+        }
+
+        public void setLogs(List<FruitLogs.Info> logs) {
+            this.logs = logs;
+        }
+
+        public List<FruitTaskUser> getUsers() {
+            return users;
+        }
+
+        public void setUsers(List<FruitTaskUser> users) {
+            this.users = users;
+        }
+
+        public void computeDays() {
+            LocalDateTime estimatedEndDate = LocalDateTime.parse(new SimpleDateFormat(DateTimeFormat).format(this.getEstimatedEndDate()));
+            LocalDateTime endDate;
+            if (!FruitDict.TaskDict.START.name().equals(this.getTaskStatus()))
+                endDate = LocalDateTime.parse(new SimpleDateFormat(DateTimeFormat).format(this.getEndDate()));
+            else
+                endDate = LocalDateTime.now().toLocalDate().atTime(23, 59, 59);
+            this.days = (int) Duration.between(endDate, estimatedEndDate).toDays();
+
+        }
+    }
+
+    public Info toInfo() {
+        return GsonUtils.toT(this, Info.class);
     }
 
 }

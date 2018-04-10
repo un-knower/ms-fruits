@@ -22,6 +22,12 @@ public interface InterfaceDao {
     Function<Date, LocalDateTime> ToLocalDate = date -> LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
     Function<LocalDateTime, Date> ToDate = localDateTime -> Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
 
+    Function<Integer, Executor> obtainExecutor = size -> Executors.newFixedThreadPool(Math.min(size, 100), r -> {
+        Thread t = new Thread(r);
+        t.setDaemon(true);  //开启守护进程，不会阻止程序关闭
+        return t;
+    });
+
     class DaoThread {
         private final ExecutorService executorService;
         private final List<Future> futures = Lists.newLinkedList();

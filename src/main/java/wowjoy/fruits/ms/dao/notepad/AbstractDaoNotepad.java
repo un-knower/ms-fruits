@@ -3,6 +3,7 @@ package wowjoy.fruits.ms.dao.notepad;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
+import wowjoy.fruits.ms.exception.MessageException;
 import wowjoy.fruits.ms.module.logs.FruitLogs;
 import wowjoy.fruits.ms.module.notepad.FruitNotepad;
 import wowjoy.fruits.ms.module.notepad.FruitNotepadDao;
@@ -42,7 +43,7 @@ public abstract class AbstractDaoNotepad implements InterfaceDao {
 
     protected abstract List<FruitNotepadDao> findsByExampleAndCustom(Consumer<FruitNotepadExample> exampleConsumer, Consumer<List<String>> customConsumer);
 
-    protected abstract Map<String, LinkedList<FruitLogs.Info>> joinLogs(LinkedList<String> ids);
+    protected abstract Map<String, ArrayList<FruitLogs.Info>> joinLogs(LinkedList<String> ids);
 
     protected abstract List<FruitUserDao> joinUser(LinkedList<String> ids);
 
@@ -53,6 +54,10 @@ public abstract class AbstractDaoNotepad implements InterfaceDao {
             throw new CheckException("内容不能为空");
         if (vo.getEstimatedSubmitDate() == null)
             throw new CheckException("日报预计提交日期不能为空");
+        Optional.ofNullable(vo.getEstimatedSubmitDate())
+                .map(date-> this.finds(example -> example.createCriteria().andEstimatedSubmitDateEqualTo(date)))
+                .filter(notepads->!notepads.stream().findAny().isPresent())
+                .orElseThrow(()->new MessageException("duplicate notepad"));
         FruitNotepadDao dao = FruitNotepad.getDao();
         dao.setUuid(vo.getUuid());
         dao.setContent(vo.getContent());
@@ -173,7 +178,7 @@ public abstract class AbstractDaoNotepad implements InterfaceDao {
     private Callable plugLogs(List<FruitNotepadDao> notepads) {
         return () -> {
             if (notepads == null || notepads.isEmpty()) return false;
-            Map<String, LinkedList<FruitLogs.Info>> logs = this.joinLogs(notepads.parallelStream().map(FruitNotepadDao::getUuid).collect(toCollection(LinkedList::new)));
+            Map<String, ArrayList<FruitLogs.Info>> logs = this.joinLogs(notepads.parallelStream().map(FruitNotepadDao::getUuid).collect(toCollection(LinkedList::new)));
             notepads.parallelStream().forEach(notepad -> notepad.setLogs(logs.get(notepad.getUuid())));
             return true;
         };

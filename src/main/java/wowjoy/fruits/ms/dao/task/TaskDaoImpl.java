@@ -15,7 +15,7 @@ import wowjoy.fruits.ms.dao.relation.impl.TaskPlanDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.TaskProjectDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.TaskUserDaoImpl;
 import wowjoy.fruits.ms.exception.CheckException;
-import wowjoy.fruits.ms.module.list.FruitListDao;
+import wowjoy.fruits.ms.module.list.FruitList;
 import wowjoy.fruits.ms.module.list.FruitListExample;
 import wowjoy.fruits.ms.module.logs.FruitLogs;
 import wowjoy.fruits.ms.module.logs.transfer.FruitTransferLogs;
@@ -33,7 +33,7 @@ import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.module.util.entity.FruitDict.Systems;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -103,14 +103,14 @@ public class TaskDaoImpl extends AbstractDaoTask {
 
     @Override
     public void update(FruitTask.Update update, Consumer<FruitTaskExample> taskExampleConsumer) {
-        Optional.ofNullable(update)
-                .map(FruitTask.Update::getUuid)
-                .filter(StringUtils::isNotBlank)
-                .orElseThrow(() -> new CheckException("taskId can't null"));
         FruitTaskExample example = new FruitTaskExample();
         taskExampleConsumer.accept(example);
         Optional.of(example).filter(task -> task.getOredCriteria().stream().filter(FruitTaskExample.Criteria::isValid).count() > 0).ifPresent(task -> taskMapper.updateByExampleSelective(update, example));
         this.ifPresent(update.getListRelation(), Systems.DELETE, list -> taskListDao.deleted(taskListRelationExample -> {
+            Optional.of(update)
+                    .map(FruitTask.Update::getUuid)
+                    .filter(StringUtils::isNotBlank)
+                    .orElseThrow(() -> new CheckException("taskId can't null"));
             TaskListRelationExample.Criteria criteria = taskListRelationExample.createCriteria();
             Optional.ofNullable(list.getListId())
                     .filter(StringUtils::isNotBlank)
@@ -118,6 +118,10 @@ public class TaskDaoImpl extends AbstractDaoTask {
             criteria.andTaskIdEqualTo(update.getUuid());
         }));
         this.ifPresent(update.getPlanRelation(), Systems.DELETE, plan -> taskPlanDao.deleted(planRelationExample -> {
+            Optional.of(update)
+                    .map(FruitTask.Update::getUuid)
+                    .filter(StringUtils::isNotBlank)
+                    .orElseThrow(() -> new CheckException("taskId can't null"));
             TaskPlanRelationExample.Criteria criteria = planRelationExample.createCriteria();
             Optional.ofNullable(plan.getPlanId())
                     .filter(StringUtils::isNotBlank)
@@ -125,6 +129,10 @@ public class TaskDaoImpl extends AbstractDaoTask {
             criteria.andTaskIdEqualTo(update.getUuid());
         }));
         this.ifPresent(update.getProjectRelation(), Systems.DELETE, project -> taskProjectDao.deleted(taskProjectRelationExample -> {
+            Optional.of(update)
+                    .map(FruitTask.Update::getUuid)
+                    .filter(StringUtils::isNotBlank)
+                    .orElseThrow(() -> new CheckException("taskId can't null"));
             TaskProjectRelationExample.Criteria criteria = taskProjectRelationExample.createCriteria();
             Optional.ofNullable(project.getProjectId())
                     .filter(StringUtils::isNotBlank)
@@ -132,6 +140,10 @@ public class TaskDaoImpl extends AbstractDaoTask {
             criteria.andTaskIdEqualTo(update.getUuid());
         }));
         this.ifPresent(update.getUserRelation(), Systems.DELETE, user -> taskUserDao.deleted(taskUserRelationExample -> {
+            Optional.of(update)
+                    .map(FruitTask.Update::getUuid)
+                    .filter(StringUtils::isNotBlank)
+                    .orElseThrow(() -> new CheckException("taskId can't null"));
             TaskUserRelationExample.Criteria criteria = taskUserRelationExample.createCriteria();
             Optional.ofNullable(user.getUserId())
                     .filter(StringUtils::isNotBlank)
@@ -140,38 +152,54 @@ public class TaskDaoImpl extends AbstractDaoTask {
         }));
 
         this.ifPresent(update.getListRelation(), Systems.ADD, list -> taskListDao.insert(listRelation -> {
+            Optional.of(update)
+                    .map(FruitTask.Update::getUuid)
+                    .filter(StringUtils::isNotBlank)
+                    .orElseThrow(() -> new CheckException("taskId can't null"));
             listRelation.setTaskId(update.getUuid());
             listRelation.setListId(list.getListId());
         }));
         this.ifPresent(update.getPlanRelation(), Systems.ADD, plan -> taskPlanDao.insert(planRelation -> {
+            Optional.of(update)
+                    .map(FruitTask.Update::getUuid)
+                    .filter(StringUtils::isNotBlank)
+                    .orElseThrow(() -> new CheckException("taskId can't null"));
             planRelation.setTaskId(update.getUuid());
             planRelation.setPlanId(plan.getPlanId());
         }));
         this.ifPresent(update.getProjectRelation(), Systems.ADD, project -> taskProjectDao.insert(projectRelation -> {
+            Optional.of(update)
+                    .map(FruitTask.Update::getUuid)
+                    .filter(StringUtils::isNotBlank)
+                    .orElseThrow(() -> new CheckException("taskId can't null"));
             projectRelation.setTaskId(update.getUuid());
             projectRelation.setProjectId(project.getProjectId());
         }));
         this.ifPresent(update.getUserRelation(), Systems.ADD, user -> taskUserDao.insert(userRelation -> {
+            Optional.of(update)
+                    .map(FruitTask.Update::getUuid)
+                    .filter(StringUtils::isNotBlank)
+                    .orElseThrow(() -> new CheckException("taskId can't null"));
             userRelation.setTaskId(update.getUuid());
             userRelation.setUserId(user.getUserId());
         }));
     }
 
     @Override
-    public void delete(FruitTaskDao dao) {
-        if (StringUtils.isBlank(dao.getUuid()))
+    public void delete(FruitTask.Update update) {
+        if (StringUtils.isBlank(update.getUuid()))
             throw new CheckException("缺少任务id");
         FruitTaskExample example = new FruitTaskExample();
         FruitTaskExample.Criteria criteria = example.createCriteria();
-        criteria.andUuidEqualTo(dao.getUuid());
+        criteria.andUuidEqualTo(update.getUuid());
         FruitTaskDao delete = FruitTask.getDao();
         delete.setIsDeleted(Systems.Y.name());
         /*删除项目、计划、用户关联信息*/
         taskMapper.updateByExampleSelective(delete, example);
-        taskListDao.deleted(taskListRelationExample -> taskListRelationExample.createCriteria().andTaskIdEqualTo(dao.getUuid()));
-        taskPlanDao.deleted(planRelationExample -> planRelationExample.createCriteria().andTaskIdEqualTo(dao.getUuid()));
-        taskProjectDao.deleted(taskProjectRelationExample -> taskProjectRelationExample.createCriteria().andTaskIdEqualTo(dao.getUuid()));
-        taskUserDao.deleted(taskUserRelationExample -> taskUserRelationExample.createCriteria().andTaskIdEqualTo(dao.getUuid()));
+        taskListDao.deleted(taskListRelationExample -> taskListRelationExample.createCriteria().andTaskIdEqualTo(update.getUuid()));
+        taskPlanDao.deleted(planRelationExample -> planRelationExample.createCriteria().andTaskIdEqualTo(update.getUuid()));
+        taskProjectDao.deleted(taskProjectRelationExample -> taskProjectRelationExample.createCriteria().andTaskIdEqualTo(update.getUuid()));
+        taskUserDao.deleted(taskUserRelationExample -> taskUserRelationExample.createCriteria().andTaskIdEqualTo(update.getUuid()));
     }
 
     private <T> void ifPresent(Map<Systems, List<T>> relation, Systems delete, Consumer<T> consumer) {
@@ -183,14 +211,14 @@ public class TaskDaoImpl extends AbstractDaoTask {
     }
 
     @Override
-    public List<FruitTaskDao> findByExample(Consumer<FruitTaskExample> consumerExample) {
+    public List<FruitTask> findByExample(Consumer<FruitTaskExample> consumerExample) {
         FruitTaskExample example = new FruitTaskExample();
         consumerExample.accept(example);
         return taskMapper.selectByExample(example);
     }
 
     @Override
-    public List<FruitTaskDao> findByListExampleAndProjectId
+    public List<FruitTaskInfo> findByListExampleAndProjectId
             (Consumer<FruitTaskExample> exampleUnaryOperator, Consumer<FruitListExample> listExampleConsumer, String
                     projectId) {
         if (projectId == null || projectId.isEmpty()) return Lists.newLinkedList();
@@ -198,12 +226,11 @@ public class TaskDaoImpl extends AbstractDaoTask {
         FruitListExample listExample = new FruitListExample();
         exampleUnaryOperator.accept(example);
         listExampleConsumer.accept(listExample);
-        example.setOrderByClause("task.task_status desc,task.create_date_time desc");
         return taskMapper.selectByListExampleAndProjectId(example, listExample, projectId);
     }
 
     @Override
-    public List<FruitListDao> findProjectList(String projectId, Consumer<FruitListExample> listExampleConsumer) {
+    public List<FruitList> findProjectList(String projectId, Consumer<FruitListExample> listExampleConsumer) {
         return listDao.findByProjectId(projectId, listExampleConsumer::accept);
     }
 
@@ -215,7 +242,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
     }
 
     @Override
-    public List<FruitTaskDao> findPlanByTaskIds(List<String> taskIds) {
+    public List<FruitTaskPlan> findPlanByTaskIds(List<String> taskIds) {
         if (taskIds == null || taskIds.isEmpty())
             return Lists.newLinkedList();
         FruitTaskExample example = new FruitTaskExample();
@@ -232,7 +259,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
     }
 
     @Override
-    public List<FruitTaskDao> findListByTask(List<String> taskIds) {
+    public List<FruitTaskList> findListByTask(List<String> taskIds) {
         if (taskIds == null || taskIds.isEmpty())
             return Lists.newLinkedList();
         FruitTaskExample example = new FruitTaskExample();
@@ -241,7 +268,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
     }
 
     @Override
-    public Map<String, LinkedList<FruitLogs.Info>> findJoinLogsByTask(List<String> taskIds) {
+    public Map<String, ArrayList<FruitLogs.Info>> findJoinLogsByTask(List<String> taskIds) {
         if (taskIds == null || taskIds.isEmpty()) return Maps.newLinkedHashMap();
         return logsDaoImpl.findLogs(example -> {
             example.createCriteria().andFruitUuidIn(taskIds).andFruitTypeEqualTo(FruitDict.Parents.TASK.name());
@@ -267,14 +294,14 @@ public class TaskDaoImpl extends AbstractDaoTask {
      ************************************************************************************************/
 
     @Override
-    protected List<FruitTaskDao> myTask(Consumer<FruitTaskExample> taskExampleConsumer, String projectId) {
+    protected List<FruitTaskInfo> myTask(Consumer<FruitTaskExample> taskExampleConsumer, String projectId) {
         FruitTaskExample example = new FruitTaskExample();
         taskExampleConsumer.accept(example);
         return taskMapper.myTaskByExample(example, Lists.newArrayList(ApplicationContextUtils.getCurrentUser().getUserId()), projectId);
     }
 
     @Override
-    protected List<FruitTaskDao> myCreateTask(Consumer<FruitTaskExample> taskExampleConsumer, String projectId) {
+    protected List<FruitTaskInfo> myCreateTask(Consumer<FruitTaskExample> taskExampleConsumer, String projectId) {
         FruitTaskExample example = new FruitTaskExample();
         taskExampleConsumer.accept(example);
         return taskMapper.myCreateTask(example, ApplicationContextUtils.getCurrentUser().getUserId(), projectId);

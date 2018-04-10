@@ -149,9 +149,9 @@ public class PlanController {
      */
     @LogInfo(uuid = "uuidVo", type = FruitDict.Parents.PLAN, operateType = FruitDict.LogsDict.UPDATE)
     @RequestMapping(value = "{uuid}", method = RequestMethod.PUT)
-    public RestResult update(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
-        vo.setUuidVo(uuid);
-        dataPlanDao.modify(vo);
+    public RestResult update(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlan.Update.class) FruitPlan.Update update) {
+        update.setUuid(uuid);
+        dataPlanDao.modify(update);
         return RestResult.newSuccess().setData(uuid);
     }
 
@@ -166,8 +166,8 @@ public class PlanController {
      */
     @LogInfo(uuid = "uuidVo", type = FruitDict.Parents.PLAN, operateType = FruitDict.LogsDict.COMPLETE)
     @RequestMapping(value = "/complete/{uuid}", method = RequestMethod.PUT)
-    public RestResult complete(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
-        vo.setUuidVo(uuid);
+    public RestResult complete(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlan.Update.class) FruitPlan.Update vo) {
+        vo.setUuid(uuid);
         dataPlanDao.complete(vo);
         return RestResult.newSuccess().setData(uuid);
     }
@@ -180,9 +180,9 @@ public class PlanController {
      */
     @LogInfo(uuid = "uuidVo", type = FruitDict.Parents.PLAN, operateType = FruitDict.LogsDict.END)
     @RequestMapping(value = "/end/{uuid}", method = RequestMethod.PUT)
-    public RestResult end(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
-        vo.setUuidVo(uuid);
-        dataPlanDao.end(vo);
+    public RestResult end(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlan.Update.class) FruitPlan.Update update) {
+        update.setUuid(uuid);
+        dataPlanDao.end(update);
         return RestResult.newSuccess().setData(uuid);
     }
 
@@ -194,9 +194,8 @@ public class PlanController {
      */
     @LogInfo(uuid = "uuidVo", type = FruitDict.Parents.PLAN, operateType = FruitDict.LogsDict.PENDING)
     @RequestMapping(value = "/pending/{uuid}", method = RequestMethod.PUT)
-    public RestResult pending(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitPlanVo.class) FruitPlanVo vo) {
-        vo.setUuidVo(uuid);
-        dataPlanDao.pending(vo);
+    public RestResult pending(@PathVariable("uuid") String uuid) {
+        dataPlanDao.pending(uuid);
         return RestResult.newSuccess().setData(uuid);
     }
 

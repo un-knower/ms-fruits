@@ -1,7 +1,6 @@
 package wowjoy.fruits.ms.module.team.mapper;
 
 import org.apache.ibatis.annotations.Param;
-import wowjoy.fruits.ms.module.team.FruitTeamDao;
 import wowjoy.fruits.ms.module.team.FruitTeamUser;
 import wowjoy.fruits.ms.module.user.example.FruitUserExample;
 

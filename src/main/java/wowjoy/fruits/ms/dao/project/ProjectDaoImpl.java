@@ -11,9 +11,10 @@ import wowjoy.fruits.ms.dao.relation.impl.ProjectTeamDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.UserProjectDaoImpl;
 import wowjoy.fruits.ms.dao.task.AbstractDaoTask;
 import wowjoy.fruits.ms.dao.task.TaskDaoImpl;
+import wowjoy.fruits.ms.dao.team.AbstractDaoTeam;
 import wowjoy.fruits.ms.dao.team.TeamDaoImpl;
 import wowjoy.fruits.ms.exception.CheckException;
-import wowjoy.fruits.ms.module.list.FruitListDao;
+import wowjoy.fruits.ms.module.list.FruitList;
 import wowjoy.fruits.ms.module.plan.FruitPlanUser;
 import wowjoy.fruits.ms.module.plan.example.FruitPlanExample;
 import wowjoy.fruits.ms.module.project.*;
@@ -30,6 +31,7 @@ import wowjoy.fruits.ms.util.ApplicationContextUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -46,7 +48,7 @@ public class ProjectDaoImpl extends AbstractDaoProject {
     private final PlanDaoImpl planDaoImpl;
     private final AbstractDaoTask taskDaoImpl;
     private final ListDaoImpl listDao;
-    private final TeamDaoImpl teamDao;
+    private final AbstractDaoTeam teamDao;
     private final TaskDaoImpl taskDao;
 
     @Autowired
@@ -64,13 +66,11 @@ public class ProjectDaoImpl extends AbstractDaoProject {
     @Override
     public List<FruitTeamUser> findUserByTeamId(ArrayList<String> teamIds) {
         return teamDao.findUserByTeamIds(teamIds, example -> example.createCriteria()
-                .andIsDeletedEqualTo(FruitDict.Systems.N.name())
-                .andStatusEqualTo(FruitDict.UserDict.ACTIVE.name())
-        );
+                .andIsDeletedEqualTo(FruitDict.Systems.N.name()));
     }
 
     @Override
-    public List<FruitListDao> findListByProjectId(String projectId) {
+    public List<FruitList> findListByProjectId(String projectId) {
         return listDao.findByProjectId(projectId, listExample -> listExample.createCriteria().andIsDeletedEqualTo(FruitDict.Systems.N.name()));
     }
 
@@ -144,6 +144,13 @@ public class ProjectDaoImpl extends AbstractDaoProject {
         return taskDaoImpl.findContainUserListByUserIdByProjectId(exampleConsumer, userIds, projectId);
     }
 
+    @Override
+    public List<FruitProjectUser> findAllUserByProjectId(String projectId) {
+        return projectMapper.selectAllUserByProjectId(
+                Optional.ofNullable(projectId).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException("projectId can't null"))
+        );
+    }
+
     /****************
      * 当前用户函数
      ****************/
@@ -158,6 +165,12 @@ public class ProjectDaoImpl extends AbstractDaoProject {
     @Override
     public List<FruitTaskProject> myCreateTaskFromProjects() {
         return taskDao.myCreateTaskFromProject();
+    }
+
+    @Override
+    protected List<FruitTeamUser> findTeamUserByTeamIds(List<String> teamIds) {
+        return teamDao.plugUserSupplier(teamIds, example -> {
+        }).get();
     }
 
     /**

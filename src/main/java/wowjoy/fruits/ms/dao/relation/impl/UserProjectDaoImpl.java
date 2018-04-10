@@ -42,6 +42,7 @@ public class UserProjectDaoImpl<T extends UserProjectRelation,E extends UserProj
             criteria.andProjectIdEqualTo(relation.getProjectId());
         if (StringUtils.isNotBlank(relation.getUserId()))
             criteria.andUserIdEqualTo(relation.getUserId());
+        /*根据角色区分用户，移除必须携带角色*/
         if (StringUtils.isNotBlank(relation.getUpRole()))
             criteria.andUpRoleEqualTo(relation.getUpRole());
         if (criteria.getAllCriteria().isEmpty())

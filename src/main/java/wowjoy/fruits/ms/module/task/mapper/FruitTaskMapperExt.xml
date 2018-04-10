@@ -8,7 +8,7 @@
         <result column="status_description" jdbcType="VARCHAR" property="statusDescription"/>
         <result column="task_level" jdbcType="VARCHAR" property="taskLevel"/>
         <result column="estimated_end_date" jdbcType="DATE" property="estimatedEndDate"/>
-        <result column="end_date" jdbcType="DATE" property="endDate"/>
+        <result column="end_date" jdbcType="TIMESTAMP" property="endDate"/>
         <result column="description" jdbcType="VARCHAR" property="description"/>
         <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
@@ -17,6 +17,21 @@
         <association property="plan" resultMap="PlanResultMap" columnPrefix="plan_"/>
         <association property="project" resultMap="ProjectResultMap" columnPrefix="project_"/>
         <association property="list" resultMap="ListResultMap" columnPrefix="list_"/>
+    </resultMap>
+
+    <resultMap id="InfoResultMap" type="wowjoy.fruits.ms.module.task.FruitTaskInfo">
+        <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
+        <result column="title" jdbcType="VARCHAR" property="title"/>
+        <result column="task_status" jdbcType="VARCHAR" property="taskStatus"/>
+        <result column="status_description" jdbcType="VARCHAR" property="statusDescription"/>
+        <result column="task_level" jdbcType="VARCHAR" property="taskLevel"/>
+        <result column="estimated_end_date" jdbcType="DATE" property="estimatedEndDate"/>
+        <result column="end_date" jdbcType="TIMESTAMP" property="endDate"/>
+        <result column="description" jdbcType="VARCHAR" property="description"/>
+        <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
+        <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
+        <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
+        <result column="list_id" jdbcType="VARCHAR" property="listId"/>
     </resultMap>
 
     <resultMap id="ProjectResultMap" type="wowjoy.fruits.ms.module.task.FruitTaskProject">
@@ -53,7 +68,7 @@
         <result column="user_role" jdbcType="VARCHAR" property="userRole"/>
     </resultMap>
 
-    <resultMap id="ListResultMap" type="wowjoy.fruits.ms.module.list.FruitListDao">
+    <resultMap id="ListResultMap" type="wowjoy.fruits.ms.module.task.FruitTaskList">
         <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
         <result column="title" jdbcType="VARCHAR" property="title"/>
         <result column="l_type" jdbcType="VARCHAR" property="lType"/>
@@ -61,9 +76,11 @@
         <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
+
+        <result column="task_id" jdbcType="VARCHAR" property="taskId"/>
     </resultMap>
 
-    <resultMap id="PlanResultMap" type="wowjoy.fruits.ms.module.plan.FruitPlanDao">
+    <resultMap id="PlanResultMap" type="wowjoy.fruits.ms.module.task.FruitTaskPlan">
         <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
         <result column="title" jdbcType="VARCHAR" property="title"/>
         <result column="plan_status" jdbcType="VARCHAR" property="planStatus"/>
@@ -76,6 +93,7 @@
         <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
+        <result column="task_id" jdbcType="VARCHAR" property="taskId"/>
     </resultMap>
     <sql id="Base_Example_Where_Clause">
         <foreach collection="example.oredCriteria" item="criteria" separator="or">
@@ -205,7 +223,7 @@
         ${replace}.is_deleted as ${prefix}is_deleted
     </sql>
 
-    <select id="selectByListExampleAndProjectId" resultMap="BaseResultMap">
+    <select id="selectByListExampleAndProjectId" resultMap="InfoResultMap">
         select
         <include refid="Base_Column_List">
             <property name="replace" value="task"/>
@@ -272,32 +290,26 @@
         where fuser.user_id is not null
     </select>
 
-    <select id="selectPlanByTask" resultMap="BaseResultMap">
+    <select id="selectPlanByTask" resultMap="PlanResultMap">
         select
-        <include refid="Base_Column_List">
-            <property name="replace" value="task"/>
-        </include>
-        ,
         <include refid="Plan_Column_List">
-            <property name="replace" value="plan"/>
-            <property name="prefix" value="plan_"/>
-        </include>
-        from fruits_task task
-        RIGHT join (select task_id,plan_id from task_plan_relation where is_deleted = 'N') planRelation on
-        planRelation.task_id = task.uuid
-        RIGHT join (select
-        <include refid="Plan_Column_List">
-            <property name="replace" value="plan"/>
+            <property name="replace" value="fplan"/>
             <property name="prefix" value=""/>
         </include>
-        from fruits_plan plan where plan.is_deleted = 'N') plan on planRelation.plan_id = plan.uuid
+        ,taskJoin.task_id
+        from fruits_plan fplan
+        right join (select task_id,plan_id from task_plan_relation where is_deleted = 'N') taskJoin on taskJoin.plan_id = fplan.uuid
+        right join (select ftask.uuid from fruits_task ftask
         <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
             <where>
                 <include refid="Base_Example_Where_Clause">
-                    <property name="replace" value="task"/>
+                    <property name="replace" value="ftask"/>
                 </include>
+                and ftask.is_deleted = 'N'
             </where>
         </trim>
+        ) ftask on ftask.uuid = taskJoin.task_id
+        where fplan.uuid is not null and fplan.is_deleted = 'N';
     </select>
 
     <!-- 查询任务关联项目 -->
@@ -362,29 +374,26 @@
     </select>
 
     <!--根据任务查询列表-->
-    <select id="selectListByTask" resultMap="BaseResultMap">
+    <select id="selectListByTask" resultMap="ListResultMap">
         SELECT
-        <include refid="Base_Column_List">
-            <property name="replace" value="task"/>
-        </include>
-        ,
         <include refid="List_Column_List">
             <property name="replace" value="flist"/>
-            <property name="prefix" value="list_"/>
-        </include>
-        from fruits_task task
-        right join (select task_id,list_id from task_list_relation where is_deleted = 'N') listJoin on listJoin.task_id
-        =
-        task.uuid
-        right join (select uuid, title, l_type, description, modify_date_time, create_date_time, is_deleted from
-        fruits_list where is_deleted = 'N') flist on flist.uuid = listJoin.list_id
+            <property name="prefix" value=""/>
+        </include>,
+        taskJoin.task_id
+        from fruits_list flist
+        right join (select task_id,list_id from task_list_relation where is_deleted = 'N') taskJoin on taskJoin.list_id = flist.uuid
+        right join (select ftask.uuid from fruits_task ftask
         <trim suffixOverrides="AND | OR" prefixOverrides="AND | OR ">
             <where>
                 <include refid="Base_Example_Where_Clause">
-                    <property name="replace" value="task"/>
+                    <property name="replace" value="ftask"/>
                 </include>
+                and ftask.is_deleted = 'N'
             </where>
         </trim>
+        ) ftask on ftask.uuid = taskJoin.task_id
+        where flist.uuid is not null and flist.is_deleted = 'N'
     </select>
 
     <select id="findUserByProjectIdAndUserIdAndTaskExample" resultMap="UserResultMap">
@@ -472,7 +481,7 @@
     <!--*                                       个人中心专供                                            *-->
     <!--************************************************************************************************/-->
 
-    <select id="myTaskByExample" resultMap="BaseResultMap">
+    <select id="myTaskByExample" resultMap="InfoResultMap">
         SELECT
         <include refid="Base_Column_List">
             <property name="replace" value="task"/>
@@ -537,7 +546,7 @@
         </if>
     </select>
 
-    <select id="myCreateTask" resultMap="BaseResultMap">
+    <select id="myCreateTask" resultMap="InfoResultMap">
         SELECT
         <include refid="Base_Column_List">
             <property name="replace" value="task"/>

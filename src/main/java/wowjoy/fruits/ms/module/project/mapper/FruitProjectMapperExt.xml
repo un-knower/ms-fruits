@@ -151,6 +151,7 @@
         userJoin.user_id
         where fuser.user_id is not null
     </select>
+
     <select id="selectTeamByProjectId" resultMap="TeamResultMap">
         select
         <include refid="team_Column_List">
@@ -209,5 +210,31 @@
                 </include>
             </where>
         </trim>
+    </select>
+
+    <select id="selectAllUserByProjectId" resultMap="UserResultMap">
+        select userId.user_id
+        from (
+        select userJoin.user_id
+        from user_team_relation userJoin
+        right join
+        (select team_id from project_team_relation
+        <where>
+            project_id = #{projectId}
+            and is_deleted = 'N'
+        </where>
+        ) projectJoin on projectJoin.team_id = userJoin.team_id
+        where userJoin.is_deleted = 'N'
+        group by userJoin.user_id,userJoin.team_id
+        union all
+        select userJoin.user_id from user_project_relation userJoin
+        <trim suffixOverrides="AND | OR" prefixOverrides="AND | OR">
+            <where>
+                userJoin.project_id = #{projectId}
+                and userJoin.is_deleted = 'N'
+            </where>
+        </trim>
+        group by userJoin.user_id,userJoin.up_role
+        ) userId
     </select>
 </mapper>

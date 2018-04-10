@@ -18,8 +18,10 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static java.util.stream.Collectors.*;
 
@@ -36,7 +38,7 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
 
     public abstract List<FruitTeamDao> findTeamByExample(Consumer<FruitTeamExample> teamExampleConsumer);
 
-    public abstract List<UserTeamRelation> findUserTeam(String userId);
+    public abstract List<UserTeamRelation> findJoinTeamByUserId(String userId);
 
     protected abstract void insert(FruitTeamDao dao);
 
@@ -65,6 +67,7 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
         });
         try {
             this.plugUser(teamDaoList).call();
+            teamDaoList.parallelStream().forEach(team -> team.findUsers().orElseGet(ArrayList::new).sort((l, r) -> l.getTeamRole().equals(FruitDict.UserTeamDict.LEADER.name()) ? -1 : 1));
         } catch (Exception e) {
             e.printStackTrace();
             throw new CheckException("获取用户信息异常");
@@ -78,25 +81,30 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
 
     private Callable plugUser(List<FruitTeamDao> teamDaoList, Consumer<FruitUserExample> userExampleConsumer) {
         return () -> {
-
             Map<String, ArrayList<FruitTeamUser>> userMap = this.findUserByTeamIds(teamDaoList.parallelStream().map(FruitTeamDao::getUuid).collect(toList()), userExampleConsumer)
                     .parallelStream().collect(groupingBy(FruitTeamUser::getTeamId, toCollection(ArrayList::new)));
             teamDaoList.parallelStream().forEach(fruitTeamDao -> {
                 fruitTeamDao.setUsers(userMap.get(fruitTeamDao.getUuid()));
-                fruitTeamDao.searchLeader();
             });
             return true;
         };
     }
 
+    public Supplier<List<FruitTeamUser>> plugUserSupplier(List<String> teamId, Consumer<FruitUserExample> userExampleConsumer) {
+        return () -> this.findUserByTeamIds(teamId, userExampleConsumer);
+    }
+
     public final List<FruitTeamDao> findCurrent() {
-        List<UserTeamRelation> userTeamList = this.findUserTeam(ApplicationContextUtils.getCurrentUser().getUserId());
+        List<UserTeamRelation> userTeamList = this.findJoinTeamByUserId(ApplicationContextUtils.getCurrentUser().getUserId());
         if (userTeamList.isEmpty()) return Lists.newLinkedList();
         return this.findTeamByExample(fruitTeamExample -> fruitTeamExample.createCriteria().andUuidIn(userTeamList.parallelStream().map(UserTeamRelation::getUuid).collect(toList())));
     }
 
     public final FruitTeamDao findInfo(String uuid) {
-        return findInfo(uuid, example -> example.createCriteria().andIsDeletedEqualTo(Systems.N.name()));
+        return Optional.ofNullable(findInfo(uuid, example -> example.createCriteria().andIsDeletedEqualTo(Systems.N.name()))).map(info -> {
+            info.searchLeader();
+            return info;
+        }).orElse(null);
     }
 
     public final FruitTeamDao findInfo(String uuid, Consumer<FruitUserExample> userExampleConsumer) {
@@ -120,6 +128,11 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
 
     public final void insert(FruitTeamVo vo) {
         try {
+            Optional.ofNullable(vo.getUserRelation().get(Systems.ADD))
+                    .map(users -> users.stream().collect(groupingBy(UserTeamRelation::getUserId, counting())))
+                    .ifPresent(addUser -> addUser.forEach((id, count) -> {
+                        Optional.of(count).filter(i -> i <= 1).orElseThrow(() -> new CheckException("一个成员不可重复添加"));
+                    }));
             FruitTeamDao dao = FruitTeam.getDao();
             dao.setUuid(vo.getUuid());
             dao.setTitle(vo.getTitle());
@@ -153,6 +166,14 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
         try {
             if (StringUtils.isBlank(vo.getUuidVo()))
                 throw new CheckException("Team id not is null");
+            Map<String, Long> teamUserMap = this.findUserByTeamIds(Lists.newArrayList(vo.getUuidVo()), example -> example.createCriteria().andIsDeletedEqualTo(Systems.N.name()))
+                    .stream().collect(groupingBy(FruitTeamUser::getUserId, counting()));
+            Optional.ofNullable(vo.getUserRelation().get(Systems.ADD))
+                    .map(users -> users.stream().collect(groupingBy(UserTeamRelation::getUserId, counting())))
+                    .ifPresent(addUser -> addUser.forEach((id, count) -> {
+                        Optional.of(count).filter(i -> i <= 1).orElseThrow(() -> new CheckException("一个成员不可重复添加"));
+                        Optional.of(teamUserMap).filter(userMap -> !userMap.containsKey(id)).orElseThrow(() -> new CheckException("已有相同成员，不可重复添加"));
+                    }));
             FruitTeamDao dao = FruitTeam.getDao();
             dao.setUuid(vo.getUuidVo());
             dao.setUserRelation(vo.getUserRelation());
@@ -165,7 +186,6 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
             ex.printStackTrace();
             throw new ServiceException("团队修改[" + vo.getUuidVo() + "]错误");
         }
-
     }
 
     public final void delete(String uuid) {

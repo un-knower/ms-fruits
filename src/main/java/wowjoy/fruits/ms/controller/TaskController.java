@@ -70,13 +70,6 @@ public class TaskController {
     @RequestMapping(value = "/{uuid}", method = RequestMethod.PUT)
     public RestResult modify(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTask.Update.class) FruitTask.Update update) {
         update.setUuid(uuid);
-        /*若变更记录中包含人员变更，将日志状态改为 STAFF_CHANGE*/
-        update.setOperateTypeSupplier(() -> {
-            Predicate<FruitDict.Systems> userPredicate = (status) -> update.getUserRelation().containsKey(status) && !update.getUserRelation().get(status).isEmpty();
-            if (update.getUserRelation() != null && (userPredicate.test(FruitDict.Systems.ADD) || userPredicate.test(FruitDict.Systems.DELETE)))
-                return FruitDict.LogsDict.STAFF_CHANGE;
-            return FruitDict.LogsDict.UPDATE;
-        });
         daoTask.modify(update);
         return newSuccess().setData(update.getUuid());
     }
@@ -89,10 +82,8 @@ public class TaskController {
     @LogInfo(uuid = "uuid", type = FruitDict.Parents.TASK, operateType = FruitDict.LogsDict.COMPLETE)
     @RequestMapping(value = "/complete/{uuid}", method = RequestMethod.PUT)
     public RestResult changeStatusToComplete(@PathVariable("uuid") String uuid) {
-        FruitTaskVo vo = FruitTask.getVo();
-        vo.setUuidVo(uuid);
-        daoTask.changeStatusToComplete(vo);
-        return newSuccess().setData(vo.getUuidVo());
+        daoTask.changeStatusToComplete(uuid);
+        return newSuccess().setData(uuid);
     }
 
     /**
@@ -103,10 +94,8 @@ public class TaskController {
     @LogInfo(uuid = "uuid", type = FruitDict.Parents.TASK, operateType = FruitDict.LogsDict.START)
     @RequestMapping(value = "/start/{uuid}", method = RequestMethod.PUT)
     public RestResult changeStatusToStart(@PathVariable("uuid") String uuid) {
-        FruitTaskVo vo = FruitTask.getVo();
-        vo.setUuidVo(uuid);
-        daoTask.changeStatusToStart(vo);
-        return newSuccess().setData(vo.getUuidVo());
+        daoTask.changeStatusToStart(uuid);
+        return newSuccess().setData(uuid);
     }
 
     /**
@@ -116,10 +105,10 @@ public class TaskController {
      */
     @LogInfo(uuid = "uuidVo", type = FruitDict.Parents.TASK, operateType = FruitDict.LogsDict.END)
     @RequestMapping(value = "/end/{uuid}", method = RequestMethod.PUT)
-    public RestResult changeStatusToEnd(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
-        vo.setUuidVo(uuid);
+    public RestResult changeStatusToEnd(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTask.Update.class) FruitTask.Update vo) {
+        vo.setUuid(uuid);
         daoTask.changeStatusToEnd(vo);
-        return newSuccess().setData(vo.getUuidVo());
+        return newSuccess().setData(vo.getUuid());
     }
 
     /**
@@ -129,10 +118,10 @@ public class TaskController {
      */
     @LogInfo(uuid = "uuidVo", type = FruitDict.Parents.TASK, operateType = FruitDict.LogsDict.MOVE_TASK)
     @RequestMapping(value = "/list/{uuid}", method = RequestMethod.PUT)
-    public RestResult changeList(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
-        vo.setUuidVo(uuid);
-        daoTask.changeList(vo);
-        return newSuccess().setData(vo.getUuidVo());
+    public RestResult changeList(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitTask.Update.class) FruitTask.Update update) {
+        update.setUuid(uuid);
+        daoTask.changeList(update);
+        return newSuccess().setData(update.getUuid());
     }
 
     /**
@@ -147,10 +136,8 @@ public class TaskController {
     @LogInfo(uuid = "uuid", type = FruitDict.Parents.TASK, operateType = FruitDict.LogsDict.DELETE)
     @RequestMapping(value = "{uuid}", method = RequestMethod.DELETE)
     public RestResult delete(@PathVariable("uuid") String uuid) {
-        FruitTaskVo vo = FruitTask.getVo();
-        vo.setUuidVo(uuid);
-        daoTask.delete(vo);
-        return newSuccess().setData(vo.getUuidVo());
+        daoTask.delete(uuid);
+        return newSuccess().setData(uuid);
     }
 
 
@@ -165,7 +152,7 @@ public class TaskController {
     @RequestMapping(value = "/project/{uuid}", method = RequestMethod.GET)
     public RestResult findJoinProject(@PathVariable("uuid") String uuid,
                                       @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
-        return newSuccess().setData(daoTask.findJoinProjects(uuid, vo));
+        return newSuccess().setData(ApiDataFactory.TaskController.findJoinProject.apply(daoTask.findJoinProjects(uuid, vo)));
     }
 
     /**
@@ -176,7 +163,7 @@ public class TaskController {
      */
     @RequestMapping(value = "{uuid}", method = RequestMethod.GET)
     public RestResult findTaskInfo(@PathVariable("uuid") String uuid) {
-        return newSuccess().setData(daoTask.findTaskInfo(uuid));
+        return newSuccess().setData(ApiDataFactory.TaskController.findTaskInfo.apply(daoTask.findTaskInfo(uuid)));
     }
 
     /**

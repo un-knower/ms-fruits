@@ -35,8 +35,8 @@ public abstract class AbstractEntity implements InterfaceEntity {
     private String isDeleted;
     private String description;
 
-    private transient String desc;
-    private transient String asc;
+    private String desc;
+    private String asc;
 
     public void setCreateDateTime(Date createDateTime) {
         this.createDateTime = createDateTime;

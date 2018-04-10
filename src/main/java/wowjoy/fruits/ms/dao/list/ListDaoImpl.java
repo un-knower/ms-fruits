@@ -2,7 +2,6 @@ package wowjoy.fruits.ms.dao.list;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wowjoy.fruits.ms.dao.relation.impl.ProjectListDaoImpl;
@@ -16,8 +15,6 @@ import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.UnaryOperator;
 
 /**
  * Created by wangziwen on 2017/10/17.
@@ -59,7 +56,7 @@ public class ListDaoImpl extends AbstractDaoList {
     }
 
     @Override
-    public List<FruitListDao> finds(Consumer<FruitListExample> exampleConsumer) {
+    public List<FruitList> finds(Consumer<FruitListExample> exampleConsumer) {
         FruitListExample example = new FruitListExample();
         exampleConsumer.accept(example);
         return mapper.selectByExample(example);
@@ -79,7 +76,7 @@ public class ListDaoImpl extends AbstractDaoList {
         Relation.newProject(listDao, dao).removeProjects();
     }
 
-    public List<FruitListDao> findByProjectId(String projectId, Consumer<FruitListExample> unaryOperator) {
+    public List<FruitList> findByProjectId(String projectId, Consumer<FruitListExample> unaryOperator) {
         FruitListExample example = new FruitListExample();
         unaryOperator.accept(example);
         afterExample.accept(example);

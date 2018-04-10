@@ -58,6 +58,7 @@ public class TaskUserDaoImpl<T extends TaskUserRelation, E extends TaskUserRelat
             criteria.andTaskIdEqualTo(relation.getTaskId());
         if (StringUtils.isNotBlank(relation.getUserId()))
             criteria.andUserIdEqualTo(relation.getUserId());
+        /*根据角色区分用户，移除必须携带角色*/
         if (StringUtils.isNotBlank(relation.getUserRole()))
             criteria.andUserRoleEqualTo(relation.getUserRole());
         if (criteria.getAllCriteria().isEmpty())

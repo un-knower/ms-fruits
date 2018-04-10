@@ -1,11 +1,11 @@
 package wowjoy.fruits.ms.module.plan;
 
 
-import com.google.common.reflect.TypeToken;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.EntityUtils;
 import wowjoy.fruits.ms.module.logs.FruitLogs;
+import wowjoy.fruits.ms.module.task.FruitTask;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.GsonUtils;
 
@@ -155,6 +155,7 @@ public class FruitPlan extends AbstractEntity {
         public Query() {
             setUuid(null);
         }
+
         private String projectId;
         /*提供年份*/
         private String year;
@@ -194,8 +195,8 @@ public class FruitPlan extends AbstractEntity {
         }
 
         private LinkedList<FruitPlanUser> users;
-        private LinkedList<FruitLogs.Info> logs;
-        private ArrayList<FruitPlanTask> tasks;
+        private ArrayList<FruitLogs.Info> logs;
+        private ArrayList<FruitTask.Info> tasks;
         private ArrayList<FruitPlan.Info> weeks;
         private Integer days;
 
@@ -220,20 +221,33 @@ public class FruitPlan extends AbstractEntity {
             return this;
         }
 
+        public void obtainPlanStatus() {
+            if (FruitDict.PlanDict.COMPLETE.name().equals(this.getPlanStatus()) && this.getDays() < 0)
+                setPlanStatus(FruitDict.PlanDict.DELAY_COMPLETE.name());
+        }
+
+        public ArrayList<FruitTask.Info> getTasks() {
+            return tasks;
+        }
+
+        public void setTasks(ArrayList<FruitTask.Info> tasks) {
+            this.tasks = tasks;
+        }
+
+        public ArrayList<FruitLogs.Info> getLogs() {
+            return logs;
+        }
+
+        public void setLogs(ArrayList<FruitLogs.Info> logs) {
+            this.logs = logs;
+        }
+
         public ArrayList<Info> getWeeks() {
             return weeks;
         }
 
         public void setWeeks(ArrayList<Info> weeks) {
             this.weeks = weeks;
-        }
-
-        public LinkedList<FruitLogs.Info> getLogs() {
-            return logs;
-        }
-
-        public void setLogs(LinkedList<FruitLogs.Info> logs) {
-            this.logs = logs;
         }
 
         public Integer getDays() {
@@ -251,17 +265,8 @@ public class FruitPlan extends AbstractEntity {
         public void setUsers(LinkedList<FruitPlanUser> users) {
             this.users = users;
         }
-
-        public ArrayList<FruitPlanTask> getTasks() {
-            return tasks;
-        }
-
-        public void setTasks(ArrayList<FruitPlanTask> tasks) {
-            this.tasks = tasks;
-        }
-
         public Info deepCopy() {
-            return GsonUtils.newGson().fromJson(GsonUtils.newGson().toJsonTree(this), TypeToken.of(this.getClass()).getType());
+            return GsonUtils.toT(this, Info.class);
         }
     }
 
@@ -277,7 +282,7 @@ public class FruitPlan extends AbstractEntity {
     }
 
     public FruitPlan.Info toInfo() {
-        return GsonUtils.newGson().fromJson(GsonUtils.newGson().toJsonTree(this), TypeToken.of(FruitPlan.Info.class).getType());
+        return GsonUtils.toT(this, FruitPlan.Info.class);
     }
 
     public static FruitPlan getInstance() {

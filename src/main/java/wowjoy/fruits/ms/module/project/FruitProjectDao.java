@@ -22,7 +22,7 @@ import java.util.Map;
  */
 public class FruitProjectDao extends FruitProject {
 
-    protected FruitProjectDao() {
+    public FruitProjectDao() {
         setUuid(null);
     }
 

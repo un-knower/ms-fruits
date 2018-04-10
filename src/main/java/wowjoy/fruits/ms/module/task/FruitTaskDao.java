@@ -37,13 +37,29 @@ public class FruitTaskDao extends FruitTask {
 
     private List<FruitLogs.Info> logs;
     private List<FruitTaskUser> users;
-    private FruitPlanDao plan;
+    private FruitTaskPlan plan;
     private FruitTaskProject project;
-    private FruitListDao list;
+    private FruitTaskList list;
 
     private Integer days;
 
     private transient String listId;
+
+    public FruitTaskPlan getPlan() {
+        return plan;
+    }
+
+    public void setPlan(FruitTaskPlan plan) {
+        this.plan = plan;
+    }
+
+    public FruitTaskList getList() {
+        return list;
+    }
+
+    public void setList(FruitTaskList list) {
+        this.list = list;
+    }
 
     public List<FruitTaskUser> getUsers() {
         return users;
@@ -59,14 +75,6 @@ public class FruitTaskDao extends FruitTask {
 
     public void setLogs(List<FruitLogs.Info> logs) {
         this.logs = logs;
-    }
-
-    public FruitListDao getList() {
-        return list;
-    }
-
-    public void setList(FruitListDao list) {
-        this.list = list;
     }
 
     private transient String planId;
@@ -85,14 +93,6 @@ public class FruitTaskDao extends FruitTask {
 
     public void setPlanId(String planId) {
         this.planId = planId;
-    }
-
-    public FruitPlanDao getPlan() {
-        return plan;
-    }
-
-    public void setPlan(FruitPlanDao plan) {
-        this.plan = plan;
     }
 
     public Integer getPageNum() {

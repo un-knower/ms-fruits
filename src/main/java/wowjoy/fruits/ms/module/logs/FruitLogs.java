@@ -1,9 +1,10 @@
 package wowjoy.fruits.ms.module.logs;
 
-import com.google.common.reflect.TypeToken;
 import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.GsonUtils;
+
+import java.util.ArrayList;
 
 public class FruitLogs extends AbstractEntity {
 
@@ -81,19 +82,19 @@ public class FruitLogs extends AbstractEntity {
             setIsDeleted(null);
         }
 
-        private String msg;
+        private ArrayList msg;
 
-        public String getMsg() {
+        public ArrayList getMsg() {
             return msg;
         }
 
-        public void setMsg(String msg) {
+        public void setMsg(ArrayList msg) {
             this.msg = msg;
         }
     }
 
     public Info toInfo() {
-        Info info = GsonUtils.newGson().fromJson(GsonUtils.newGson().toJsonTree(this), TypeToken.of(Info.class).getType());
+        Info info = GsonUtils.toT(this, Info.class);
         info.setFruitUuid(this.getFruitUuid());
         return info;
     }

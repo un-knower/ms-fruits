@@ -24,11 +24,11 @@ public abstract class AbstractDaoList implements InterfaceDao {
 
     protected abstract void update(FruitListDao dao);
 
-    protected abstract List<FruitListDao> finds(Consumer<FruitListExample> exampleConsumer);
+    protected abstract List<FruitList> finds(Consumer<FruitListExample> exampleConsumer);
 
     protected abstract void delete(FruitListDao dao);
 
-    protected abstract List<FruitListDao> findByProjectId(String projectId, Consumer<FruitListExample> unaryOperator);
+    protected abstract List<FruitList> findByProjectId(String projectId, Consumer<FruitListExample> unaryOperator);
 
     public final void insertProject(FruitListVo vo) {
         try {
@@ -71,8 +71,6 @@ public abstract class AbstractDaoList implements InterfaceDao {
         try {
             if (!checkByUUID(vo.getUuidVo()).isPresent())
                 throw new CheckException("列表不存在，操作被拒绝");
-            if (StringUtils.isBlank(vo.getTitle()))
-                throw new CheckException("列表标题不能为空");
             FruitListDao dao = FruitList.getDao();
             dao.setUuid(vo.getUuidVo());
             dao.setTitle(vo.getTitle());
@@ -104,7 +102,7 @@ public abstract class AbstractDaoList implements InterfaceDao {
         }
     }
 
-    private Optional<FruitListDao> checkByUUID(String uuid) {
+    private Optional<FruitList> checkByUUID(String uuid) {
         if (StringUtils.isBlank(uuid))
             return Optional.empty();
         FruitListDao dao = FruitList.getDao();

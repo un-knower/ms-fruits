@@ -19,6 +19,7 @@ import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.user.example.FruitUserExample;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -88,7 +89,7 @@ public class NotepadDaoImpl extends AbstractDaoNotepad {
     }
 
     @Override
-    protected Map<String, LinkedList<FruitLogs.Info>> joinLogs(LinkedList<String> ids) {
+    protected Map<String, ArrayList<FruitLogs.Info>> joinLogs(LinkedList<String> ids) {
         if (ids == null || ids.isEmpty()) return Maps.newHashMap();
         return daoLogs.findLogs(example -> {
             example.createCriteria().andFruitTypeEqualTo(FruitDict.Parents.NOTEPAD.name()).andFruitUuidIn(ids);

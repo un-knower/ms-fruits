@@ -92,8 +92,8 @@ public class ProjectController {
      */
     @LogInfo(uuid = "uuidVo", type = FruitDict.Parents.PROJECT, operateType = FruitDict.LogsDict.UPDATE)
     @RequestMapping(value = "{uuid}", method = RequestMethod.PUT)
-    public RestResult update(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitProjectVo.class) FruitProjectVo vo) {
-        vo.setUuidVo(uuid);
+    public RestResult update(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitProject.Update.class) FruitProject.Update vo) {
+        vo.setUuid(uuid);
         projectDaoImpl.modify(vo);
         return RestResult.newSuccess().setData(vo.getUuid());
     }

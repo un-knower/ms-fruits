@@ -1,5 +1,7 @@
 package wowjoy.fruits.ms.util;
 
+import java.util.function.Supplier;
+
 /**
  * Created by wangziwen on 2017/8/28.
  */
@@ -53,5 +55,8 @@ public class RestResult<T> {
 
     public static <T> RestResult<T> newError(int code, String msg, T data) {
         return new RestResult(code, msg, data, false);
+    }
+    public static <T> RestResult<T> newError(int code, String msg, Supplier<T> data) {
+        return new RestResult(code, msg, data.get(), false);
     }
 }

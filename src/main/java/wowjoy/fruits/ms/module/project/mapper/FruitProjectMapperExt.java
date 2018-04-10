@@ -21,4 +21,6 @@ public interface FruitProjectMapperExt {
     List<FruitProjectTeam> selectTeamByProjectId(@Param("projectIds") List<String> ids);
 
     List<FruitProjectDao> selectByUserIdAndExample(@Param("example") FruitProjectExample example, @Param("userId") String userId);
+
+    List<FruitProjectUser> selectAllUserByProjectId(@Param("projectId") String projectId);
 }

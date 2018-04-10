@@ -18,6 +18,7 @@ import wowjoy.fruits.ms.module.user.example.FruitUserExample;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -25,7 +26,7 @@ import java.util.function.Consumer;
  */
 // TODO: 2017/10/13 团队关联项目时，需要指明在团队在项目中的角色
 @Service
-@Transactional(rollbackFor = CheckException.class)
+@Transactional
 public class TeamDaoImpl extends AbstractDaoTeam {
     private final FruitTeamMapper mapper;
     private final UserTeamDaoImpl<UserTeamRelation, UserTeamRelationExample> dao;
@@ -44,6 +45,7 @@ public class TeamDaoImpl extends AbstractDaoTeam {
         return mapper.selectUserByTeamId(userExample, teamIds);
     }
 
+
     @Override
     public List<FruitTeamDao> findTeamByExample(Consumer<FruitTeamExample> teamExampleConsumer) {
         final FruitTeamExample example = new FruitTeamExample();
@@ -52,7 +54,7 @@ public class TeamDaoImpl extends AbstractDaoTeam {
     }
 
     @Override
-    public List<UserTeamRelation> findUserTeam(String userId) {
+    public List<UserTeamRelation> findJoinTeamByUserId(String userId) {
         return dao.finds(example -> {
             UserTeamRelationExample.Criteria criteria = example.createCriteria();
             if (StringUtils.isNotBlank(userId))
