@@ -55,7 +55,7 @@ public abstract class AbstractDaoNotepad implements InterfaceDao {
         if (vo.getEstimatedSubmitDate() == null)
             throw new CheckException("日报预计提交日期不能为空");
         Optional.ofNullable(vo.getEstimatedSubmitDate())
-                .map(date-> this.finds(example -> example.createCriteria().andEstimatedSubmitDateEqualTo(date)))
+                .map(date-> this.finds(example -> example.createCriteria().andEstimatedSubmitDateEqualTo(date).andUserIdEqualTo(ApplicationContextUtils.getCurrentUser().getUserId())))
                 .filter(notepads->!notepads.stream().findAny().isPresent())
                 .orElseThrow(()->new MessageException("duplicate notepad"));
         FruitNotepadDao dao = FruitNotepad.getDao();

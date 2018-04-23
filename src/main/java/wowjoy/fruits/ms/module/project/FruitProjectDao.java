@@ -6,8 +6,6 @@ import org.apache.commons.lang3.StringUtils;
 import wowjoy.fruits.ms.module.relation.entity.ProjectListRelation;
 import wowjoy.fruits.ms.module.relation.entity.ProjectTeamRelation;
 import wowjoy.fruits.ms.module.relation.entity.UserProjectRelation;
-import wowjoy.fruits.ms.module.team.FruitTeamDao;
-import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.text.SimpleDateFormat;
@@ -34,8 +32,18 @@ public class FruitProjectDao extends FruitProject {
     private List<FruitProjectTeam> teams;
     private FruitProjectTeam principalTeam;
     private FruitProjectUser principalUser;
+    /*是否是星标项目*/
+    private boolean mark;
 
     private Integer days;
+
+    public boolean isMark() {
+        return mark;
+    }
+
+    public void setMark(boolean mark) {
+        this.mark = mark;
+    }
 
     public List<FruitProjectTeam> getTeams() {
         return teams;

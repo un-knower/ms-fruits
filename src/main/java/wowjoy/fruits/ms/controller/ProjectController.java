@@ -148,4 +148,28 @@ public class ProjectController {
     public RestResult createTaskComeFromProjects() {
         return RestResult.newSuccess().setData(projectDaoImpl.myCreateTaskFromProjects());
     }
+
+    /**
+     * @api {post} /v1/project/star/{projectId} 星标
+     * @apiVersion 3.0.0
+     * @apiGroup project
+     * @apiParam {projectId} projectId 项目uuid
+     */
+    @RequestMapping(value = "/star/{projectId}", method = RequestMethod.POST)
+    public RestResult star(@PathVariable("projectId") String projectId) {
+        projectDaoImpl.star(projectId);
+        return RestResult.newSuccess().setData(projectId);
+    }
+
+    /**
+     * @api {delete} /v1/project/unStar/{projectId} 取消星标
+     * @apiVersion 3.0.0
+     * @apiGroup project
+     * @apiParam {projectId} projectId 项目uuid
+     */
+    @RequestMapping(value = "/unStar/{projectId}", method = RequestMethod.DELETE)
+    public RestResult unStar(@PathVariable("projectId") String projectId) {
+        projectDaoImpl.unStar(projectId);
+        return RestResult.newSuccess().setData(projectId);
+    }
 }

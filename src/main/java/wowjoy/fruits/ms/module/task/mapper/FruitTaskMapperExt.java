@@ -22,7 +22,7 @@ public interface FruitTaskMapperExt {
 
     List<FruitTaskList> selectListByTask(@Param("example") FruitTaskExample example);
 
-    List<FruitTaskUser> findUserByProjectIdAndUserIdAndTaskExample(@Param("example") FruitTaskExample example, @Param("userIds") List<String> userIds, @Param("projectId") String projectId);
+    List<FruitTaskUser> findUserByTaskExampleAndUserIdOrProjectId(@Param("example") FruitTaskExample example, @Param("userIds") List<String> userIds, @Param("projectId") String projectId);
 
     /************************************************************************************************
      *                                       个人中心专供                                            *

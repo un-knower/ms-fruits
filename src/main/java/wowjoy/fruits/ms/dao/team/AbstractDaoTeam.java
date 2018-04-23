@@ -2,24 +2,29 @@ package wowjoy.fruits.ms.dao.team;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.exception.ExceptionSupport;
+import wowjoy.fruits.ms.exception.MessageException;
 import wowjoy.fruits.ms.exception.ServiceException;
+import wowjoy.fruits.ms.module.plan.FruitPlanUser;
+import wowjoy.fruits.ms.module.plan.example.FruitPlanExample;
 import wowjoy.fruits.ms.module.relation.entity.UserTeamRelation;
+import wowjoy.fruits.ms.module.task.FruitTaskExample;
+import wowjoy.fruits.ms.module.task.FruitTaskUser;
 import wowjoy.fruits.ms.module.team.*;
 import wowjoy.fruits.ms.module.user.example.FruitUserExample;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.module.util.entity.FruitDict.Systems;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;
+import wowjoy.fruits.ms.util.GsonUtils;
 
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -45,6 +50,10 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
     protected abstract void update(FruitTeamDao data);
 
     protected abstract void delete(FruitTeamDao data);
+
+    public abstract List<FruitPlanUser> findUserByPlanExampleAndUserId(Consumer<FruitPlanExample> exampleConsumer, ArrayList<String> userIds);
+
+    public abstract List<FruitTaskUser> findUserByTaskExampleAndUserId(Consumer<FruitTaskExample> exampleConsumer, ArrayList<String> userIds);
 
     /*******************************
      * PUBLIC 函数，公共接口         *
@@ -166,14 +175,8 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
         try {
             if (StringUtils.isBlank(vo.getUuidVo()))
                 throw new CheckException("Team id not is null");
-            Map<String, Long> teamUserMap = this.findUserByTeamIds(Lists.newArrayList(vo.getUuidVo()), example -> example.createCriteria().andIsDeletedEqualTo(Systems.N.name()))
-                    .stream().collect(groupingBy(FruitTeamUser::getUserId, counting()));
-            Optional.ofNullable(vo.getUserRelation().get(Systems.ADD))
-                    .map(users -> users.stream().collect(groupingBy(UserTeamRelation::getUserId, counting())))
-                    .ifPresent(addUser -> addUser.forEach((id, count) -> {
-                        Optional.of(count).filter(i -> i <= 1).orElseThrow(() -> new CheckException("一个成员不可重复添加"));
-                        Optional.of(teamUserMap).filter(userMap -> !userMap.containsKey(id)).orElseThrow(() -> new CheckException("已有相同成员，不可重复添加"));
-                    }));
+            this.checkWantAddUserIfRepeat(vo.getUserRelation().get(Systems.ADD), vo.getUuidVo());
+            this.checkWantDeleteUserPendingCompleteItem(vo.getUserRelation().get(Systems.DELETE));
             FruitTeamDao dao = FruitTeam.getDao();
             dao.setUuid(vo.getUuidVo());
             dao.setUserRelation(vo.getUserRelation());
@@ -186,6 +189,48 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
             ex.printStackTrace();
             throw new ServiceException("团队修改[" + vo.getUuidVo() + "]错误");
         }
+    }
+
+    /*检查用户是否重复添加*/
+    public void checkWantAddUserIfRepeat(List<UserTeamRelation> addUserList, String teamId) {
+        Map<String, Long> teamUserMap = this.findUserByTeamIds(Lists.newArrayList(teamId), example -> example.createCriteria().andIsDeletedEqualTo(Systems.N.name()))
+                .stream().collect(groupingBy(FruitTeamUser::getUserId, counting()));
+            /*检查添加人员中是否有重复用户*/
+        Optional.ofNullable(addUserList)
+                .map(users -> users.stream().collect(groupingBy(UserTeamRelation::getUserId, counting())))
+                .ifPresent(addUser -> addUser.forEach((id, count) -> {
+                    Optional.of(count).filter(i -> i <= 1).orElseThrow(() -> new CheckException("一个成员不可重复添加"));
+                    Optional.of(teamUserMap).filter(userMap -> !userMap.containsKey(id)).orElseThrow(() -> new CheckException("已有相同成员，不可重复添加"));
+                }));
+    }
+
+    /*检查等待删除的用户是否有未完成的事项*/
+    public void checkWantDeleteUserPendingCompleteItem(List<UserTeamRelation> deleteUserList) {
+        /*检查移除人员中是否有未完成的事项*/
+        Optional.ofNullable(deleteUserList)
+                .filter(users -> !users.isEmpty())
+                .map(users -> users.stream().map(UserTeamRelation::getUserId).collect(toCollection(ArrayList::new)))
+                .ifPresent(userIds -> {
+                    Optional.of(CompletableFuture.supplyAsync(() -> this.findUserByPlanExampleAndUserId(example -> example.createCriteria()
+                            .andIsDeletedEqualTo(Systems.N.name())
+                            .andPlanStatusIn(Lists.newArrayList(FruitDict.PlanDict.PENDING.name(), FruitDict.PlanDict.STAY_PENDING.name())), userIds).stream().collect(groupingBy(FruitPlanUser::getUserName, counting()))
+                    ).thenCombine(CompletableFuture.supplyAsync(() ->
+                                    this.findUserByTaskExampleAndUserId(example -> example.createCriteria().andIsDeletedEqualTo(Systems.N.name()).andTaskStatusEqualTo(FruitDict.TaskDict.START.name()), userIds)
+                                            .stream().collect(groupingBy(FruitTaskUser::getUserName, counting()))),
+                            (planUserMap, taskUserMap) -> {
+                                HashSet<String> userNameSet = Sets.newHashSet();
+                                userNameSet.addAll(planUserMap.keySet().stream().collect(toCollection(Sets::newHashSet)));
+                                userNameSet.addAll(taskUserMap.keySet().stream().collect(toCollection(Sets::newHashSet)));
+                                return Optional.of(userNameSet).filter(set -> !set.isEmpty()).map(set -> set.parallelStream().map(userName -> MessageException.RefuseToRemoveUser.newInstance(userName,
+                                        Optional.of(planUserMap).filter(planMap -> planMap.containsKey(userName))
+                                                .map(planMap -> planMap.get(userName)).orElse(0L),
+                                        Optional.of(taskUserMap).filter(taskMap -> taskMap.containsKey(userName))
+                                                .map(taskMap -> taskMap.get(userName)).orElse(0L)))
+                                        .collect(toCollection(LinkedList::new))).orElseGet(LinkedList::new);
+                            }).join()).filter(msgList -> !msgList.isEmpty()).ifPresent(msgList -> {
+                        throw new MessageException(GsonUtils.newGson().toJson(msgList));
+                    });
+                });
     }
 
     public final void delete(String uuid) {
@@ -203,5 +248,4 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
         }
 
     }
-
 }

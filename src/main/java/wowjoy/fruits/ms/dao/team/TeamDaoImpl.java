@@ -5,10 +5,16 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import wowjoy.fruits.ms.dao.plan.PlanDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.UserTeamDaoImpl;
+import wowjoy.fruits.ms.dao.task.TaskDaoImpl;
 import wowjoy.fruits.ms.exception.CheckException;
+import wowjoy.fruits.ms.module.plan.FruitPlanUser;
+import wowjoy.fruits.ms.module.plan.example.FruitPlanExample;
 import wowjoy.fruits.ms.module.relation.entity.UserTeamRelation;
 import wowjoy.fruits.ms.module.relation.example.UserTeamRelationExample;
+import wowjoy.fruits.ms.module.task.FruitTaskExample;
+import wowjoy.fruits.ms.module.task.FruitTaskUser;
 import wowjoy.fruits.ms.module.team.FruitTeam;
 import wowjoy.fruits.ms.module.team.FruitTeamDao;
 import wowjoy.fruits.ms.module.team.FruitTeamExample;
@@ -17,8 +23,8 @@ import wowjoy.fruits.ms.module.team.mapper.FruitTeamMapper;
 import wowjoy.fruits.ms.module.user.example.FruitUserExample;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -30,11 +36,15 @@ import java.util.function.Consumer;
 public class TeamDaoImpl extends AbstractDaoTeam {
     private final FruitTeamMapper mapper;
     private final UserTeamDaoImpl<UserTeamRelation, UserTeamRelationExample> dao;
+    private final PlanDaoImpl planDao;
+    private final TaskDaoImpl taskDao;
 
     @Autowired
-    public TeamDaoImpl(FruitTeamMapper mapper, UserTeamDaoImpl<UserTeamRelation, UserTeamRelationExample> dao) {
+    public TeamDaoImpl(FruitTeamMapper mapper, UserTeamDaoImpl<UserTeamRelation, UserTeamRelationExample> dao, PlanDaoImpl planDao, TaskDaoImpl taskDao) {
         this.mapper = mapper;
         this.dao = dao;
+        this.planDao = planDao;
+        this.taskDao = taskDao;
     }
 
     @Override
@@ -89,6 +99,16 @@ public class TeamDaoImpl extends AbstractDaoTeam {
         delete.setIsDeleted(FruitDict.Systems.Y.name());
         mapper.updateByExampleSelective(delete, example);
         Relation.getInstance(data, this.dao).deleteUsers();
+    }
+
+    @Override
+    public List<FruitPlanUser> findUserByPlanExampleAndUserId(Consumer<FruitPlanExample> exampleConsumer, ArrayList<String> userIds) {
+        return planDao.findUserByPlanExampleAndUserIdOrProjectId(exampleConsumer, null, userIds);
+    }
+
+    @Override
+    public List<FruitTaskUser> findUserByTaskExampleAndUserId(Consumer<FruitTaskExample> exampleConsumer, ArrayList<String> userIds){
+        return taskDao.findUserByTaskExampleAndUserIdOrProjectId(exampleConsumer,userIds,null);
     }
 
     private static class Relation {

@@ -21,7 +21,7 @@ public interface FruitPlanMapperExt {
 
     List<FruitPlanUser> selectUserByPlanIds(@Param("planIds") List<String> planIds, @Param("userId") String userId);
 
-    List<FruitPlanUser> selectUserByPlanExampleAndUserIdAndProjectId(@Param("example") FruitPlanExample example, @Param("projectId") String projectId, @Param("userIds") List<String> userIds);
+    List<FruitPlanUser> selectUserByPlanExampleAndUserIdOrProjectId(@Param("example") FruitPlanExample example, @Param("projectId") String projectId, @Param("userIds") List<String> userIds);
 
     List<FruitPlanTask> selectTaskByPlanIds(@Param("example") FruitTaskExample taskExample, @Param("planIds") List<String> planIds);
 

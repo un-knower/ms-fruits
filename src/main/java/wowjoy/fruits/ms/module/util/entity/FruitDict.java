@@ -96,6 +96,8 @@ public class FruitDict extends AbstractEntity {
         USER("用户"),
         TEAM("团队"),
         List("列表"),
+        VERSIONS("版本"),
+        DEFECT("缺陷"),
         PLANUSER("计划-用户"),
         TASKUSER("任务-用户"),
         MEILESTONE("里程碑"),
@@ -561,4 +563,81 @@ public class FruitDict extends AbstractEntity {
         }
     }
 
+    public static class DefectDict {
+        /*缺陷类型*/
+        public enum Type {
+            FUNCTION("功能"),
+            API("接口"),
+            LOGIC("逻辑"),
+            DATA("数据"),
+            COMPUTE("计算"),
+            INTERFACE("界面"),
+            DOCUMENT("文档"),
+            PERFORMANCE("性能"),
+            DEPLOY("配置"),
+            CRITERIA("标准"),
+            ENVIRONMENT("环境"),
+            COMPATIBLE("兼容"),
+            OTHER("其他");
+
+            private String parentCode;
+            private String value;
+
+            Type(String value) {
+                this.parentCode = Parents.DEFECT.name();
+                this.value = value;
+            }
+        }
+
+        /*缺陷等级*/
+        public enum Level {
+            EMERGENCY("紧急"),
+            HIGH("高"),
+            CENTRE("中"),
+            LOW("低"),
+            ADVICE("建议");
+
+            private String parentCode;
+            private String value;
+
+            Level(String value) {
+                this.parentCode = Parents.DEFECT.name();
+                this.value = value;
+            }
+        }
+
+        /*危险系数 / 严重程度*/
+        public enum Index {
+            DEADLY("致命"),
+            SERIOUS("严重"),
+            COMMON("一般"),
+            SLIGHT("轻微"),
+            IMPROVE("有待改进");
+
+            private String parentCode;
+            private String value;
+
+            Index(String value) {
+                this.parentCode = Parents.DEFECT.name();
+                this.value = value;
+            }
+        }
+
+        /*缺陷状态*/
+        public enum Status {
+            NEW("新开"),
+            SOLVED("已解决"),
+            CLOSED("已关闭"),
+            DELAY("延迟处理"),
+            DISREGARD("不予处理");
+
+            private String parentCode;
+            private String value;
+
+            Status(String value) {
+                this.parentCode = Parents.DEFECT.name();
+                this.value = value;
+            }
+        }
+    }
 }

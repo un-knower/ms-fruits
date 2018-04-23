@@ -18,20 +18,20 @@
             <property name="forceBigDecimals" value="false"/>
         </javaTypeResolver>
 
-        <javaModelGenerator targetPackage="wowjoy.fruits.ms.module.resource" targetProject="MAVEN">
+        <javaModelGenerator targetPackage="wowjoy.fruits.ms.module.defect" targetProject="MAVEN">
             <property name="enableSubPackages" value="true"/>
             <property name="trimStrings" value="true"/>
         </javaModelGenerator>
 
-        <sqlMapGenerator targetPackage="wowjoy.fruits.ms.module.resource.mapper" targetProject="MAVEN">
+        <sqlMapGenerator targetPackage="wowjoy.fruits.ms.module.defect.mapper" targetProject="MAVEN">
             <property name="enableSubPackages" value="true"/>
         </sqlMapGenerator>
 
-        <javaClientGenerator type="XMLMAPPER" targetPackage="wowjoy.fruits.ms.module.resource.mapper" targetProject="MAVEN">
+        <javaClientGenerator type="XMLMAPPER" targetPackage="wowjoy.fruits.ms.module.defect.mapper" targetProject="MAVEN">
             <property name="enableSubPackages" value="true"/>
         </javaClientGenerator>
 
-        <table schema="fruitResource" tableName="fruits_resource" domainObjectName="FruitResource">
+        <table schema="DefectStatusCount" tableName="defect_status_count" domainObjectName="DefectStatusCount">
             <ignoreColumn column="inc_id"/>
         </table>
 

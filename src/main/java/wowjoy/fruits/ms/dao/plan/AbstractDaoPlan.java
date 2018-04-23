@@ -13,7 +13,10 @@ import wowjoy.fruits.ms.exception.MessageException;
 import wowjoy.fruits.ms.exception.ServiceException;
 import wowjoy.fruits.ms.module.logs.FruitLogs;
 import wowjoy.fruits.ms.module.logs.FruitLogsVo;
-import wowjoy.fruits.ms.module.plan.*;
+import wowjoy.fruits.ms.module.plan.FruitPlan;
+import wowjoy.fruits.ms.module.plan.FruitPlanSummaryDao;
+import wowjoy.fruits.ms.module.plan.FruitPlanUser;
+import wowjoy.fruits.ms.module.plan.FruitPlanVo;
 import wowjoy.fruits.ms.module.plan.example.FruitPlanExample;
 import wowjoy.fruits.ms.module.task.FruitTask;
 import wowjoy.fruits.ms.module.task.FruitTaskExample;
@@ -36,6 +39,7 @@ import java.util.function.IntFunction;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.*;
 
 public abstract class AbstractDaoPlan implements InterfaceDao {
@@ -172,22 +176,22 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
         Map<String, LinkedList<FruitPlan.Info>> oneConcert = infos.parallelStream().collect(groupingBy(FruitPlan.Info::getPlanStatus, toCollection(Lists::newLinkedList)));
         ArrayList<FruitPlan.Info> sortAfterPlans = Optional.ofNullable(oneConcert.get(PlanDict.STAY_PENDING.name()))
                 .map(stayPendingList -> {
-                    stayPendingList.sort((l, r) -> r.getEstimatedEndDate().compareTo(l.getEstimatedEndDate()));
+                    stayPendingList.sort(comparing(FruitPlan::getEstimatedEndDate));
                     return new ArrayList<>(stayPendingList);
                 }).orElseGet(Lists::newArrayList);
         sortAfterPlans.addAll(Optional.ofNullable(oneConcert.get(PlanDict.PENDING.name()))
                 .map(pendingList -> {
-                    pendingList.sort((l, r) -> r.getEstimatedEndDate().compareTo(l.getEstimatedEndDate()));
+                    pendingList.sort(comparing(FruitPlan::getEstimatedEndDate));
                     return new ArrayList<>(pendingList);
                 }).orElseGet(Lists::newArrayList));
         sortAfterPlans.addAll(Optional.ofNullable(oneConcert.get(PlanDict.COMPLETE.name()))
                 .map(completeList -> {
-                    completeList.sort((l, r) -> r.getEstimatedEndDate().compareTo(l.getEstimatedEndDate()));
+                    completeList.sort(comparing(FruitPlan::getEstimatedEndDate));
                     return new ArrayList<>(completeList);
                 }).orElseGet(Lists::newArrayList));
         sortAfterPlans.addAll(Optional.ofNullable(oneConcert.get(PlanDict.END.name()))
                 .map(endList -> {
-                    endList.sort((l, r) -> r.getEstimatedEndDate().compareTo(l.getEstimatedEndDate()));
+                    endList.sort(comparing(FruitPlan::getEstimatedEndDate));
                     return new ArrayList<>(endList);
                 }).orElseGet(Lists::newArrayList));
         return sortAfterPlans;
@@ -381,10 +385,8 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
                 .andIsDeletedEqualTo(FruitDict.Systems.N.name())
                 .andPlanStatusIn(Lists.newArrayList(PlanDict.STAY_PENDING.name(), PlanDict.PENDING.name()))); //查询出所有待完成、进行中的计划
 
-        this.checkThePlanInToBeCompleteTasks(Optional.ofNullable(planList
-                .stream()
+        this.checkThePlanInToBeCompleteTasks(Optional.ofNullable(planList.stream()
                 .map(FruitPlan::getUuid).collect(toCollection(ArrayList::new)))
-                .filter(plans -> !plans.isEmpty())
                 .map(plans -> {
                     plans.add(intoUpdate.getUuid());
                     return plans;

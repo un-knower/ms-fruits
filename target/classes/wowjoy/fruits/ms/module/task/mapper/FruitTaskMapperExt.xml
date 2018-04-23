@@ -226,32 +226,33 @@
     <select id="selectByListExampleAndProjectId" resultMap="InfoResultMap">
         select
         <include refid="Base_Column_List">
-            <property name="replace" value="task"/>
+            <property name="replace" value="ftask"/>
         </include>
         ,
-        listRelation.list_id
-        from fruits_task task
-        right join
-        (
-        select task_id,list_id from task_list_relation where list_id in
-        (select list_id from fruits_list flist inner join (select list_id from project_list_relation where project_id =
-        #{projectId} and is_deleted = 'N') plr on plr.list_id = flist.uuid
-        and
-        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
-            <include refid="list_Example_Where_Clause">
-                <property name="replace" value="flist"/>
-            </include>
-            AND flist.is_deleted = 'N'
-        </trim>
-        ) and is_deleted = 'N'
-        ) listRelation on listRelation.task_id = task.uuid
+        listJoin.list_id
+        from fruits_task ftask
+        right join (
+        select listJoin.task_id,listJoin.list_id from task_list_relation listJoin
+        right join (select list_id,project_id from project_list_relation where project_id = #{projectId} and is_deleted
+        = 'N') projectJoin on listJoin.list_id = projectJoin.list_id
+        right join (select uuid as list_id from fruits_list flist
+        <trim suffixOverrides="AND | OR" prefixOverrides="AND | OR">
+            <where>
+                <include refid="list_Example_Where_Clause">
+                    <property name="replace" value="flist"/>
+                </include>
+                AND flist.is_deleted = 'N'
+            </where>
+        </trim>) flist on flist.list_id = projectJoin.list_id
+        where listJoin.is_deleted = 'N'
+        ) listJoin on listJoin.task_id = ftask.uuid
         <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
             <where>
                 <include refid="Base_Example_Where_Clause">
-                    <property name="replace" value="task"/>
+                    <property name="replace" value="ftask"/>
                 </include>
-                AND task.is_deleted = 'N'
-                and task.uuid is not null
+                AND ftask.is_deleted = 'N'
+                and ftask.uuid is not null
             </where>
         </trim>
         <if test="example.orderByClause != null">
@@ -298,7 +299,8 @@
         </include>
         ,taskJoin.task_id
         from fruits_plan fplan
-        right join (select task_id,plan_id from task_plan_relation where is_deleted = 'N') taskJoin on taskJoin.plan_id = fplan.uuid
+        right join (select task_id,plan_id from task_plan_relation where is_deleted = 'N') taskJoin on taskJoin.plan_id
+        = fplan.uuid
         right join (select ftask.uuid from fruits_task ftask
         <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
             <where>
@@ -379,10 +381,12 @@
         <include refid="List_Column_List">
             <property name="replace" value="flist"/>
             <property name="prefix" value=""/>
-        </include>,
+        </include>
+        ,
         taskJoin.task_id
         from fruits_list flist
-        right join (select task_id,list_id from task_list_relation where is_deleted = 'N') taskJoin on taskJoin.list_id = flist.uuid
+        right join (select task_id,list_id from task_list_relation where is_deleted = 'N') taskJoin on taskJoin.list_id
+        = flist.uuid
         right join (select ftask.uuid from fruits_task ftask
         <trim suffixOverrides="AND | OR" prefixOverrides="AND | OR ">
             <where>
@@ -396,7 +400,7 @@
         where flist.uuid is not null and flist.is_deleted = 'N'
     </select>
 
-    <select id="findUserByProjectIdAndUserIdAndTaskExample" resultMap="UserResultMap">
+    <select id="findUserByTaskExampleAndUserIdOrProjectId" resultMap="UserResultMap">
         select
         <include refid="User_Column_List">
             <property name="replace" value="fuser"/>

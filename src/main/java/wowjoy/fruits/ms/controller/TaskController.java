@@ -15,7 +15,6 @@ import wowjoy.fruits.ms.util.JsonArgument;
 import wowjoy.fruits.ms.util.RestResult;
 
 import javax.annotation.Resource;
-import java.util.function.Predicate;
 
 import static wowjoy.fruits.ms.util.RestResult.newSuccess;
 
@@ -151,8 +150,8 @@ public class TaskController {
      */
     @RequestMapping(value = "/project/{uuid}", method = RequestMethod.GET)
     public RestResult findJoinProject(@PathVariable("uuid") String uuid,
-                                      @JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
-        return newSuccess().setData(ApiDataFactory.TaskController.findJoinProject.apply(daoTask.findJoinProjects(uuid, vo)));
+                                      @JsonArgument(type = FruitTask.Search.class) FruitTask.Search search) {
+        return newSuccess().setData(ApiDataFactory.TaskController.findJoinProject.apply(daoTask.findJoinProjects(uuid, search)));
     }
 
     /**

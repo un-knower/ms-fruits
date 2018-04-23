@@ -2,11 +2,13 @@ package wowjoy.fruits.ms.dao.task;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.reflect.TypeToken;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.exception.ExceptionSupport;
 import wowjoy.fruits.ms.exception.ServiceException;
+import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.list.FruitList;
 import wowjoy.fruits.ms.module.list.FruitListExample;
 import wowjoy.fruits.ms.module.logs.FruitLogs;
@@ -47,7 +49,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
     /**
      * 查询关联项目的任务列表
      */
-    protected abstract List<FruitTaskInfo> findByListExampleAndProjectId(Consumer<FruitTaskExample> exampleUnaryOperator, Consumer<FruitListExample> listExampleConsumer, String projectId);
+    protected abstract List<FruitTaskInfo> findByListExampleAndProjectId(Consumer<FruitTaskExample> exampleUnaryOperator, Consumer<FruitListExample> listExampleConsumer, String projectId, int pageNum, int pageSize);
 
     protected abstract List<FruitList> findProjectList(String projectId, Consumer<FruitListExample> listExampleConsumer);
 
@@ -65,7 +67,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
 
     protected abstract List<FruitTaskInfo> myCreateTask(Consumer<FruitTaskExample> taskExampleConsumer, String projectId);
 
-    protected abstract List<FruitTaskUser> findUserByProjectIdAndUserIdAndTaskExample(Consumer<FruitTaskExample> exampleConsumer, List<String> userIds, String projectId);
+    protected abstract List<FruitTaskUser> findUserByTaskExampleAndUserIdOrProjectId(Consumer<FruitTaskExample> exampleConsumer, List<String> userIds, String projectId);
 
     protected abstract void insertTransfer(Consumer<FruitTransferLogs.Insert> insertConsumer);
 
@@ -325,36 +327,75 @@ public abstract class AbstractDaoTask implements InterfaceDao {
      * 1、查询项目的任务列表集合
      * 2、查询每个列表对应的任务集合
      * 3、组合每个任务的详细信息，例如计划信息、用户信息
+     * <p>
+     * v3.0.0新增功能
+     * 1、增加日期范围查询
+     * 2、增加指定列表ID查询
      */
-    public ArrayList<FruitTaskList> findJoinProjects(String projectId, final FruitTaskVo vo) {
-        String userId = ApplicationContextUtils.getCurrentUser().getUserId();
+    public ArrayList<FruitTaskList> findJoinProjects(String projectId, final FruitTask.Search search) {
+        /*当前用户userId*/
+        final String userId = ApplicationContextUtils.getCurrentUser().getUserId();
+        /*结果汇总*/
         final ArrayList<FruitTaskList> exportLists = Lists.newArrayList();
+        /*列表查询条件*/
         Consumer<FruitListExample> listExampleConsumer = listExample -> {
             FruitListExample.Criteria criteria = listExample.createCriteria();
-            if (StringUtils.isNotBlank(vo.getListTitle()))
-                criteria.andTitleLike(MessageFormat.format("%{0}%", vo.getListTitle()));
+            /*列表标题查询*/
+            Optional.ofNullable(search)
+                    .filter(task -> StringUtils.isNotBlank(task.getListTitle()))
+                    .ifPresent(task -> criteria.andTitleLike(MessageFormat.format("%{0}%", search.getListTitle())));
+            /*列表id查询，支持编号查询*/
+            Optional.ofNullable(search)
+                    .filter(task -> StringUtils.isNotBlank(task.getLists()))
+                    .map(task -> task.getLists().split(","))
+                    .filter(lists -> lists.length > 0)
+                    .ifPresent(lists -> criteria.andUuidIn(Lists.newArrayList(lists)));
             criteria.andIsDeletedEqualTo(Systems.N.name());
         };
-        List<FruitTaskInfo> exportTasks = Optional.ofNullable(projectId).filter(StringUtils::isNotBlank).map(id -> this.findByListExampleAndProjectId((taskExample) -> {
-            if (StringUtils.isNotBlank(vo.getTitle()))
-                taskExample.createCriteria().andTitleLike(MessageFormat.format("%{0}%", vo.getTitle()));
-        }, listExampleConsumer, projectId)).orElseThrow(() -> new CheckException("projectId can't null"));
-        CompletableFuture.allOf(
-                CompletableFuture.supplyAsync(plugUtilSupplier(exportTasks)),
-                CompletableFuture.supplyAsync(plugUserSupplier(exportTasks.stream().map(FruitTaskInfo::getUuid).collect(toList())))
-                        .thenAccept(userMap -> exportTasks.parallelStream().forEach(task -> Optional.ofNullable(userMap.get(task.getUuid())).map(users -> {
-                            users.sort((l, r) -> l.getUserId().equals(userId) ? -1 : 1);
-                            return users;
-                        }).ifPresent(task::setUsers))),
-                CompletableFuture.supplyAsync(() -> this.findProjectList(projectId, listExampleConsumer)).thenAccept(lists -> {
-                    Map<String, ArrayList<FruitTaskInfo>> listMap = exportTasks.parallelStream().collect(groupingBy(FruitTaskInfo::getListId, toCollection(ArrayList::new)));
-                    exportLists.addAll(lists.parallelStream().map(list -> {
-                        FruitTaskList exportList = GsonUtils.toT(list, FruitTaskList.class);
-                        exportList.setTasks(Optional.ofNullable(listMap.get(list.getUuid())).map(this::sortDuet).orElse(null));
-                        return exportList;
-                    }).collect(toCollection(ArrayList::new)));
-                })).join();
-        return Optional.ofNullable(vo.getTitle()).filter(StringUtils::isNotBlank).map(title -> exportLists.stream().filter(list -> list.getTasks() != null && !list.getTasks().isEmpty()).collect(toCollection(ArrayList::new))).orElse(exportLists);
+
+        /*获取项目下所有列表*/
+        List<FruitList> listList = this.findProjectList(projectId, listExampleConsumer);
+        /*获取每一个列表下的任务*/
+        ArrayList<CompletableFuture<Void>> futures = Optional.ofNullable(listList)
+                .filter(lists -> !lists.isEmpty())
+                .map(lists -> {
+                    /*设定线程池大小，封顶一百*/
+                    Executor executor = obtainExecutor.apply(lists.size());
+                    return lists.stream()
+                            .map(intoList -> (FruitTaskList) GsonUtils.newGson().fromJson(GsonUtils.newGson().toJsonTree(intoList), TypeToken.of(FruitTaskList.class).getType()))
+                            .map(intoList -> CompletableFuture.supplyAsync(() -> this.findByListExampleAndProjectId(  //根据列表Example 和 项目ID 查询所有任务
+                                    (taskExample) -> {  //查询列表关联任务
+                                        FruitTaskExample.Criteria criteria = taskExample.createCriteria();
+                                        Optional.ofNullable(search.getTitle())
+                                                .filter(StringUtils::isNotBlank)
+                                                .ifPresent(title -> criteria.andTitleLike(MessageFormat.format("%{0}%", title)));
+                                        Optional.ofNullable(search)
+                                                .filter(task -> Objects.nonNull(task.getBeginDateTime()))
+                                                .filter(task -> Objects.nonNull(task.getEndDateTime()))
+                                                .map(task -> criteria.andEndDateBetween(task.getBeginDateTime(), task.getEndDateTime()));
+                                    }, listExample -> listExample.createCriteria().andUuidEqualTo(intoList.getUuid()), projectId, search.getPageNum(), search.getPageSize()), executor)
+                                    .thenApply(tasks -> {   //查询关联信息
+                                        CompletableFuture.allOf(
+                                                CompletableFuture.supplyAsync(plugUtilSupplier(tasks)),
+                                                CompletableFuture.supplyAsync(plugUserSupplier(tasks.stream().map(FruitTaskInfo::getUuid).collect(toList())))
+                                                        .thenAccept(userMap -> tasks.parallelStream().forEach(task -> Optional.ofNullable(userMap.get(task.getUuid())).map(users -> {
+                                                            users.sort((l, r) -> l.getUserId().equals(userId) ? -1 : 1);
+                                                            return users;
+                                                        }).ifPresent(task::setUsers)))).join();
+                                        return tasks;
+                                    })
+                                    .thenAccept(tasks -> {
+                                        intoList.setTasks(Optional.ofNullable(tasks)
+                                                .map(this::sortDuet)
+                                                .orElse(null));
+                                        exportLists.add(intoList);
+                                    })).collect(toCollection(Lists::newArrayList));
+                }).orElseGet(ArrayList::new);
+        /*等待结果完成*/
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[futures.size()])).join();
+        /*列表排序*/
+        exportLists.sort(Comparator.comparing(AbstractEntity::getCreateDateTime).reversed());
+        return Optional.ofNullable(search.getTitle()).filter(StringUtils::isNotBlank).map(title -> exportLists.stream().filter(list -> list.getTasks() != null && !list.getTasks().isEmpty()).collect(toCollection(ArrayList::new))).orElse(exportLists);
     }
 
     /*排序二重奏*/
@@ -401,7 +442,7 @@ public abstract class AbstractDaoTask implements InterfaceDao {
     }
 
     public List<FruitTaskUser> findContainUserListByUserIdByProjectId(Consumer<FruitTaskExample> exampleConsumer, List<String> userIds, String projectId) {
-        return this.findUserByProjectIdAndUserIdAndTaskExample(exampleConsumer, userIds, projectId);
+        return this.findUserByTaskExampleAndUserIdOrProjectId(exampleConsumer, userIds, projectId);
     }
 
     /************************************************************************************************

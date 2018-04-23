@@ -25,7 +25,6 @@ import wowjoy.fruits.ms.module.relation.entity.PlanUserRelation;
 import wowjoy.fruits.ms.module.relation.example.PlanProjectRelationExample;
 import wowjoy.fruits.ms.module.relation.example.PlanUserRelationExample;
 import wowjoy.fruits.ms.module.task.FruitTask;
-import wowjoy.fruits.ms.module.task.FruitTaskDao;
 import wowjoy.fruits.ms.module.task.FruitTaskExample;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.module.util.entity.FruitDict.Systems;
@@ -79,12 +78,11 @@ public class PlanDaoImpl extends AbstractDaoPlan {
         return mapper.selectByExampleWithBLOBs(example);
     }
 
-    public List<FruitPlanUser> findUserByPlanExampleAndUserIdAndProjectId(Consumer<FruitPlanExample> exampleConsumer, String projectId, List<String> userIds) {
+    public List<FruitPlanUser> findUserByPlanExampleAndUserIdOrProjectId(Consumer<FruitPlanExample> exampleConsumer, String projectId, List<String> userIds) {
         Optional.ofNullable(userIds).filter(ids -> !ids.isEmpty()).orElseThrow(() -> new CheckException("userIds can't null"));
-        Optional.ofNullable(projectId).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException("projectId can't null"));
         FruitPlanExample example = new FruitPlanExample();
         exampleConsumer.accept(example);
-        return mapper.selectUserByPlanExampleAndUserIdAndProjectId(example, projectId, userIds);
+        return mapper.selectUserByPlanExampleAndUserIdOrProjectId(example, projectId, userIds);
     }
 
     @Override

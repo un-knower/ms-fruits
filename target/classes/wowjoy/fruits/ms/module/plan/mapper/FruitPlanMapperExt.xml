@@ -44,7 +44,7 @@
         <result column="status_description" jdbcType="VARCHAR" property="statusDescription"/>
         <result column="task_level" jdbcType="VARCHAR" property="taskLevel"/>
         <result column="estimated_end_date" jdbcType="DATE" property="estimatedEndDate"/>
-        <result column="end_date" jdbcType="DATE" property="endDate"/>
+        <result column="end_date" jdbcType="TIMESTAMP" property="endDate"/>
         <result column="description" jdbcType="VARCHAR" property="description"/>
         <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
@@ -212,7 +212,7 @@
         </trim>
     </select>
 
-    <select id="selectUserByPlanExampleAndUserIdAndProjectId" resultMap="UserResultMap">
+    <select id="selectUserByPlanExampleAndUserIdOrProjectId" resultMap="UserResultMap">
         select
         <include refid="User_Column_List">
             <property name="replace" value="fuser"/>
@@ -224,10 +224,14 @@
         select planJoin.pu_role,planJoin.user_id,planJoin.plan_id,projectJoin.project_id from plan_user_relation
         planJoin
         right join (select plan_id,project_id from plan_project_relation
-        <where>
-            project_id = #{projectId}
-            and is_deleted = 'N'
-        </where>
+        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
+            <where>
+                <if test="projectId != null">
+                    project_id = #{projectId}
+                </if>
+                and is_deleted = 'N'
+            </where>
+        </trim>
         ) projectJoin on projectJoin.plan_id = planJoin.plan_id
         right join (select uuid from fruits_plan fplan
         <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">

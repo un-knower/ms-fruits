@@ -271,6 +271,72 @@ public class FruitTask extends AbstractEntity {
         }
     }
 
+    public static class Search extends FruitTask implements EntityUtils {
+        public Search() {
+            setUuid(null);
+            setIsDeleted(null);
+        }
+
+        /*列表名称查询*/
+        private String listTitle;
+        /*日期范围查询*/
+        private Date beginDateTime;   //开始时间
+        private Date endDateTime;     //结束时间
+        /*根据列表ID查询，支持多列表查询*/
+        private String lists;   //多个逗号隔开
+        /*分页*/
+        private int pageNum;    //页码
+        private int pageSize;   //行数
+
+        public Date getBeginDateTime() {
+            return beginDateTime;
+        }
+
+        public void setBeginDateTime(Date beginDateTime) {
+            this.beginDateTime = beginDateTime;
+        }
+
+        public Date getEndDateTime() {
+            return endDateTime;
+        }
+
+        public void setEndDateTime(Date endDateTime) {
+            this.endDateTime = endDateTime;
+        }
+
+        public int getPageNum() {
+            return pageNum;
+        }
+
+        public void setPageNum(int pageNum) {
+            this.pageNum = pageNum;
+        }
+
+        public int getPageSize() {
+            return pageSize;
+        }
+
+        public void setPageSize(int pageSize) {
+            this.pageSize = pageSize;
+        }
+
+        public String getLists() {
+            return lists;
+        }
+
+        public void setLists(String lists) {
+            this.lists = lists;
+        }
+
+        public String getListTitle() {
+            return listTitle;
+        }
+
+        public void setListTitle(String listTitle) {
+            this.listTitle = listTitle;
+        }
+    }
+
     public Info toInfo() {
         return GsonUtils.toT(this, Info.class);
     }

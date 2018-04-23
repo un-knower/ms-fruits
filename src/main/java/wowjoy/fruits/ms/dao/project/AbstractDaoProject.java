@@ -3,6 +3,7 @@ package wowjoy.fruits.ms.dao.project;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.reflect.TypeToken;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
@@ -10,6 +11,7 @@ import wowjoy.fruits.ms.exception.ExceptionSupport;
 import wowjoy.fruits.ms.exception.MessageException;
 import wowjoy.fruits.ms.exception.ServiceException;
 import wowjoy.fruits.ms.module.list.FruitList;
+import wowjoy.fruits.ms.module.mark.UserMarkProject;
 import wowjoy.fruits.ms.module.plan.FruitPlanUser;
 import wowjoy.fruits.ms.module.plan.example.FruitPlanExample;
 import wowjoy.fruits.ms.module.project.*;
@@ -24,15 +26,16 @@ import wowjoy.fruits.ms.module.user.example.FruitUserExample;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.module.util.entity.FruitDict.ProjectTeamDict;
 import wowjoy.fruits.ms.module.util.entity.FruitDict.Systems;
+import wowjoy.fruits.ms.util.ApplicationContextUtils;
 import wowjoy.fruits.ms.util.GsonUtils;
 
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import static java.util.stream.Collectors.*;
 
@@ -57,7 +60,7 @@ public abstract class AbstractDaoProject implements InterfaceDao {
     protected abstract void insert(Consumer<FruitProjectDao> daoConsumer);
 
 
-    protected abstract List<FruitProjectDao> finds(Consumer<FruitProjectExample> exampleConsumer);
+    protected abstract List<FruitProject> finds(Consumer<FruitProjectExample> exampleConsumer);
 
     protected abstract ArrayList<FruitProjectUser> findUserByProjectIds(Consumer<FruitUserExample> exampleConsumer, List<String> ids);
 
@@ -78,6 +81,12 @@ public abstract class AbstractDaoProject implements InterfaceDao {
     public abstract List<FruitTaskProject> myCreateTaskFromProjects();
 
     protected abstract List<FruitTeamUser> findTeamUserByTeamIds(List<String> teamIds);
+
+    protected abstract List<UserMarkProject> findMarkProject(String userId);
+
+    public abstract void star(String projectId);
+
+    public abstract void unStar(String projectId);
 
     /*******************************
      * PUBLIC 函数，公共接口         *
@@ -141,19 +150,39 @@ public abstract class AbstractDaoProject implements InterfaceDao {
      * @param vo
      * @return
      */
-    public final FruitProjectDao find(FruitProjectVo vo) {
-        Optional<FruitProjectDao> project = this.finds(example -> example.createCriteria().andUuidEqualTo(vo.getUuidVo()).andIsDeletedEqualTo(Systems.N.name())).stream().findAny();
+    public final FruitProject.Info find(FruitProjectVo vo) {
+        Optional<FruitProject> project = this.finds(example -> example.createCriteria().andUuidEqualTo(vo.getUuidVo()).andIsDeletedEqualTo(Systems.N.name())).stream().findAny();
         if (!project.isPresent())
             throw new CheckException("项目不存在");
-        DaoThread.getFixed()
-                .execute(this.plugUser(Lists.newArrayList(project.get())))
-                .execute(this.plugTeam(Lists.newArrayList(project.get())))
-                .get().shutdown();
-        return project.get();
+        FruitProject.Info exportInfo = GsonUtils.newGson().fromJson(GsonUtils.newGson().toJsonTree(project.get()), TypeToken.of(FruitProject.Info.class).getType());
+        CompletableFuture.allOf(
+                CompletableFuture.supplyAsync(this.plugUserSupplier(Lists.newArrayList(exportInfo.getUuid())))
+                        .thenAccept(userMap -> Optional.ofNullable(userMap.get(exportInfo.getUuid()))
+                                .filter(users -> !users.isEmpty())
+                                .ifPresent(users -> {
+                                    exportInfo.setUsers(users);
+                                    exportInfo.seekPrincipalUser();
+                                })),
+                CompletableFuture.supplyAsync(this.plugTeamSupplier(Lists.newArrayList(project.get().getUuid())))
+                        .thenAccept(teamList -> Optional.ofNullable(teamList)
+                                .filter(teams -> !teams.isEmpty())
+                                .ifPresent(teams -> {
+                                    Map<String, ArrayList<FruitTeamUser>> userMap = this.findUserByTeamId(teams.stream().map(FruitProjectTeam::getUuid).collect(toCollection(ArrayList::new))).stream().collect(groupingBy(FruitTeamUser::getTeamId, toCollection(Lists::newArrayList)));
+                                    exportInfo.setTeams(teams
+                                            .stream()
+                                            .map(team -> {
+                                                team.setUsers(userMap.get(team.getUuid()));
+                                                return team;
+                                            })
+                                            .collect(toCollection(ArrayList::new)));
+                                    exportInfo.seekPrincipalTeam();
+                                }))).join();
+        return exportInfo;
     }
 
-    public final List<FruitProjectDao> finds(FruitProjectVo vo) {
-        List<FruitProjectDao> result = this.finds(example -> {
+    public final List<FruitProject.Info> finds(FruitProjectVo vo) {
+        final String userId = ApplicationContextUtils.getCurrentUser().getUserId();
+        List<FruitProject.Info> exportProject = CompletableFuture.supplyAsync(() -> this.finds(example -> {
             final FruitProjectExample.Criteria criteria = example.createCriteria();
             if (StringUtils.isNotBlank(vo.getTitle()))
                 criteria.andTitleLike(MessageFormat.format("%{0}%", vo.getTitle()));
@@ -165,45 +194,55 @@ public abstract class AbstractDaoProject implements InterfaceDao {
                 example.setOrderByClause(order);
             else
                 example.setOrderByClause("create_date_time desc");
-        });
-        DaoThread.getFixed()
-                .execute(this.plugUser(result))
-                .execute(this.plugTeam(result))
-                .get().shutdown();
-        return result;
+        })).thenCombine(CompletableFuture.supplyAsync(() -> this.findMarkProject(userId)),
+                (projects, markList) -> {
+                    List<FruitProject.Info> exportProjects = projects.stream().map(project -> {
+                        FruitProject.Info exportInfo = GsonUtils.newGson().fromJson(GsonUtils.newGson().toJsonTree(project), TypeToken.of(FruitProject.Info.class).getType());
+                        Optional.of(markList).flatMap(marks -> marks.stream().filter(mark -> mark.getProjectId().equals(project.getUuid())).findAny()).ifPresent(exportInfo::setMarkProject);
+                        return exportInfo;
+                    }).collect(toList());
+                    exportProjects.sort((l, r) -> l.isMark() ? -1 : 1);
+                    exportProjects.sort((l, r) -> Optional.ofNullable(l.getMarkProject()).map(markL -> Optional.ofNullable(r.getMarkProject()).map(markR -> markL.getCreateDateTime().compareTo(markR.getCreateDateTime())).orElse(0)).orElse(0));
+                    return exportProjects;
+                }).join();
+        CompletableFuture.allOf(
+                CompletableFuture.supplyAsync(this.plugUserSupplier(exportProject.stream().map(FruitProject::getUuid).collect(toList())))
+                        .thenAccept(userMap -> exportProject.parallelStream()
+                                .filter(project -> userMap.containsKey(project.getUuid()))
+                                .forEach(project -> {
+                                    project.setUsers(userMap.get(project.getUuid()));
+                                    project.seekPrincipalUser();
+                                })),
+                CompletableFuture.supplyAsync(this.plugTeamSupplier(exportProject.stream().map(FruitProject::getUuid).collect(toList())))
+                        .thenAccept(teamList -> {
+                            Optional.ofNullable(teamList)
+                                    .filter(teams -> !teams.isEmpty())
+                                    .map(teams -> teams.stream().collect(groupingBy(FruitProjectTeam::getProjectId, toCollection(Lists::newArrayList))))
+                                    .ifPresent(teamMap -> exportProject.parallelStream()
+                                            .filter(project -> teamMap.containsKey(project.getUuid()))
+                                            .forEach(project -> {
+                                                project.setTeams(teamMap.get(project.getUuid()));
+                                                project.seekPrincipalTeam();
+                                            }));
+                        })).join();
+        return exportProject;
     }
 
-    private Callable plugUser(List<FruitProjectDao> projectDaoList) {
-        return () -> {
-            if (projectDaoList.isEmpty()) return false;
-            Map<String, List<FruitProjectUser>> userMap = this.findUserByProjectIds(example -> {
-            }, projectDaoList.stream().map(FruitProjectDao::getUuid).collect(toList()))
-                    .stream()
-                    .collect(groupingBy(FruitProjectUser::getProjectId));
-            projectDaoList.parallelStream()
-                    .filter(project -> userMap.containsKey(project.getUuid()))
-                    .forEach(project -> {
-                        project.setUsers(userMap.get(project.getUuid()));
-                        project.seekPrincipalUser();
-                    });
-            return true;
-        };
+    private Supplier<Map<String, List<FruitProjectUser>>> plugUserSupplier(List<String> projectIds) {
+        return () -> Optional.ofNullable(projectIds)
+                .filter(ids -> !ids.isEmpty())
+                .map(ids -> this.findUserByProjectIds(example -> {
+                }, ids))
+                .map(users -> users.stream()
+                        .collect(groupingBy(FruitProjectUser::getProjectId)))
+                .orElseGet(Maps::newHashMap);
     }
 
-    private Callable plugTeam(List<FruitProjectDao> projectDaoList) {
-        return () -> {
-            if (projectDaoList.isEmpty()) return false;
-            Map<String, ArrayList<FruitProjectTeam>> teamMap = this.findTeamByProjectIds(projectDaoList.stream().map(FruitProjectDao::getUuid).collect(toList()))
-                    .stream()
-                    .collect(groupingBy(FruitProjectTeam::getProjectId, toCollection(ArrayList::new)));
-            projectDaoList.parallelStream()
-                    .filter(project -> teamMap.containsKey(project.getUuid()))
-                    .forEach(project -> {
-                        project.setTeams(teamMap.get(project.getUuid()));
-                        project.seekPrincipalTeam();
-                    });
-            return true;
-        };
+    private Supplier<List<FruitProjectTeam>> plugTeamSupplier(List<String> projectIds) {
+        return () -> Optional.ofNullable(projectIds)
+                .filter(ids -> !ids.isEmpty())
+                .map(this::findTeamByProjectIds)
+                .orElseGet(Lists::newArrayList);
     }
 
     /**
@@ -302,7 +341,7 @@ public abstract class AbstractDaoProject implements InterfaceDao {
 
     public final void complete(FruitProjectVo vo) {
         try {
-            Optional<FruitProjectDao> projectDao = this.finds(example -> example.createCriteria().andUuidEqualTo(vo.getUuidVo())).stream().findAny();
+            Optional<FruitProject> projectDao = this.finds(example -> example.createCriteria().andUuidEqualTo(vo.getUuidVo())).stream().findAny();
             if (!projectDao.isPresent())
                 throw new CheckException("项目不存在");
             if (FruitDict.ProjectDict.COMPLETE.name().equals(projectDao.get().getProjectStatus()))
@@ -401,5 +440,4 @@ public abstract class AbstractDaoProject implements InterfaceDao {
                 example.setOrderByClause("create_date_time desc");
         });
     }
-
 }

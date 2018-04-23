@@ -15,6 +15,9 @@ import wowjoy.fruits.ms.dao.team.AbstractDaoTeam;
 import wowjoy.fruits.ms.dao.team.TeamDaoImpl;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.list.FruitList;
+import wowjoy.fruits.ms.module.mark.UserMarkProject;
+import wowjoy.fruits.ms.module.mark.UserMarkProjectExample;
+import wowjoy.fruits.ms.module.mark.mapper.UserMarkProjectMapper;
 import wowjoy.fruits.ms.module.plan.FruitPlanUser;
 import wowjoy.fruits.ms.module.plan.example.FruitPlanExample;
 import wowjoy.fruits.ms.module.project.*;
@@ -26,7 +29,7 @@ import wowjoy.fruits.ms.module.task.FruitTaskProject;
 import wowjoy.fruits.ms.module.task.FruitTaskUser;
 import wowjoy.fruits.ms.module.team.FruitTeamUser;
 import wowjoy.fruits.ms.module.user.example.FruitUserExample;
-import wowjoy.fruits.ms.module.util.entity.FruitDict;
+import wowjoy.fruits.ms.module.util.entity.FruitDict.Systems;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;
 
 import java.util.ArrayList;
@@ -50,9 +53,15 @@ public class ProjectDaoImpl extends AbstractDaoProject {
     private final ListDaoImpl listDao;
     private final AbstractDaoTeam teamDao;
     private final TaskDaoImpl taskDao;
+    private final UserMarkProjectMapper markProjectMapper;
 
     @Autowired
-    public ProjectDaoImpl(TaskDaoImpl taskDao, TeamDaoImpl teamDao, FruitProjectMapper projectMapper, @Qualifier("projectTeamDaoImpl") ProjectTeamDaoImpl teamRelationDao, @Qualifier("userProjectDaoImpl") UserProjectDaoImpl userRelationDao, PlanDaoImpl planDaoImpl, TaskDaoImpl taskDaoImpl, ListDaoImpl listDao) {
+    public ProjectDaoImpl(TaskDaoImpl taskDao, TeamDaoImpl teamDao,
+                          FruitProjectMapper projectMapper,
+                          @Qualifier("projectTeamDaoImpl") ProjectTeamDaoImpl teamRelationDao,
+                          @Qualifier("userProjectDaoImpl") UserProjectDaoImpl userRelationDao,
+                          PlanDaoImpl planDaoImpl, TaskDaoImpl taskDaoImpl, ListDaoImpl listDao,
+                          UserMarkProjectMapper markProjectMapper) {
         this.teamDao = teamDao;
         this.projectMapper = projectMapper;
         this.teamRelationDao = teamRelationDao;
@@ -61,17 +70,18 @@ public class ProjectDaoImpl extends AbstractDaoProject {
         this.taskDaoImpl = taskDaoImpl;
         this.listDao = listDao;
         this.taskDao = taskDao;
+        this.markProjectMapper = markProjectMapper;
     }
 
     @Override
     public List<FruitTeamUser> findUserByTeamId(ArrayList<String> teamIds) {
         return teamDao.findUserByTeamIds(teamIds, example -> example.createCriteria()
-                .andIsDeletedEqualTo(FruitDict.Systems.N.name()));
+                .andIsDeletedEqualTo(Systems.N.name()));
     }
 
     @Override
     public List<FruitList> findListByProjectId(String projectId) {
-        return listDao.findByProjectId(projectId, listExample -> listExample.createCriteria().andIsDeletedEqualTo(FruitDict.Systems.N.name()));
+        return listDao.findByProjectId(projectId, listExample -> listExample.createCriteria().andIsDeletedEqualTo(Systems.N.name()));
     }
 
     @Override
@@ -83,7 +93,7 @@ public class ProjectDaoImpl extends AbstractDaoProject {
     }
 
     @Override
-    public List<FruitProjectDao> finds(Consumer<FruitProjectExample> exampleConsumer) {
+    public List<FruitProject> finds(Consumer<FruitProjectExample> exampleConsumer) {
         FruitProjectExample example = new FruitProjectExample();
         exampleConsumer.accept(example);
         return projectMapper.selectByExampleWithBLOBs(example);
@@ -126,7 +136,7 @@ public class ProjectDaoImpl extends AbstractDaoProject {
         FruitProjectExample example = new FruitProjectExample();
         example.createCriteria().andUuidEqualTo(uuid);
         FruitProjectDao delete = FruitProject.getDao();
-        delete.setIsDeleted(FruitDict.Systems.Y.name());
+        delete.setIsDeleted(Systems.Y.name());
         projectMapper.updateByExampleSelective(delete, example);
         FruitProjectDao projectDao = FruitProject.getDao();
         projectDao.setUuid(uuid);
@@ -136,7 +146,7 @@ public class ProjectDaoImpl extends AbstractDaoProject {
 
     @Override
     public List<FruitPlanUser> findPlanByPlanExampleAndUserIdsAnProjectId(Consumer<FruitPlanExample> exampleConsumer, List<String> userIds, String projectId) {
-        return planDaoImpl.findUserByPlanExampleAndUserIdAndProjectId(exampleConsumer, projectId, userIds);
+        return planDaoImpl.findUserByPlanExampleAndUserIdOrProjectId(exampleConsumer, projectId, userIds);
     }
 
     @Override
@@ -173,6 +183,37 @@ public class ProjectDaoImpl extends AbstractDaoProject {
         }).get();
     }
 
+    @Override
+    protected List<UserMarkProject> findMarkProject(String userId) {
+        UserMarkProjectExample example = new UserMarkProjectExample();
+        example.createCriteria().andUserIdEqualTo(userId).andIsDeletedEqualTo(Systems.N.name());
+        return markProjectMapper.selectByExample(example);
+    }
+
+    @Override
+    public void star(String projectId) {
+        Optional.ofNullable(projectId)
+                .filter(StringUtils::isNotBlank)
+                .ifPresent(id -> {
+                    UserMarkProject.Insert insert = new UserMarkProject.Insert();
+                    insert.setProjectId(projectId);
+                    insert.setUserId(ApplicationContextUtils.getCurrentUser().getUserId());
+                    markProjectMapper.insertSelective(insert);
+                });
+    }
+
+    @Override
+    public void unStar(String projectId) {
+        Optional.ofNullable(projectId)
+                .ifPresent(id -> {
+                    UserMarkProjectExample example = new UserMarkProjectExample();
+                    example.createCriteria().andProjectIdEqualTo(projectId).andUserIdEqualTo(ApplicationContextUtils.getCurrentUser().getUserId());
+                    UserMarkProject.Update update = new UserMarkProject.Update();
+                    update.setIsDeleted(Systems.Y.name());
+                    markProjectMapper.updateByExampleSelective(update, example);
+                });
+    }
+
     /**
      * 非静态类，对外部类提供关联功能
      * 随着系统迭代，替换掉现有的关联操作实现方式（具体参考目标dao实现）
@@ -205,7 +246,7 @@ public class ProjectDaoImpl extends AbstractDaoProject {
          * 删除指定关联用户
          */
         private Relation removeUserRelation() {
-            Dao.getUserRelation(FruitDict.Systems.DELETE).forEach((i) -> {
+            Dao.getUserRelation(Systems.DELETE).forEach((i) -> {
                 if (StringUtils.isBlank(i.getUserId()))
                     throw new CheckException("未指明删除的关联用户");
                 UserDao.deleted(UserProjectRelation.newInstance(Dao.getUuid(), i.getUserId(), StringUtils.isNotBlank(i.getUpRole()) ? i.getUpRole() : null));
@@ -226,7 +267,7 @@ public class ProjectDaoImpl extends AbstractDaoProject {
          * 删除指定关联团队
          */
         private Relation removeTeamRelation() {
-            Dao.getTeamRelation(FruitDict.Systems.DELETE).forEach((i) -> {
+            Dao.getTeamRelation(Systems.DELETE).forEach((i) -> {
                 if (StringUtils.isBlank(i.getTeamId()))
                     throw new CheckException("未指明删除的关联团队");
                 TeamDao.deleted(ProjectTeamRelation.newInstance(Dao.getUuid(), i.getTeamId(), StringUtils.isNotBlank(i.getTpRole()) ? i.getTpRole() : null));
@@ -239,7 +280,7 @@ public class ProjectDaoImpl extends AbstractDaoProject {
          * 添加用户关联
          */
         private Relation insertUserRelation() {
-            Dao.getUserRelation(FruitDict.Systems.ADD).forEach((i) -> {
+            Dao.getUserRelation(Systems.ADD).forEach((i) -> {
                 i.setProjectId(Dao.getUuid());
                 UserDao.insert(i);
             });
@@ -250,7 +291,7 @@ public class ProjectDaoImpl extends AbstractDaoProject {
          * 添加团队关联
          */
         private Relation insertTeamRelation() {
-            Dao.getTeamRelation(FruitDict.Systems.ADD).forEach((i) -> {
+            Dao.getTeamRelation(Systems.ADD).forEach((i) -> {
                 i.setProjectId(Dao.getUuid());
                 TeamDao.insert(i);
             });

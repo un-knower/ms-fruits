@@ -1,14 +1,10 @@
-import com.google.gson.Gson;
-import com.google.gson.JsonParser;
 import org.junit.Test;
-import wowjoy.fruits.ms.module.util.entity.FruitDict;
-import wowjoy.fruits.ms.util.DateUtils;
 
-import java.time.Duration;
-import java.time.LocalDate;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.List;
+import java.util.stream.IntStream;
+
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 
 /**
  * Created by wangziwen on 2017/9/15.
@@ -34,10 +30,8 @@ public class PatternTest {
 
     @Test
     public void test() throws Exception {
-        Duration between = Duration.between(
-                LocalDate.now().atTime(0, 0, 0),
-                LocalDate.now().atTime(23, 59, 59)
-        );
-        System.out.println(between.toHours());
+        List<String> collect = IntStream.range(0, 100).boxed().map(i -> Integer.toString(i)).collect(toList());
+        collect.sort((l, r) -> "99".contains(l) ? -1 : 1);
+        System.out.println(collect.stream().collect(joining(",")));
     }
 }

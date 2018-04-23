@@ -1,5 +1,6 @@
 package wowjoy.fruits.ms.dao.task;
 
+import com.github.pagehelper.PageHelper;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
@@ -220,12 +221,13 @@ public class TaskDaoImpl extends AbstractDaoTask {
     @Override
     public List<FruitTaskInfo> findByListExampleAndProjectId
             (Consumer<FruitTaskExample> exampleUnaryOperator, Consumer<FruitListExample> listExampleConsumer, String
-                    projectId) {
+                    projectId, int pageNum, int pageSize) {
         if (projectId == null || projectId.isEmpty()) return Lists.newLinkedList();
         FruitTaskExample example = new FruitTaskExample();
         FruitListExample listExample = new FruitListExample();
         exampleUnaryOperator.accept(example);
         listExampleConsumer.accept(listExample);
+        PageHelper.startPage(Optional.of(pageNum).filter(num -> num > 0).orElse(1), Optional.of(pageNum).filter(num -> num > 0).orElse(10));
         return taskMapper.selectByListExampleAndProjectId(example, listExample, projectId);
     }
 
@@ -277,11 +279,11 @@ public class TaskDaoImpl extends AbstractDaoTask {
     }
 
     @Override
-    public List<FruitTaskUser> findUserByProjectIdAndUserIdAndTaskExample
+    public List<FruitTaskUser> findUserByTaskExampleAndUserIdOrProjectId
             (Consumer<FruitTaskExample> exampleConsumer, List<String> userIds, String projectId) {
         FruitTaskExample example = new FruitTaskExample();
         exampleConsumer.accept(example);
-        return taskMapper.findUserByProjectIdAndUserIdAndTaskExample(example, userIds, projectId);
+        return taskMapper.findUserByTaskExampleAndUserIdOrProjectId(example, userIds, projectId);
     }
 
     @Override
