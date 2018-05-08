@@ -10,6 +10,12 @@ public class UserTeamRelation extends AbstractEntity {
 
     private String utRole;
 
+    public static class Update extends UserTeamRelation {
+        public Update() {
+            setUuid(null);
+        }
+    }
+
     public String getUserId() {
         return userId;
     }

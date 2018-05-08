@@ -12,6 +12,12 @@ public class TaskUserRelation extends AbstractEntity {
 
     private String userRole;
 
+    public static class Update extends TaskUserRelation {
+        public Update() {
+            setUuid(null);
+        }
+    }
+
     public String getTaskId() {
         return taskId;
     }

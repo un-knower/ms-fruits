@@ -1,17 +1,10 @@
-import org.assertj.core.util.Sets;
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.channels.SelectableChannel;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.spi.AbstractSelectableChannel;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
 
 /**
  * Created by ${汪梓文} on ${2018年03月20日15:45:02}.
@@ -41,5 +34,19 @@ public class LocalFileTest {
         while (allocate.hasRemaining())
             channel.write(allocate);
         channel.close();
+    }
+
+
+    @Test
+    public void findFile() throws Exception {
+        RandomAccessFile r = new RandomAccessFile("/Users/wangziwen/Downloads/wangziwen.txt", "r");
+        FileChannel channel = r.getChannel();
+        ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        while (channel.read(byteBuffer) != -1) {
+            byteBuffer.flip();
+            stream.write(byteBuffer.array());
+            byteBuffer.clear();
+        }
     }
 }

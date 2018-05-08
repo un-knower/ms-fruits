@@ -63,7 +63,7 @@ public class ProjectTeamDaoImpl<T extends ProjectTeamRelation, E extends Project
 
     @Override
     public void deleted(ProjectTeamRelation relation) {
-        ProjectTeamRelation delete = ProjectTeamRelation.getInstance();
+        ProjectTeamRelation.Update delete = new ProjectTeamRelation.Update();
         delete.setIsDeleted(FruitDict.Systems.Y.name());
         mapper.updateByExampleSelective(delete, removeTemplate(relation));
     }

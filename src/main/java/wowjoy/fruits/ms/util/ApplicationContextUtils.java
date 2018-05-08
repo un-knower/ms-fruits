@@ -35,6 +35,10 @@ public class ApplicationContextUtils implements ApplicationContextAware {
         return vo;
     }
 
+    public static TokenJwt getCurrentJwt() {
+        return new TokenJwt();
+    }
+
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         setContext(applicationContext);
@@ -67,6 +71,18 @@ public class ApplicationContextUtils implements ApplicationContextAware {
             CurrentUser result = new CurrentUser();
             result.setUser(user);
             return result;
+        }
+    }
+
+    public static class TokenJwt {
+        private String jwt;
+
+        public String getJwt() {
+            return jwt;
+        }
+
+        public void setJwt(String jwt) {
+            this.jwt = jwt;
         }
     }
 }

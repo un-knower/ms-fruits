@@ -12,6 +12,12 @@ public class UserProjectRelation extends AbstractEntity {
 
     private String upRole;
 
+    public static class Update extends UserProjectRelation {
+        public Update() {
+            setUuid(null);
+        }
+    }
+
     public String getUserId() {
         return userId;
     }

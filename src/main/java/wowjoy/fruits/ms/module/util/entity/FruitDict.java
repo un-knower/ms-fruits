@@ -1,7 +1,12 @@
 package wowjoy.fruits.ms.module.util.entity;
 
 
+import com.google.common.collect.Maps;
+import wowjoy.fruits.ms.exception.ServiceException;
 import wowjoy.fruits.ms.module.AbstractEntity;
+
+import java.util.HashMap;
+import java.util.function.Predicate;
 
 /**
  * Created by wangziwen on 2017/8/24.
@@ -55,7 +60,14 @@ public class FruitDict extends AbstractEntity {
         START("开始"),
         END("结束"),
         CLOSE("关闭"),
-        TRANSFER("转移");
+        TRANSFER("转移"),
+        /*缺陷处理*/
+        TO_NEW("新开"),
+        TO_SOLVED("已解决"),
+        TO_CLOSED("已关闭"),
+        TO_DELAY("延迟处理"),
+        TO_DISREGARD("不予处理"),
+        TO_REOPEN("重新打开");
 
         private String parentCode;
         private String value;
@@ -103,7 +115,8 @@ public class FruitDict extends AbstractEntity {
         MEILESTONE("里程碑"),
         USERTEAM("用户-团队"),
         USERPROJECT("用户-项目"),
-        MS_FRUITS("Elasticsearch-INDEX-TYPE");
+        MS_FRUITS("Elasticsearch-INDEX-TYPE"),
+        MIME("MIME");
 
         private String value;
 
@@ -564,6 +577,19 @@ public class FruitDict extends AbstractEntity {
     }
 
     public static class DefectDict {
+        /*缺陷资源类型*/
+        public enum Resource {
+            DESCRIPTION("描述附带资源"),
+            FORM("随表单上传资源");
+            private String parentCode;
+            private String value;
+
+            Resource(String value) {
+                this.parentCode = Parents.DEFECT.name();
+                this.value = value;
+            }
+        }
+
         /*缺陷类型*/
         public enum Type {
             FUNCTION("功能"),
@@ -583,6 +609,10 @@ public class FruitDict extends AbstractEntity {
             private String parentCode;
             private String value;
 
+            public String getValue() {
+                return value;
+            }
+
             Type(String value) {
                 this.parentCode = Parents.DEFECT.name();
                 this.value = value;
@@ -593,12 +623,16 @@ public class FruitDict extends AbstractEntity {
         public enum Level {
             EMERGENCY("紧急"),
             HIGH("高"),
-            CENTRE("中"),
+            CENTER("中"),
             LOW("低"),
             ADVICE("建议");
 
             private String parentCode;
             private String value;
+
+            public String getValue() {
+                return value;
+            }
 
             Level(String value) {
                 this.parentCode = Parents.DEFECT.name();
@@ -610,12 +644,17 @@ public class FruitDict extends AbstractEntity {
         public enum Index {
             DEADLY("致命"),
             SERIOUS("严重"),
+            IMPORTANT("重要"),
             COMMON("一般"),
             SLIGHT("轻微"),
             IMPROVE("有待改进");
 
             private String parentCode;
             private String value;
+
+            public String getValue() {
+                return value;
+            }
 
             Index(String value) {
                 this.parentCode = Parents.DEFECT.name();
@@ -629,13 +668,55 @@ public class FruitDict extends AbstractEntity {
             SOLVED("已解决"),
             CLOSED("已关闭"),
             DELAY("延迟处理"),
-            DISREGARD("不予处理");
+            DISREGARD("不予处理"),
+            REOPEN("重新打开");
 
             private String parentCode;
             private String value;
 
             Status(String value) {
                 this.parentCode = Parents.DEFECT.name();
+                this.value = value;
+            }
+        }
+    }
+
+    public static class Mime {
+        private static final HashMap<String, String> keyValue = Maps.newHashMapWithExpectedSize(3);
+
+        static {
+            keyValue.put(Image.PNG.key, Image.PNG.value);
+            keyValue.put(Image.JPEG.key, Image.JPEG.value);
+            keyValue.put(Image.GIF.key, Image.GIF.value);
+        }
+
+        /**
+         * 前20位字节即可
+         *
+         * @param header
+         * @return
+         */
+        public static String obtainMimeType(byte[] header) {
+            if (header.length > 20) throw new ServiceException("file length can't more than 20");
+            StringBuffer headerStr = new StringBuffer();
+            for (int i = 0; i < header.length; i++)
+                headerStr.append(" ").append(Integer.toHexString(header[i] & 0xFF));
+            Predicate<String> predicate = (key) -> headerStr.toString().trim().toUpperCase().contains(key);
+            return keyValue.keySet().stream().filter(predicate).map(keyValue::get).findAny().orElse("");
+        }
+
+        public enum Image {
+            PNG("89 50 4E 47 D A 1A A", "image/png"),
+            JPEG("FF D8 FF E0 0 10 4A 46 49 46", "image/jpeg"),
+            GIF("47 49 46 38 39 61", "image/gif");
+
+            private String parentCode;
+            private String key;
+            private String value;
+
+            Image(String key, String value) {
+                this.parentCode = Parents.MIME.name();
+                this.key = key;
                 this.value = value;
             }
         }

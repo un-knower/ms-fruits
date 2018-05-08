@@ -58,7 +58,7 @@ public class UserTeamDaoImpl<T extends UserTeamRelation, E extends UserTeamRelat
 
     @Override
     public void deleted(UserTeamRelation relation) {
-        UserTeamRelation delete = UserTeamRelation.getInstance();
+        UserTeamRelation delete = new UserTeamRelation.Update();
         delete.setIsDeleted(FruitDict.Systems.Y.name());
         mapper.updateByExampleSelective(delete, removeTemplate(relation));
     }

@@ -12,6 +12,7 @@ import wowjoy.fruits.ms.module.user.example.FruitUserExample;
 import wowjoy.fruits.ms.module.util.entity.FruitDict.Systems;
 import wowjoy.fruits.ms.module.versions.FruitVersions;
 import wowjoy.fruits.ms.module.versions.FruitVersionsExample;
+import wowjoy.fruits.ms.util.ApplicationContextUtils;
 import wowjoy.fruits.ms.util.GsonUtils;
 
 import java.text.MessageFormat;
@@ -47,6 +48,8 @@ public abstract class ServiceVersions {
      */
     public void addVersion(FruitVersions.Insert insert) {
         this.checkVersions(insert);
+        /*默认创建人为当前登录用户*/
+        insert.setUserId(ApplicationContextUtils.getCurrentUser().getUserId());
         this.insert(insert);
     }
 
@@ -94,10 +97,7 @@ public abstract class ServiceVersions {
                 },
                 userExample -> {
                 });
-        return Optional.ofNullable(allVersionsList.stream().map(versions -> Optional.ofNullable(versions)
-                .filter(one -> StringUtils.isNotBlank(one.getParentId()))
-                .map(FruitVersions::getParentId)
-                .orElseGet(versions::getUuid)).collect(toCollection(Lists::newArrayList)))
+        return Optional.ofNullable(allVersionsList.stream().filter(version -> StringUtils.isBlank(version.getParentId())).map(FruitVersions::getUuid).collect(toCollection(Lists::newArrayList)))
                 .filter(ids -> !ids.isEmpty())
                 .map(ids -> this.findByExampleAndPage(versionsExample -> {
                     versionsExample.createCriteria().andUuidIn(ids);
@@ -128,5 +128,10 @@ public abstract class ServiceVersions {
                     pageVersions.addAll(partitionVersions.get(false));
                     return pageVersions;
                 }).orElse(null);
+    }
+
+    /*根据项目查询所有子版本信息*/
+    public List<FruitVersions> findSons(String projectId) {
+        return this.findByExample(versionsExample -> versionsExample.createCriteria().andProjectIdEqualTo(projectId).andParentIdIsNotNull().andIsDeletedEqualTo(Systems.N.name()));
     }
 }

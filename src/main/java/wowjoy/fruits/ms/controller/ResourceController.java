@@ -1,12 +1,12 @@
 package wowjoy.fruits.ms.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 import wowjoy.fruits.ms.dao.resource.ServiceResource;
+import wowjoy.fruits.ms.util.RestResult;
 
 import java.io.IOException;
 
@@ -15,12 +15,13 @@ import java.io.IOException;
  */
 @RestController
 @RequestMapping("/v1/resource")
-public class ControllerResource {
-    @Autowired
-    private ServiceResource serviceResource;
+public class ResourceController {
 
-    @RequestMapping(method = RequestMethod.POST)
-    public void upload(@RequestPart("file") MultipartFile[] multipartFile) throws IOException {
-        serviceResource.upload(multipartFile[0].getBytes());
+    @Autowired
+    private ServiceResource resource;
+
+    @RequestMapping(value = "/{uuid}", method = RequestMethod.GET)
+    public RestResult image(@PathVariable("uuid") String uuid) throws IOException {
+        return RestResult.newSuccess().setData(resource.download(uuid));
     }
 }

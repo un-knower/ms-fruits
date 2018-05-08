@@ -7,7 +7,6 @@ import org.springframework.transaction.annotation.Transactional;
 import wowjoy.fruits.ms.dao.relation.RelationInterface;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.relation.entity.TaskProjectRelation;
-import wowjoy.fruits.ms.module.relation.example.TaskListRelationExample;
 import wowjoy.fruits.ms.module.relation.example.TaskProjectRelationExample;
 import wowjoy.fruits.ms.module.relation.mapper.TaskProjectRelationMapper;
 import wowjoy.fruits.ms.module.util.entity.FruitDict.Systems;
@@ -74,7 +73,7 @@ public class TaskProjectDaoImpl<T extends TaskProjectRelation, E extends TaskPro
 
     @Override
     public void deleted(TaskProjectRelation relation) {
-        TaskProjectRelation delete = TaskProjectRelation.getInstance();
+        TaskProjectRelation delete = new TaskProjectRelation.Update();
         delete.setIsDeleted(Systems.Y.name());
         mapper.updateByExampleSelective(delete, removeTemplate(relation));
     }
@@ -88,7 +87,7 @@ public class TaskProjectDaoImpl<T extends TaskProjectRelation, E extends TaskPro
                 .map(criteriaList -> criteriaList.stream().filter(TaskProjectRelationExample.Criteria::isValid).collect(toList()))
                 .filter(criteriaList -> !criteriaList.isEmpty())
                 .orElseThrow(() -> new CheckException("必须携带条件"));
-        TaskProjectRelation instance = TaskProjectRelation.getInstance();
+        TaskProjectRelation instance = new TaskProjectRelation.Update();
         instance.setIsDeleted(Systems.Y.name());
         mapper.updateByExampleSelective(instance, example);
     }

@@ -19,7 +19,7 @@ import java.util.List;
  */
 @Service
 @Transactional
-public class ProjectListDaoImpl<T extends ProjectListRelation,E extends ProjectListRelationExample> implements RelationInterface<T,E> {
+public class ProjectListDaoImpl<T extends ProjectListRelation, E extends ProjectListRelationExample> implements RelationInterface<T, E> {
     @Autowired
     private ProjectListRelationMapper mapper;
 
@@ -47,7 +47,7 @@ public class ProjectListDaoImpl<T extends ProjectListRelation,E extends ProjectL
 
     @Override
     public void deleted(T relation) {
-        ProjectListRelation deleted = ProjectListRelation.getInstance();
+        ProjectListRelation.Update deleted = new ProjectListRelation.Update();
         deleted.setIsDeleted(FruitDict.Systems.Y.name());
         mapper.updateByExampleSelective(deleted, removeTemplate(relation));
     }

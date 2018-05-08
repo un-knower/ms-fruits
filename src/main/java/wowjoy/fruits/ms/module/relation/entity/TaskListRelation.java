@@ -6,6 +6,12 @@ public class TaskListRelation extends AbstractEntity {
     private String taskId;
     private String listId;
 
+    public static class Update extends TaskListRelation {
+        public Update() {
+            setUuid(null);
+        }
+    }
+
     public String getTaskId() {
         return taskId;
     }

@@ -1,11 +1,18 @@
 package wowjoy.fruits.ms.module.relation.entity;
 
 import wowjoy.fruits.ms.module.AbstractEntity;
+import wowjoy.fruits.ms.module.util.entity.FruitDict.DefectDict;
 
 public class DefectResourceRelation extends AbstractEntity {
     private String defectId;
     private String resourceId;
-    private String drType;
+    private DefectDict.Resource drType;
+
+    public static class Update extends DefectResourceRelation {
+        public Update() {
+            setUuid(null);
+        }
+    }
 
     public String getDefectId() {
         return defectId;
@@ -23,11 +30,11 @@ public class DefectResourceRelation extends AbstractEntity {
         this.resourceId = resourceId;
     }
 
-    public String getDrType() {
+    public DefectDict.Resource getDrType() {
         return drType;
     }
 
-    public void setDrType(String drType) {
+    public void setDrType(DefectDict.Resource drType) {
         this.drType = drType;
     }
 }

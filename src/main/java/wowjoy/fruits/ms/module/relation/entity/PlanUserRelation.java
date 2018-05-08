@@ -10,6 +10,12 @@ public class PlanUserRelation extends AbstractEntity {
 
     private String puRole;
 
+    public static class Update extends PlanUserRelation {
+        public Update() {
+            setUuid(null);
+        }
+    }
+
     public String getUserId() {
         return userId;
     }

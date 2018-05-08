@@ -17,12 +17,12 @@ import wowjoy.fruits.ms.util.RestResult;
  */
 @RestController
 @RequestMapping("/v1/versions")
-public class ControllerVersions {
+public class VersionsController {
 
     private ServiceVersions serviceVersions;
 
     @Autowired
-    public ControllerVersions(ServiceVersions serviceVersions) {
+    public VersionsController(ServiceVersions serviceVersions) {
         this.serviceVersions = serviceVersions;
     }
 
@@ -52,6 +52,16 @@ public class ControllerVersions {
     }
 
     /**
+     * @api {put} /v1/versions/page 查询版本列表 (分页)
+     * @apiVersion 3.0.0
+     * @apiGroup versions
+     */
+    @RequestMapping(value = "/page", method = RequestMethod.GET)
+    public RestResult findPage(@JsonArgument(type = FruitVersions.Search.class) FruitVersions.Search search) {
+        return RestResult.newSuccess().setData(this.serviceVersions.findVersions(search).toPageInfo());
+    }
+
+    /**
      * @api {put} /v1/versions 查询版本列表
      * @apiVersion 3.0.0
      * @apiGroup versions
@@ -59,6 +69,11 @@ public class ControllerVersions {
     @RequestMapping(method = RequestMethod.GET)
     public RestResult finds(@JsonArgument(type = FruitVersions.Search.class) FruitVersions.Search search) {
         return RestResult.newSuccess().setData(this.serviceVersions.findVersions(search));
+    }
+
+    @RequestMapping(value = "/project/{projectId}", method = RequestMethod.GET)
+    public RestResult findSons(@PathVariable("projectId") String projectId) {
+        return RestResult.newSuccess().setData(this.serviceVersions.findSons(projectId));
     }
 
 }

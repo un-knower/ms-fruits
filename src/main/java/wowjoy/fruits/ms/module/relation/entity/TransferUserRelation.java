@@ -9,6 +9,12 @@ public class TransferUserRelation extends AbstractEntity {
 
     private String status;
 
+    public static class Update extends TransferUserRelation {
+        public Update() {
+            setUuid(null);
+        }
+    }
+
     public String getTransferId() {
         return transferId;
     }

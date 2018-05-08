@@ -67,7 +67,7 @@ public class PlanUserDaoImpl<T extends PlanUserRelation, E extends PlanUserRelat
 
     @Override
     public void deleted(T relation) {
-        PlanUserRelation delete = PlanUserRelation.getInstance();
+        PlanUserRelation delete = new PlanUserRelation.Update();
         delete.setIsDeleted(Systems.Y.name());
         mapper.updateByExampleSelective(delete, removeTemplate(relation));
     }

@@ -73,7 +73,7 @@ public class TaskListDaoImpl<T extends TaskListRelation, E extends TaskListRelat
 
     @Override
     public void deleted(TaskListRelation relation) {
-        TaskListRelation delete = TaskListRelation.getInstance();
+        TaskListRelation.Update delete = new TaskListRelation.Update();
         delete.setIsDeleted(Systems.Y.name());
         mapper.updateByExampleSelective(delete, removeTemplate(relation));
     }
@@ -87,7 +87,7 @@ public class TaskListDaoImpl<T extends TaskListRelation, E extends TaskListRelat
                 .map(criteriaList -> criteriaList.stream().filter(TaskListRelationExample.Criteria::isValid).collect(toList()))
                 .filter(criteriaList -> !criteriaList.isEmpty())
                 .orElseThrow(() -> new CheckException("必须携带条件"));
-        TaskListRelation taskListRelation = new TaskListRelation();
+        TaskListRelation.Update taskListRelation = new TaskListRelation.Update();
         taskListRelation.setIsDeleted(Systems.Y.name());
         mapper.updateByExampleSelective(taskListRelation, example);
 

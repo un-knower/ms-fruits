@@ -5,8 +5,10 @@ import com.github.pagehelper.PageHelper;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import wowjoy.fruits.ms.dao.project.ProjectDaoImpl;
 import wowjoy.fruits.ms.module.project.FruitProject;
+import wowjoy.fruits.ms.module.user.FruitUser;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.user.example.FruitUserExample;
 import wowjoy.fruits.ms.module.user.mapper.FruitUserMapper;
@@ -24,6 +26,7 @@ import java.util.function.Consumer;
  * Created by ${汪梓文} on ${2018年03月20日15:45:02}.
  */
 @Service
+@Transactional
 public class DaoVersions extends ServiceVersions {
 
     private FruitVersionsMapper versionsMapper;

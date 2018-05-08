@@ -38,7 +38,7 @@ public class RelationTransfer<T extends TransferUserRelation, E extends Transfer
     public void deleted(Consumer<E> tConsumer) {
         TransferUserRelationExample example = new TransferUserRelationExample();
         tConsumer.accept((E) example);
-        TransferUserRelation relation = new TransferUserRelation();
+        TransferUserRelation.Update relation = new TransferUserRelation.Update();
         relation.setIsDeleted(FruitDict.Systems.Y.name());
         mapper.updateByExampleSelective(relation, example);
     }

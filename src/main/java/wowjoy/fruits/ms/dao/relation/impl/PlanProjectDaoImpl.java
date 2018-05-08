@@ -8,7 +8,6 @@ import wowjoy.fruits.ms.dao.relation.RelationInterface;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.relation.entity.PlanProjectRelation;
 import wowjoy.fruits.ms.module.relation.example.PlanProjectRelationExample;
-import wowjoy.fruits.ms.module.relation.example.PlanUserRelationExample;
 import wowjoy.fruits.ms.module.relation.mapper.PlanProjectRelationMapper;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
@@ -74,7 +73,7 @@ public class PlanProjectDaoImpl<T extends PlanProjectRelation, E extends PlanPro
 
     @Override
     public void deleted(T relation) {
-        PlanProjectRelation delete = PlanProjectRelation.getInstance();
+        PlanProjectRelation delete = new PlanProjectRelation.Update();
         delete.setIsDeleted(FruitDict.Systems.Y.name());
         mapper.updateByExampleSelective(delete, removeTemplate(relation));
     }
@@ -88,8 +87,8 @@ public class PlanProjectDaoImpl<T extends PlanProjectRelation, E extends PlanPro
                 .map(criteriaList -> criteriaList.stream().filter(PlanProjectRelationExample.Criteria::isValid).collect(toList()))
                 .filter(criteriaList -> !criteriaList.isEmpty())
                 .orElseThrow(() -> new CheckException("必须携带条件"));
-        PlanProjectRelation delete = PlanProjectRelation.getInstance();
+        PlanProjectRelation.Update delete = new PlanProjectRelation.Update();
         delete.setIsDeleted(FruitDict.Systems.Y.name());
-        mapper.updateByExampleSelective(delete,example);
+        mapper.updateByExampleSelective(delete, example);
     }
 }

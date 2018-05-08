@@ -74,7 +74,7 @@ public class TaskPlanDaoImpl<T extends TaskPlanRelation, E extends TaskPlanRelat
 
     @Override
     public void deleted(TaskPlanRelation relation) {
-        TaskPlanRelation delete = TaskPlanRelation.getInstance();
+        TaskPlanRelation.Update delete = new TaskPlanRelation.Update();
         delete.setIsDeleted(Systems.Y.name());
         mapper.updateByExampleSelective(delete, removeTemplate(relation));
     }
@@ -88,7 +88,7 @@ public class TaskPlanDaoImpl<T extends TaskPlanRelation, E extends TaskPlanRelat
                 .map(criteriaList -> criteriaList.stream().filter(TaskPlanRelationExample.Criteria::isValid).collect(toList()))
                 .filter(criteriaList -> !criteriaList.isEmpty())
                 .orElseThrow(() -> new CheckException("必须携带条件"));
-        TaskPlanRelation instance = TaskPlanRelation.getInstance();
+        TaskPlanRelation instance = new TaskPlanRelation.Update();
         instance.setIsDeleted(Systems.Y.name());
         mapper.updateByExampleSelective(instance, example);
     }

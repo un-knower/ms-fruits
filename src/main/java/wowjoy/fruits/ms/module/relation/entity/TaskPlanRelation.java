@@ -7,6 +7,12 @@ public class TaskPlanRelation extends AbstractEntity {
 
     private String planId;
 
+    public static class Update extends TaskPlanRelation {
+        public Update() {
+            setUuid(null);
+        }
+    }
+
     public String getTaskId() {
         return taskId;
     }

@@ -8,6 +8,12 @@ public class ProjectListRelation extends AbstractEntity {
 
     private String listId;
 
+    public static class Update extends ProjectListRelation {
+        public Update() {
+            setUuid(null);
+        }
+    }
+
     public String getProjectId() {
         return projectId;
     }

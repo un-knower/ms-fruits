@@ -4,6 +4,12 @@ import wowjoy.fruits.ms.module.AbstractEntity;
 
 public class ProjectTeamRelation extends AbstractEntity {
 
+    public static class Update extends ProjectTeamRelation {
+        public Update() {
+            setUuid(null);
+        }
+    }
+
     public static ProjectTeamRelation newInstance(String projectId, String teamId) {
         final ProjectTeamRelation result = new ProjectTeamRelation();
         result.setProjectId(projectId);

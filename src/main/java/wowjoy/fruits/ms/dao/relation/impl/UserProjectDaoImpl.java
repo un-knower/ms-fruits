@@ -64,7 +64,7 @@ public class UserProjectDaoImpl<T extends UserProjectRelation,E extends UserProj
 
     @Override
     public void deleted(T relation) {
-        UserProjectRelation delete = UserProjectRelation.getInstance();
+        UserProjectRelation delete = new UserProjectRelation.Update();
         delete.setIsDeleted(FruitDict.Systems.Y.name());
         mapper.updateByExampleSelective(delete, removeTemplate(relation));
     }

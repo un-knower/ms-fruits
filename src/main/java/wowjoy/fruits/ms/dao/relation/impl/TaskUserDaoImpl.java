@@ -80,7 +80,7 @@ public class TaskUserDaoImpl<T extends TaskUserRelation, E extends TaskUserRelat
 
     @Override
     public void deleted(TaskUserRelation relation) {
-        TaskUserRelation delete = TaskUserRelation.getInstance();
+        TaskUserRelation delete = new TaskUserRelation.Update();
         delete.setIsDeleted(Systems.Y.name());
         mapper.updateByExampleSelective(delete, removeTemplate(relation));
     }
@@ -94,7 +94,7 @@ public class TaskUserDaoImpl<T extends TaskUserRelation, E extends TaskUserRelat
                 .map(criteriaList -> criteriaList.stream().filter(TaskUserRelationExample.Criteria::isValid).collect(toList()))
                 .filter(criteriaList -> !criteriaList.isEmpty())
                 .orElseThrow(() -> new CheckException("必须携带条件"));
-        TaskUserRelation instance = TaskUserRelation.getInstance();
+        TaskUserRelation instance = new TaskUserRelation.Update();
         instance.setIsDeleted(Systems.Y.name());
         mapper.updateByExampleSelective(instance, example);
     }
