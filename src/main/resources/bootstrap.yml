@@ -20,12 +20,6 @@ eureka:
 
 spring:
   profiles: pro
-  cloud:
-    config:
-      profile: pro
-      discovery:
-        service-id: config
-        enabled: false
 eureka:
   client:
     service-url:
