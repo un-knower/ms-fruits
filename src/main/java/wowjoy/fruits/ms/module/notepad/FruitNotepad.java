@@ -1,11 +1,15 @@
 package wowjoy.fruits.ms.module.notepad;
 
+import org.assertj.core.util.Lists;
 import wowjoy.fruits.ms.module.AbstractEntity;
+import wowjoy.fruits.ms.module.EntityUtils;
+import wowjoy.fruits.ms.module.resource.FruitResource;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Date;
 
 public class FruitNotepad extends AbstractEntity {
@@ -17,6 +21,76 @@ public class FruitNotepad extends AbstractEntity {
 
     /*预计提交时间*/
     private Date estimatedSubmitDate;
+
+    public static class Insert extends FruitNotepad implements EntityUtils {
+        public Insert() {
+            setUuid(obtainUUID());
+            setIsDeleted(FruitDict.Systems.N.name());
+        }
+
+        private ArrayList<Upload> uploads;
+
+        public ArrayList<Upload> getUploads() {
+            return uploads;
+        }
+
+        public void setUpload(Upload upload) {
+            if (this.uploads == null)
+                this.uploads = Lists.newArrayList();
+            this.uploads.add(upload);
+        }
+    }
+
+    public static class Update extends FruitNotepad {
+        public Update() {
+            setUuid(null);
+            setIsDeleted(null);
+        }
+
+        private ArrayList<Upload> uploads;
+        private String removeResource;
+
+        public ArrayList<String> getRemoveResources() {
+            return Lists.newArrayList(removeResource.split(","));
+        }
+
+        public String getRemoveResource() {
+            return removeResource;
+        }
+
+        public void setRemoveResource(String removeResource) {
+            this.removeResource = removeResource;
+        }
+
+        public ArrayList<Upload> getUploads() {
+            return uploads;
+        }
+
+        public void setUploads(ArrayList<Upload> uploads) {
+            this.uploads = uploads;
+        }
+
+        public void setUpload(Upload upload) {
+            if (this.uploads == null)
+                this.uploads = Lists.newArrayList();
+            this.uploads.add(upload);
+        }
+    }
+
+    public static class Upload extends FruitResource.Upload {
+        public Upload() {
+        }
+
+        private FruitDict.Resource nrType;
+
+        public FruitDict.Resource getNrType() {
+            return nrType;
+        }
+
+        public void setNrType(FruitDict.Resource nrType) {
+            this.nrType = nrType;
+        }
+    }
 
     public String getContent() {
         return content;

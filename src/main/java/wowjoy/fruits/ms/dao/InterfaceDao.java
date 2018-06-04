@@ -5,6 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.exception.ExceptionSupport;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
+import wowjoy.fruits.ms.module.util.entity.FruitDict.Exception.Check;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -28,6 +30,7 @@ public interface InterfaceDao {
         return t;
     });
 
+    @Deprecated
     class DaoThread {
         private final ExecutorService executorService;
         private final List<Future> futures = Lists.newLinkedList();
@@ -55,13 +58,13 @@ public interface InterfaceDao {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 futures.forEach((i) -> i.cancel(true));
-                throw new CheckException("强制中断线程");
+                throw new CheckException(Check.SYSTEM_THREAD_INTERRUPTED.name());
             } catch (ExceptionSupport exceptionSupport) {
                 throw new CheckException(exceptionSupport.getMessage());
             } catch (ExecutionException e) {
                 executorService.shutdownNow();
                 e.printStackTrace();
-                throw new CheckException("获取线程数据异常，线程已终止");
+                throw new CheckException(Check.SYSTEM_THREAD_EXECUTION.name());
             }
             return this;
         }
@@ -70,10 +73,10 @@ public interface InterfaceDao {
             try {
                 executorService.shutdown();
                 if (!executorService.awaitTermination(60, TimeUnit.SECONDS))
-                    throw new CheckException("超时，主动关闭线程，请重试");
+                    throw new CheckException(Check.SYSTEM_THREAD_TIMEOUT.name());
             } catch (InterruptedException e) {
                 executorService.shutdownNow();
-                throw new CheckException("等待关闭时，被提前终止");
+                throw new CheckException(Check.SYSTEM_THREAD_INTERRUPTED.name());
             }
         }
 

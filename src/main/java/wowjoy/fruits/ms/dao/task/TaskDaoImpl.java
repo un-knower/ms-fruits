@@ -1,5 +1,6 @@
 package wowjoy.fruits.ms.dao.task;
 
+import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -16,10 +17,12 @@ import wowjoy.fruits.ms.dao.relation.impl.TaskPlanDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.TaskProjectDaoImpl;
 import wowjoy.fruits.ms.dao.relation.impl.TaskUserDaoImpl;
 import wowjoy.fruits.ms.exception.CheckException;
+import wowjoy.fruits.ms.exception.MessageException;
 import wowjoy.fruits.ms.module.list.FruitList;
 import wowjoy.fruits.ms.module.list.FruitListExample;
 import wowjoy.fruits.ms.module.logs.FruitLogs;
 import wowjoy.fruits.ms.module.logs.transfer.FruitTransferLogs;
+import wowjoy.fruits.ms.module.plan.mapper.FruitPlanMapper;
 import wowjoy.fruits.ms.module.relation.entity.TaskListRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskPlanRelation;
 import wowjoy.fruits.ms.module.relation.entity.TaskProjectRelation;
@@ -52,6 +55,7 @@ import java.util.function.Consumer;
 @Transactional
 public class TaskDaoImpl extends AbstractDaoTask {
     private final FruitTaskMapper taskMapper;
+    private final FruitPlanMapper planMapper;
     private final TaskPlanDaoImpl<TaskPlanRelation, TaskPlanRelationExample> taskPlanDao;
     private final TaskProjectDaoImpl<TaskProjectRelation, TaskProjectRelationExample> taskProjectDao;
     private final TaskUserDaoImpl<TaskUserRelation, TaskUserRelationExample> taskUserDao;
@@ -62,7 +66,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
 
     @Autowired
     public TaskDaoImpl(FruitTaskMapper taskMapper,
-                       @Qualifier("taskPlanDaoImpl") TaskPlanDaoImpl<TaskPlanRelation, TaskPlanRelationExample> taskPlanDao,
+                       FruitPlanMapper planMapper, @Qualifier("taskPlanDaoImpl") TaskPlanDaoImpl<TaskPlanRelation, TaskPlanRelationExample> taskPlanDao,
                        @Qualifier("taskProjectDaoImpl") TaskProjectDaoImpl<TaskProjectRelation, TaskProjectRelationExample> taskProjectDao,
                        @Qualifier("taskUserDaoImpl") TaskUserDaoImpl<TaskUserRelation, TaskUserRelationExample> taskUserDao,
                        @Qualifier("taskListDaoImpl") TaskListDaoImpl<TaskListRelation, TaskListRelationExample> taskListDao,
@@ -70,6 +74,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
                        ServiceLogs logsDaoImpl,
                        ServiceTransferLogs transferLogs) {
         this.taskMapper = taskMapper;
+        this.planMapper = planMapper;
         this.taskPlanDao = taskPlanDao;
         this.taskProjectDao = taskProjectDao;
         this.taskUserDao = taskUserDao;
@@ -111,7 +116,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
             Optional.of(update)
                     .map(FruitTask.Update::getUuid)
                     .filter(StringUtils::isNotBlank)
-                    .orElseThrow(() -> new CheckException("taskId can't null"));
+                    .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name()));
             TaskListRelationExample.Criteria criteria = taskListRelationExample.createCriteria();
             Optional.ofNullable(list.getListId())
                     .filter(StringUtils::isNotBlank)
@@ -122,7 +127,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
             Optional.of(update)
                     .map(FruitTask.Update::getUuid)
                     .filter(StringUtils::isNotBlank)
-                    .orElseThrow(() -> new CheckException("taskId can't null"));
+                    .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name()));
             TaskPlanRelationExample.Criteria criteria = planRelationExample.createCriteria();
             Optional.ofNullable(plan.getPlanId())
                     .filter(StringUtils::isNotBlank)
@@ -133,7 +138,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
             Optional.of(update)
                     .map(FruitTask.Update::getUuid)
                     .filter(StringUtils::isNotBlank)
-                    .orElseThrow(() -> new CheckException("taskId can't null"));
+                    .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name()));
             TaskProjectRelationExample.Criteria criteria = taskProjectRelationExample.createCriteria();
             Optional.ofNullable(project.getProjectId())
                     .filter(StringUtils::isNotBlank)
@@ -144,7 +149,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
             Optional.of(update)
                     .map(FruitTask.Update::getUuid)
                     .filter(StringUtils::isNotBlank)
-                    .orElseThrow(() -> new CheckException("taskId can't null"));
+                    .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name()));
             TaskUserRelationExample.Criteria criteria = taskUserRelationExample.createCriteria();
             Optional.ofNullable(user.getUserId())
                     .filter(StringUtils::isNotBlank)
@@ -156,7 +161,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
             Optional.of(update)
                     .map(FruitTask.Update::getUuid)
                     .filter(StringUtils::isNotBlank)
-                    .orElseThrow(() -> new CheckException("taskId can't null"));
+                    .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name()));
             listRelation.setTaskId(update.getUuid());
             listRelation.setListId(list.getListId());
         }));
@@ -164,7 +169,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
             Optional.of(update)
                     .map(FruitTask.Update::getUuid)
                     .filter(StringUtils::isNotBlank)
-                    .orElseThrow(() -> new CheckException("taskId can't null"));
+                    .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name()));
             planRelation.setTaskId(update.getUuid());
             planRelation.setPlanId(plan.getPlanId());
         }));
@@ -172,7 +177,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
             Optional.of(update)
                     .map(FruitTask.Update::getUuid)
                     .filter(StringUtils::isNotBlank)
-                    .orElseThrow(() -> new CheckException("taskId can't null"));
+                    .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name()));
             projectRelation.setTaskId(update.getUuid());
             projectRelation.setProjectId(project.getProjectId());
         }));
@@ -180,7 +185,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
             Optional.of(update)
                     .map(FruitTask.Update::getUuid)
                     .filter(StringUtils::isNotBlank)
-                    .orElseThrow(() -> new CheckException("taskId can't null"));
+                    .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name()));
             userRelation.setTaskId(update.getUuid());
             userRelation.setUserId(user.getUserId());
         }));
@@ -189,7 +194,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
     @Override
     public void delete(FruitTask.Update update) {
         if (StringUtils.isBlank(update.getUuid()))
-            throw new CheckException("缺少任务id");
+            throw new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name());
         FruitTaskExample example = new FruitTaskExample();
         FruitTaskExample.Criteria criteria = example.createCriteria();
         criteria.andUuidEqualTo(update.getUuid());
@@ -222,7 +227,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
     public List<FruitTaskInfo> findByListExampleAndProjectId
             (Consumer<FruitTaskExample> exampleUnaryOperator, Consumer<FruitListExample> listExampleConsumer, String
                     projectId, int pageNum, int pageSize) {
-        if (projectId == null || projectId.isEmpty()) return Lists.newLinkedList();
+        if (projectId == null || projectId.isEmpty()) throw new MessageException("projectId can't null");
         FruitTaskExample example = new FruitTaskExample();
         FruitListExample listExample = new FruitListExample();
         exampleUnaryOperator.accept(example);
@@ -247,9 +252,7 @@ public class TaskDaoImpl extends AbstractDaoTask {
     public List<FruitTaskPlan> findPlanByTaskIds(List<String> taskIds) {
         if (taskIds == null || taskIds.isEmpty())
             return Lists.newLinkedList();
-        FruitTaskExample example = new FruitTaskExample();
-        example.createCriteria().andUuidIn(taskIds).andIsDeletedEqualTo(Systems.N.name());
-        return taskMapper.selectPlanByTask(example);
+        return planMapper.selectPlanByTask(Lists.newArrayList(taskIds));
     }
 
     @Override
@@ -291,22 +294,32 @@ public class TaskDaoImpl extends AbstractDaoTask {
         transferLogs.insert(insertConsumer);
     }
 
+    @Override
+    protected Page<FruitTaskInfo> findPages(Consumer<FruitTask.Search> searchConsumer) {
+        FruitTask.Search search = new FruitTask.Search();
+        searchConsumer.accept(search);
+        PageHelper.startPage(Optional.of(search.getPageNum()).filter(i -> i > 0).orElse(1), Optional.of(search.getPageSize()).filter(i -> i > 0).orElse(10));
+        return (Page<FruitTaskInfo>) taskMapper.selectByExampleExt(search);
+    }
+
     /************************************************************************************************
      *                                       个人中心专供                                            *
      ************************************************************************************************/
 
     @Override
-    protected List<FruitTaskInfo> myTask(Consumer<FruitTaskExample> taskExampleConsumer, String projectId) {
+    protected Page<FruitTaskInfo> myTask(Consumer<FruitTaskExample> taskExampleConsumer, String projectId, Integer pageNum, Integer pageSize) {
         FruitTaskExample example = new FruitTaskExample();
         taskExampleConsumer.accept(example);
-        return taskMapper.myTaskByExample(example, Lists.newArrayList(ApplicationContextUtils.getCurrentUser().getUserId()), projectId);
+        PageHelper.startPage(Optional.of(pageNum).filter(i -> i > 0).orElse(1), Optional.of(pageSize).filter(i -> i > 0).orElse(10));
+        return (Page<FruitTaskInfo>) taskMapper.myTaskByExample(example, Lists.newArrayList(ApplicationContextUtils.getCurrentUser().getUserId()), projectId);
     }
 
     @Override
-    protected List<FruitTaskInfo> myCreateTask(Consumer<FruitTaskExample> taskExampleConsumer, String projectId) {
+    protected Page<FruitTaskInfo> myCreateTask(Consumer<FruitTaskExample> taskExampleConsumer, String projectId, Integer pageNum, Integer pageSize) {
         FruitTaskExample example = new FruitTaskExample();
         taskExampleConsumer.accept(example);
-        return taskMapper.myCreateTask(example, ApplicationContextUtils.getCurrentUser().getUserId(), projectId);
+        PageHelper.startPage(Optional.of(pageNum).filter(i -> i > 0).orElse(1), Optional.of(pageSize).filter(i -> i > 0).orElse(10));
+        return (Page<FruitTaskInfo>) taskMapper.myCreateTask(example, ApplicationContextUtils.getCurrentUser().getUserId(), projectId);
     }
 
     /*我创建的项目来自哪些项目，返回项目列表*/

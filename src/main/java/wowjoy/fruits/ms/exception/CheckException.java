@@ -7,4 +7,5 @@ public class CheckException extends ExceptionSupport {
     public CheckException(String message) {
         super(message);
     }
+
 }

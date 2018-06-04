@@ -39,8 +39,8 @@ public class PlanProjectDaoImpl<T extends PlanProjectRelation, E extends PlanPro
         PlanProjectRelation instance = PlanProjectRelation.getInstance();
         tConsumer.accept((T) instance);
         Optional<PlanProjectRelation> optionalInstance = Optional.of(instance);
-        optionalInstance.map(PlanProjectRelation::getPlanId).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException("缺少计划UUID"));
-        optionalInstance.map(PlanProjectRelation::getProjectId).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException("缺少项目UUID"));
+        optionalInstance.map(PlanProjectRelation::getPlanId).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name()));
+        optionalInstance.map(PlanProjectRelation::getProjectId).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name()));
         mapper.insertSelective(instance);
     }
 
@@ -86,7 +86,7 @@ public class PlanProjectDaoImpl<T extends PlanProjectRelation, E extends PlanPro
                 /*检查列表元素是否为空*/
                 .map(criteriaList -> criteriaList.stream().filter(PlanProjectRelationExample.Criteria::isValid).collect(toList()))
                 .filter(criteriaList -> !criteriaList.isEmpty())
-                .orElseThrow(() -> new CheckException("必须携带条件"));
+                .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_LACK_CRITERIA.name()));
         PlanProjectRelation.Update delete = new PlanProjectRelation.Update();
         delete.setIsDeleted(FruitDict.Systems.Y.name());
         mapper.updateByExampleSelective(delete, example);

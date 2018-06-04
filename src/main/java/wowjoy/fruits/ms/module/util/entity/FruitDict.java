@@ -99,6 +99,8 @@ public class FruitDict extends AbstractEntity {
      * dict 管理项目所有父节点，便于父节点的管理和维护。
      */
     public enum Parents {
+        EXCEPTION("异常管理"),
+        RESOURCE("资源"),
         TRANSFER("转交"),
         PROJECT("项目"),
         SUMMARY("小结"),
@@ -577,33 +579,17 @@ public class FruitDict extends AbstractEntity {
     }
 
     public static class DefectDict {
-        /*缺陷资源类型*/
-        public enum Resource {
-            DESCRIPTION("描述附带资源"),
-            FORM("随表单上传资源");
-            private String parentCode;
-            private String value;
-
-            Resource(String value) {
-                this.parentCode = Parents.DEFECT.name();
-                this.value = value;
-            }
-        }
 
         /*缺陷类型*/
         public enum Type {
             FUNCTION("功能"),
-            API("接口"),
-            LOGIC("逻辑"),
+            REQUIREMENT("需求"),
+            DESIGN("设计"),
             DATA("数据"),
-            COMPUTE("计算"),
-            INTERFACE("界面"),
-            DOCUMENT("文档"),
             PERFORMANCE("性能"),
-            DEPLOY("配置"),
-            CRITERIA("标准"),
-            ENVIRONMENT("环境"),
             COMPATIBLE("兼容"),
+            SAFETY("安全"),
+            ADVICE("建议"),
             OTHER("其他");
 
             private String parentCode;
@@ -625,7 +611,7 @@ public class FruitDict extends AbstractEntity {
             HIGH("高"),
             CENTER("中"),
             LOW("低"),
-            ADVICE("建议");
+            IRRELEVANT("无关紧要");
 
             private String parentCode;
             private String value;
@@ -688,6 +674,7 @@ public class FruitDict extends AbstractEntity {
             keyValue.put(Image.PNG.key, Image.PNG.value);
             keyValue.put(Image.JPEG.key, Image.JPEG.value);
             keyValue.put(Image.GIF.key, Image.GIF.value);
+            keyValue.put(Application.PDF.key, Application.PDF.value);
         }
 
         /**
@@ -717,6 +704,122 @@ public class FruitDict extends AbstractEntity {
             Image(String key, String value) {
                 this.parentCode = Parents.MIME.name();
                 this.key = key;
+                this.value = value;
+            }
+        }
+
+        public enum Application {
+            PDF("25 50 44 46 2D 31", "application/pdf");
+
+            private String parentCode;
+            private String key;
+            private String value;
+
+            Application(String key, String value) {
+                this.parentCode = Parents.MIME.name();
+                this.key = key;
+                this.value = value;
+            }
+        }
+    }
+
+    /*缺陷资源类型*/
+    public enum Resource {
+        DESCRIPTION("描述附带资源"),
+        FORM("随表单上传资源");
+        private String parentCode;
+        private String value;
+
+        Resource(String value) {
+            this.parentCode = Parents.RESOURCE.name();
+            this.value = value;
+        }
+    }
+
+    public static class Exception {
+        public enum Check {
+            SYSTEM_NULL("specify uuid can't null"),
+            SYSTEM_NOT_EXISTS("specify uuid not exists"),
+            SYSTEM_THREAD_INTERRUPTED("thread be forcibly terminated"),
+            SYSTEM_THREAD_EXECUTION("obtain data exception thread terminated"),
+            SYSTEM_THREAD_TIMEOUT("thread wait timeout"),
+            SYSTEM_LACK_CRITERIA("lack criteria"),
+            SYSTEM_UPDATE_NULL("entity not exists"),
+            /*PLAN*/
+            PLAN_TITLE_NULL("plan title can't null"),
+            PLAN_ESTIMATED_END_DATE("plan estimated end date can't null"),
+            PLAN_ADD_LEAST_ONE_USER("must add least a relation user"),
+            PLAN_ADD_CAN_BUT_ONE_PROJECT("can but add one relation project"),
+            PLAN_END_DATE_GREATER_NOW("end date can't greater than now"),
+            PLAN_NO_TO_COMPLETE("plan status can't change to complete"),
+            PLAN_NO_TO_END("plan status can't change to end"),
+            PLAN_STAY_PENDING_TO_PENDING("plan current status can only change to 'PENDING'"),
+            PLAN_END_STATUS("plan status end description can't null"),
+            PLAN_DELAY_COMPLETE_REASON("plan delay complete must write delay reason"),
+            PLAN_PROJECT_NULL("plan relation project id can't null"),
+            PLAN_USER_NULL("[findUserByPlanExampleAndUserIdOrProjectId] userIds can't null"),
+            /*ASPECT_LOGS*/
+            ASPECT_LOGS_OBTAIN_UUID("【Aspect_logs】can't obtain logs UUID"),
+            ASPECT_LOGS_NOT_EXISTS("【Aspect_logs】specify uuid not exists"),
+            /*VERSION*/
+            VERSION_DELETE_INCLUDE("current version include son version!"),
+            VERSION_DELETE_USE("current version in use!"),
+            /*Notepad*/
+            NOTEPAD_DATE_FORMAT("date format error：yyyy-mm-dd"),
+            NOTEPAD_ADD_CONTENT("notepad content can't null"),
+            NOTEPAD_ESTIMATED_SUBMIT_DATE("estimated submit date can't null"),
+            NOTEPAD_DUPLICATE("duplicate notepad"),
+            NOTEPAD_TEAM_NULL("team id can't null"),
+            /*Defect*/
+            DEFECT_LEVEL_NULL("level can't null"),
+            DEFECT_RISK_INDEX_NULL("risk index can't null"),
+            DEFECT_TYPE_NULL("type can't null"),
+            DEFECT_NAME_NULL("name can't null"),
+            DEFECT_BEFORE_NULL("before version can't null"),
+            DEFECT_AFTER_NULL("after version can't null"),
+            DEFECT_HANDLER_USER_NULL("handler user can't null"),
+            DEFECT_PROJECT_NULL("project can't null"),
+            DEFECT_CREATE_PERSON("current user weren't defect create person"),
+            DEFECT_HANDLER_PERSON("current user weren't defect handler person"),
+            DEFECT_NO_CHANGE_TO_STATUS("current status can't change to specify status"),
+            /*COMMENT*/
+            COMMENT_CONTENT_NULL("comment can't null"),
+            /*LIST*/
+            LIST_PROJECT_NULL("projectId can't null"),
+            LIST_TITLE_NULL("list title can't null"),
+            LIST_EXISTS_TASK("There are tasks in the list and cannot be deleted"),
+            /*PROJECT*/
+            PROJECT_TITLE_NULL("project title can't null"),
+            PROJECT_PRINCIPAL_TEAM_NULL("project must add least one principal team"),
+            PROJECT_PRINCIPAL_USER_NULL("project must add least one principal user"),
+            PROJECT_COMPLETE("project already complete"),
+            PROJECT_TEAM_NULL("relation team id can't null"),
+            PROJECT_USER_NULL("relation user id can't null"),
+            /*TRANSFER*/
+            TRANSFER_OBTAIN_NOT_EXISTS("transfer logs not exists"),
+            TRANSFER_USER_NULL("transfer user can't null"),
+            /*TASK*/
+            TASK_LIST_NULL("list can't null"),
+            TASK_END_DESCRIPTION_NULL("description can't null"),
+            TASK_TITLE_NULL("title can't null"),
+            TASK_ESTIMATED_END_DATE_NULL("estimatedEndDate can't null"),
+            TASK_JOIN_LIST("must specify one join list"),
+            TASK_JOIN_PLAN("only can join one plan"),
+            TASK_JOIN_PROJECT("only can join one project"),
+            TASK_PROJECT_OR_PLAN("only can one project or plan"),
+            /*TEAM*/
+            TEAM_JOIN_USER("user can't null"),
+            TEAM_LEADER_NULL("must specify one leader"),
+            TEAM_DUPLICATE_USER("team user duplicate");
+            private String parentCode;
+            private String value;
+
+            public String getValue() {
+                return value;
+            }
+
+            Check(String value) {
+                this.parentCode = Parents.EXCEPTION.name();
                 this.value = value;
             }
         }

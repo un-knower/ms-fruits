@@ -49,38 +49,50 @@
         ${replace}.is_deleted as ${prefix}is_deleted
     </sql>
 
-    <select id="selectByExampleOrUserExample" resultMap="BaseResultMap">
-        select
-        <include refid="Base_Column_List">
-            <property name="replace" value="fversions"/>
-            <property name="prefix" value=""/>
-        </include>
-        from fruits_versions fversions
-        right join
-        (select user_id from fruits_user
-        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
-            <where>
-                <foreach collection="userExample.oredCriteria" item="criteria" separator="or">
-                    <include refid="Example_Where_Clause">
-                        <property name="prefix" value=""/>
-                    </include>
-                </foreach>
-                and is_deleted = 'N'
-            </where>
-        </trim>
-        )
-        userJoin on userJoin.user_id = fversions.user_id
-        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
-            <where>
-                <foreach collection="versionExample.oredCriteria" item="criteria" separator="or">
-                    <include refid="Example_Where_Clause">
-                        <property name="prefix" value="fversions"/>
-                    </include>
-                </foreach>
-                and fversions.is_deleted = 'N'
-                and fversions.uuid is not null
-            </where>
-        </trim>
-        Order by fversions.versions desc
+    <select id="selectSonCount" resultType="java.lang.Long">
+        select count(uuid) from fruits_versions where parent_id = #{versionId} and is_deleted = 'N'
+    </select>
+
+    <!--index:cover_selectJoinDefect-->
+    <select id="selectJoinDefectCount" resultType="java.lang.Long">
+        select count(uuid) from fruits_defect where (before_version_id = #{versionId} or after_version_id = #{versionId}) and is_deleted = 'N'
+    </select>
+
+    <!--index:cover_selectByVersionIdAfter-->
+    <!--index:cover_selectByVersionIdBefore-->
+    <select id="selectJoinDefect" resultType="java.lang.String">
+        select before_version_id from fruits_defect where before_version_id in
+        <foreach collection="versionIds" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+        and is_deleted = 'N'
+        union
+        select after_version_id from fruits_defect where after_version_id in
+        <foreach collection="versionIds" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+        and is_deleted = 'N'
+    </select>
+
+    <!--index：cover_index-->
+    <select id="selectByProjectId" resultMap="BaseResultMap">
+        select fversion.`uuid`,fversion.`parent_id`,fversion.`versions`,fversion.parent_id,fversion.`user_id`,fversion.`create_date_time`,fversion.`description` from fruits_versions fversion
+        right join (
+        select parent_id as uuid from fruits_versions where project_id = #{projectId} and parent_id is not null and is_deleted = 'N' and versions like #{version}
+        union
+        select uuid from fruits_versions where  project_id = #{projectId} and parent_id is null and is_deleted = 'N' and versions like #{version}
+        ) versionJoin on versionJoin.uuid = fversion.uuid
+        order by fversion.versions desc
+    </select>
+
+    <!--index：cover_index-->
+    <select id="selectByProjectAndParentIds" resultMap="BaseResultMap">
+        select `uuid`,`versions`,`user_id`,`create_date_time`,`description`,`parent_id` from fruits_versions
+        where project_id = #{projectId} and parent_id in
+        <foreach collection="parentIds" open="(" close=")" item="id" separator=",">
+            #{id}
+        </foreach>
+        and is_deleted = 'N' and versions like #{version}
+        order by versions desc
     </select>
 </mapper>

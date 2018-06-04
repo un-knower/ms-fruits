@@ -118,7 +118,7 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
 
     public final FruitTeamDao findInfo(String uuid, Consumer<FruitUserExample> userExampleConsumer) {
         if (StringUtils.isBlank(uuid))
-            throw new CheckException("团队id不能为空");
+            throw new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name());
         List<FruitTeamDao> result = this.findTeamByExample(fruitTeamExample -> {
             FruitTeamExample.Criteria criteria = fruitTeamExample.createCriteria();
             if (StringUtils.isNotBlank(uuid))
@@ -126,7 +126,7 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
             criteria.andIsDeletedEqualTo(Systems.N.name());
         });
         if (result.isEmpty())
-            throw new CheckException("未找到指定团队");
+            throw new CheckException(FruitDict.Exception.Check.SYSTEM_NOT_EXISTS.name());
         try {
             this.plugUser(result, userExampleConsumer).call();
         } catch (Exception e) {
@@ -136,30 +136,23 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
     }
 
     public final void insert(FruitTeamVo vo) {
-        try {
-            Optional.ofNullable(vo.getUserRelation().get(Systems.ADD))
-                    .map(users -> users.stream().collect(groupingBy(UserTeamRelation::getUserId, counting())))
-                    .ifPresent(addUser -> addUser.forEach((id, count) -> {
-                        Optional.of(count).filter(i -> i <= 1).orElseThrow(() -> new CheckException("一个成员不可重复添加"));
-                    }));
-            FruitTeamDao dao = FruitTeam.getDao();
-            dao.setUuid(vo.getUuid());
-            dao.setTitle(vo.getTitle());
-            dao.setDescription(vo.getDescription());
-            dao.setUserRelation(vo.getUserRelation());
-            this.checkInUsers(dao);
-            this.insert(dao);
-        } catch (ExceptionSupport ex) {
-            throw ex;
-        } catch (RuntimeException ex) {
-            ex.printStackTrace();
-            throw new ServiceException("团队添加数据错误");
-        }
+        Optional.ofNullable(vo.getUserRelation().get(Systems.ADD))
+                .map(users -> users.stream().collect(groupingBy(UserTeamRelation::getUserId, counting())))
+                .ifPresent(addUser -> addUser.forEach((id, count) -> {
+                    Optional.of(count).filter(i -> i <= 1).orElseThrow(() -> new CheckException(FruitDict.Exception.Check.TEAM_DUPLICATE_USER.name()));
+                }));
+        FruitTeamDao dao = FruitTeam.getDao();
+        dao.setUuid(vo.getUuid());
+        dao.setTitle(vo.getTitle());
+        dao.setDescription(vo.getDescription());
+        dao.setUserRelation(vo.getUserRelation());
+        this.checkInUsers(dao);
+        this.insert(dao);
     }
 
     private void checkInUsers(FruitTeamDao dao) {
         if (dao.getUserRelation(Systems.ADD).isEmpty())
-            throw new CheckException("缺少关联用户");
+            throw new CheckException(FruitDict.Exception.Check.TEAM_JOIN_USER.name());
         Map<String, List<UserTeamRelation>> roleValue = Maps.newLinkedHashMap();
         dao.getUserRelation(Systems.ADD).forEach((i) -> {
             if (roleValue.containsKey(i.getUtRole()))
@@ -167,28 +160,23 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
             else
                 roleValue.put(i.getUtRole(), Lists.newArrayList(i));
         });
-        if (!roleValue.containsKey(FruitDict.UserTeamDict.LEADER.name())) throw new CheckException("团队leader不存在");
-        if (roleValue.get(FruitDict.UserTeamDict.LEADER.name()).size() > 1) throw new CheckException("只允许添加一位leader");
+        if (!roleValue.containsKey(FruitDict.UserTeamDict.LEADER.name()))
+            throw new CheckException(FruitDict.Exception.Check.TEAM_LEADER_NULL.name());
+        if (roleValue.get(FruitDict.UserTeamDict.LEADER.name()).size() > 1)
+            throw new CheckException(FruitDict.Exception.Check.TEAM_LEADER_NULL.name());
     }
 
     public final void update(FruitTeamVo vo) {
-        try {
-            if (StringUtils.isBlank(vo.getUuidVo()))
-                throw new CheckException("Team id not is null");
-            this.checkWantAddUserIfRepeat(vo.getUserRelation().get(Systems.ADD), vo.getUuidVo());
-            this.checkWantDeleteUserPendingCompleteItem(vo.getUserRelation().get(Systems.DELETE));
-            FruitTeamDao dao = FruitTeam.getDao();
-            dao.setUuid(vo.getUuidVo());
-            dao.setUserRelation(vo.getUserRelation());
-            dao.setTitle(vo.getTitle());
-            dao.setDescription(vo.getDescription());
-            this.update(dao);
-        } catch (ExceptionSupport ex) {
-            throw ex;
-        } catch (RuntimeException ex) {
-            ex.printStackTrace();
-            throw new ServiceException("团队修改[" + vo.getUuidVo() + "]错误");
-        }
+        if (StringUtils.isBlank(vo.getUuidVo()))
+            throw new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name());
+        this.checkWantAddUserIfRepeat(vo.getUserRelation().get(Systems.ADD), vo.getUuidVo());
+        this.checkWantDeleteUserPendingCompleteItem(vo.getUserRelation().get(Systems.DELETE));
+        FruitTeamDao dao = FruitTeam.getDao();
+        dao.setUuid(vo.getUuidVo());
+        dao.setUserRelation(vo.getUserRelation());
+        dao.setTitle(vo.getTitle());
+        dao.setDescription(vo.getDescription());
+        this.update(dao);
     }
 
     /*检查用户是否重复添加*/
@@ -199,8 +187,8 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
         Optional.ofNullable(addUserList)
                 .map(users -> users.stream().collect(groupingBy(UserTeamRelation::getUserId, counting())))
                 .ifPresent(addUser -> addUser.forEach((id, count) -> {
-                    Optional.of(count).filter(i -> i <= 1).orElseThrow(() -> new CheckException("一个成员不可重复添加"));
-                    Optional.of(teamUserMap).filter(userMap -> !userMap.containsKey(id)).orElseThrow(() -> new CheckException("已有相同成员，不可重复添加"));
+                    Optional.of(count).filter(i -> i <= 1).orElseThrow(() -> new CheckException(FruitDict.Exception.Check.TEAM_DUPLICATE_USER.name()));
+                    Optional.of(teamUserMap).filter(userMap -> !userMap.containsKey(id)).orElseThrow(() -> new CheckException(FruitDict.Exception.Check.TEAM_DUPLICATE_USER.name()));
                 }));
     }
 
@@ -236,7 +224,7 @@ public abstract class AbstractDaoTeam implements InterfaceDao {
     public final void delete(String uuid) {
         try {
             if (StringUtils.isBlank(uuid))
-                throw new CheckException("Team id not is null");
+                throw new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name());
             FruitTeamDao dao = FruitTeam.getDao();
             dao.setUuid(uuid);
             this.delete(dao);

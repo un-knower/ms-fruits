@@ -16,8 +16,13 @@ public class RestResult<T> {
 
     private Integer code = 200;
     private String msg;
+    private String key;
     private T data;
     private boolean success = true;
+
+    public void setKey(String key) {
+        this.key = key;
+    }
 
     public RestResult setMsg(String msg) {
         this.msg = msg;
@@ -50,13 +55,15 @@ public class RestResult<T> {
     }
 
     public static RestResult newError(int code, String msg) {
-        return new RestResult(code, msg, null, false);
+        return new RestResult<>(code, msg, null, false);
     }
 
-    public static <T> RestResult<T> newError(int code, String msg, T data) {
-        return new RestResult(code, msg, data, false);
+    public static <T> RestResult<T> newError(int code, String key, String msg) {
+        RestResult<T> restResult = new RestResult<>(code, msg, null, false);
+        restResult.setKey(key);
+        return restResult;
     }
     public static <T> RestResult<T> newError(int code, String msg, Supplier<T> data) {
-        return new RestResult(code, msg, data.get(), false);
+        return new RestResult<>(code, msg, data.get(), false);
     }
 }

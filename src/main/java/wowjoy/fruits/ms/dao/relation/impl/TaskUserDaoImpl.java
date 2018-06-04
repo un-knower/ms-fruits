@@ -41,8 +41,8 @@ public class TaskUserDaoImpl<T extends TaskUserRelation, E extends TaskUserRelat
         tConsumer.accept((T) taskUserRelation);
         taskUserRelation.setUserRole(FruitDict.TaskUserDict.EXECUTOR);
         Optional<TaskUserRelation> optional = Optional.of(taskUserRelation);
-        optional.map(TaskUserRelation::getUserId).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException("task -> user userId can't null"));
-        optional.map(TaskUserRelation::getTaskId).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException("task -> user taskId can't null"));
+        optional.map(TaskUserRelation::getUserId).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name()));
+        optional.map(TaskUserRelation::getTaskId).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name()));
         mapper.insertSelective(taskUserRelation);
     }
 
@@ -93,7 +93,7 @@ public class TaskUserDaoImpl<T extends TaskUserRelation, E extends TaskUserRelat
                 /*检查列表元素是否为空*/
                 .map(criteriaList -> criteriaList.stream().filter(TaskUserRelationExample.Criteria::isValid).collect(toList()))
                 .filter(criteriaList -> !criteriaList.isEmpty())
-                .orElseThrow(() -> new CheckException("必须携带条件"));
+                .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_LACK_CRITERIA.name()));
         TaskUserRelation instance = new TaskUserRelation.Update();
         instance.setIsDeleted(Systems.Y.name());
         mapper.updateByExampleSelective(instance, example);

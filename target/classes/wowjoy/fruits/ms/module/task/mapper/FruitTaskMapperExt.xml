@@ -1,24 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="wowjoy.fruits.ms.module.task.mapper.FruitTaskMapperExt">
-    <resultMap id="BaseResultMap" type="wowjoy.fruits.ms.module.task.FruitTaskDao">
-        <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
-        <result column="title" jdbcType="VARCHAR" property="title"/>
-        <result column="task_status" jdbcType="VARCHAR" property="taskStatus"/>
-        <result column="status_description" jdbcType="VARCHAR" property="statusDescription"/>
-        <result column="task_level" jdbcType="VARCHAR" property="taskLevel"/>
-        <result column="estimated_end_date" jdbcType="DATE" property="estimatedEndDate"/>
-        <result column="end_date" jdbcType="TIMESTAMP" property="endDate"/>
-        <result column="description" jdbcType="VARCHAR" property="description"/>
-        <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
-        <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
-        <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
-        <result column="list_id" jdbcType="VARCHAR" property="listId"/>
-        <association property="plan" resultMap="PlanResultMap" columnPrefix="plan_"/>
-        <association property="project" resultMap="ProjectResultMap" columnPrefix="project_"/>
-        <association property="list" resultMap="ListResultMap" columnPrefix="list_"/>
-    </resultMap>
-
     <resultMap id="InfoResultMap" type="wowjoy.fruits.ms.module.task.FruitTaskInfo">
         <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
         <result column="title" jdbcType="VARCHAR" property="title"/>
@@ -80,20 +62,20 @@
         <result column="task_id" jdbcType="VARCHAR" property="taskId"/>
     </resultMap>
 
-    <resultMap id="PlanResultMap" type="wowjoy.fruits.ms.module.task.FruitTaskPlan">
+    <resultMap id="TaskResultMap" type="wowjoy.fruits.ms.module.plan.FruitPlanTask">
         <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
         <result column="title" jdbcType="VARCHAR" property="title"/>
-        <result column="plan_status" jdbcType="VARCHAR" property="planStatus"/>
+        <result column="task_status" jdbcType="VARCHAR" property="taskStatus"/>
         <result column="status_description" jdbcType="VARCHAR" property="statusDescription"/>
-        <result column="percent" jdbcType="INTEGER" property="percent"/>
-        <result column="estimated_start_date" jdbcType="TIMESTAMP" property="estimatedStartDate"/>
-        <result column="estimated_end_date" jdbcType="TIMESTAMP" property="estimatedEndDate"/>
+        <result column="task_level" jdbcType="VARCHAR" property="taskLevel"/>
+        <result column="estimated_end_date" jdbcType="DATE" property="estimatedEndDate"/>
         <result column="end_date" jdbcType="TIMESTAMP" property="endDate"/>
-        <result column="parent_id" jdbcType="VARCHAR" property="parentId"/>
+        <result column="description" jdbcType="VARCHAR" property="description"/>
         <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
-        <result column="task_id" jdbcType="VARCHAR" property="taskId"/>
+
+        <result column="plan_id" jdbcType="VARCHAR" property="planId"/>
     </resultMap>
     <sql id="Base_Example_Where_Clause">
         <foreach collection="example.oredCriteria" item="criteria" separator="or">
@@ -243,7 +225,8 @@
                 </include>
                 AND flist.is_deleted = 'N'
             </where>
-        </trim>) flist on flist.list_id = projectJoin.list_id
+        </trim>
+        ) flist on flist.list_id = projectJoin.list_id
         where listJoin.is_deleted = 'N'
         ) listJoin on listJoin.task_id = ftask.uuid
         <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
@@ -289,29 +272,6 @@
         </include>
         from fruits_user fuser where fuser.is_deleted = 'N') fuser on fuser.user_id = userJoin.user_id
         where fuser.user_id is not null
-    </select>
-
-    <select id="selectPlanByTask" resultMap="PlanResultMap">
-        select
-        <include refid="Plan_Column_List">
-            <property name="replace" value="fplan"/>
-            <property name="prefix" value=""/>
-        </include>
-        ,taskJoin.task_id
-        from fruits_plan fplan
-        right join (select task_id,plan_id from task_plan_relation where is_deleted = 'N') taskJoin on taskJoin.plan_id
-        = fplan.uuid
-        right join (select ftask.uuid from fruits_task ftask
-        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
-            <where>
-                <include refid="Base_Example_Where_Clause">
-                    <property name="replace" value="ftask"/>
-                </include>
-                and ftask.is_deleted = 'N'
-            </where>
-        </trim>
-        ) ftask on ftask.uuid = taskJoin.task_id
-        where fplan.uuid is not null and fplan.is_deleted = 'N';
     </select>
 
     <!-- 查询任务关联项目 -->
@@ -490,6 +450,12 @@
         <include refid="Base_Column_List">
             <property name="replace" value="task"/>
         </include>
+        ,
+        case
+        when task.task_status = 'START' then 1
+        when task.task_status = 'COMPLETE' then 2
+        when task.task_status = 'END' then 3
+        else -1 end as `status`
         from (
         select
         <include refid="Base_Column_List">
@@ -545,9 +511,10 @@
                 and task.uuid is not null
             </where>
         </trim>
-        <if test="example.orderByClause != null">
-            order by ${example.orderByClause}
-        </if>
+        order by
+        `status`,
+        case when `status` = 1 then task.estimated_end_date else '' end asc,
+        case when `status` in (2,3) then task.end_date else '' end desc
     </select>
 
     <select id="myCreateTask" resultMap="InfoResultMap">
@@ -555,6 +522,12 @@
         <include refid="Base_Column_List">
             <property name="replace" value="task"/>
         </include>
+        ,
+        case
+        when task.task_status = 'START' then 1
+        when task.task_status = 'COMPLETE' then 2
+        when task.task_status = 'END' then 3
+        else -1 end as `status`
         from (
         select
         <include refid="Base_Column_List">
@@ -605,9 +578,10 @@
                 AND task.uuid is not null
             </where>
         </trim>
-        <if test="example.orderByClause != null">
-            order by ${example.orderByClause}
-        </if>
+        order by
+        `status`,
+        case when `status` = 1 then task.estimated_end_date else '' end asc,
+        case when `status` in (2,3) then task.end_date else '' end desc
     </select>
 
     <select id="myCreateTaskFromProjects" resultMap="ProjectResultMap">
@@ -641,6 +615,105 @@
         </include>
         from fruits_project fproject where fproject.is_deleted = 'N') fproject on fproject.uuid = project.project_id
         where fproject.uuid is not null
+    </select>
+
+    <!--
+        fruits_task:
+            index: uuid
+        task_list_relation：
+            index: cover_task_list
+    -->
+    <select id="selectByExampleExt" resultMap="InfoResultMap">
+        select uuid,title,`estimated_end_date`,`end_date`,`create_date_time`,task_status,
+        case
+        when task_status = 'START' then 1
+        when task_status = 'COMPLETE' then 2
+        when task_status = 'END' then 3
+        else -1 end as `status`,
+        listRelation.list_id
+        from fruits_task ftask
+        right join (
+        select task_id,list_id from task_list_relation where is_deleted = 'N' and
+        list_id in
+        <foreach collection="listIn" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+        ) listRelation on listRelation.task_id = ftask.uuid
+        where
+        `is_deleted` = 'N'
+        and task_status in
+        <if test="statusIn != null">
+            <foreach collection="statusIn" item="status" open="(" close=")" separator=",">
+                #{status}
+            </foreach>
+        </if>
+        and uuid is not null
+        <if test="title != null">
+            and `title` like #{title}
+        </if>
+        <choose>
+            <when test="beginDateTime != null and endDateTime != null">
+                and `estimated_end_date` between #{beginDateTime} and #{endDateTime}
+            </when>
+            <when test="endDateTime != null">
+                and `estimated_end_date` &lt; #{endDateTime}
+            </when>
+        </choose>
+        order by
+        `status`,
+        case when `status` = 1 then estimated_end_date else '' end asc,
+        case when `status` in (2,3) then end_date else '' end desc
+    </select>
+
+    <select id="selectTaskByPlanIds" resultMap="TaskResultMap">
+        select
+        taskPlanRelation.plan_id as plan_id
+        ,
+        <include refid="Base_Column_List">
+            <property name="replace" value="ftask"/>
+        </include>
+        ,
+        case
+        when ftask.task_status = 'START' then 1
+        when ftask.task_status = 'COMPLETE' then 2
+        when ftask.task_status = 'END' then 3
+        else -1 end as `status`
+        from fruits_task ftask
+        right join (
+        select task_id,plan_id from task_plan_relation
+        where is_deleted = 'N'
+        and plan_id in
+        <foreach collection="planIds" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+        ) taskPlanRelation on taskPlanRelation.task_id = ftask.uuid
+        <trim>
+            <where>
+                <include refid="Base_Example_Where_Clause">
+                    <property name="replace" value="ftask"/>
+                </include>
+                AND
+                ftask.is_deleted = 'N'
+            </where>
+        </trim>
+        order by
+        `status`,
+        case when `status` = 1 then ftask.estimated_end_date else '' end asc,
+        case when `status` in (2,3) then ftask.end_date else '' end desc
+    </select>
+
+    <!--
+        fruits_task :
+            index : uuid
+        task_list_relation :
+            index : cover_task_list
+    -->
+    <select id="taskCountByListId" resultType="java.lang.Integer">
+        select count(uuid) from fruits_task ftask
+        right join (
+        select task_id
+        from task_list_relation where is_deleted = 'N' and list_id = #{listId}) listJoin on listJoin.task_id = ftask.uuid
+        where ftask.is_deleted = 'N'
     </select>
 
 </mapper>

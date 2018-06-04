@@ -10,29 +10,31 @@ import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.comment.DefectComment;
 import wowjoy.fruits.ms.module.comment.FruitComment;
-import wowjoy.fruits.ms.module.defect.DefectStatusCount;
-import wowjoy.fruits.ms.module.defect.FruitDefect;
+import wowjoy.fruits.ms.module.defect.*;
 import wowjoy.fruits.ms.module.defect.FruitDefect.ChangeInfo;
-import wowjoy.fruits.ms.module.defect.FruitDefectExample;
-import wowjoy.fruits.ms.module.defect.FruitDefectResource;
 import wowjoy.fruits.ms.module.logs.FruitLogs;
 import wowjoy.fruits.ms.module.project.FruitProject;
 import wowjoy.fruits.ms.module.resource.FruitResource;
 import wowjoy.fruits.ms.module.user.FruitUser;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
-import wowjoy.fruits.ms.module.util.entity.FruitDict.DefectDict;
+import wowjoy.fruits.ms.module.user.example.FruitUserExample;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.module.util.entity.FruitDict.DefectDict.Status;
+import wowjoy.fruits.ms.module.util.entity.FruitDict.Exception.Check;
 import wowjoy.fruits.ms.module.util.entity.FruitDict.Systems;
 import wowjoy.fruits.ms.module.versions.FruitVersions;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;
 import wowjoy.fruits.ms.util.GsonUtils;
 
+import java.text.MessageFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.function.*;
+import java.util.stream.Stream;
 
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.*;
@@ -59,10 +61,10 @@ public abstract class ServiceDefect implements InterfaceDao {
     /*不予处理 ->  已关闭（创建人）、重打开（创建人）*/
     /*延期处理 ->  已解决（处理人）、不予处理（处理人）、已关闭（创建人）*/
     /*重打开 ->  已解决（处理人）、不予处理（处理人）、延期处理（处理人）、已关闭（创建人）*/
-    BiConsumer<Status, Status> checkStatus = (currentStatus, toStatus) -> Optional.of(includeStatus.get(toStatus))
+    private BiConsumer<Status, Status> checkStatus = (currentStatus, toStatus) -> Optional.of(includeStatus.get(toStatus))
             .map(Supplier::get)
             .filter(include -> include.contains(currentStatus.name()))
-            .orElseThrow(() -> new CheckException("current status can't to " + toStatus.name()));
+            .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.DEFECT_NO_CHANGE_TO_STATUS.name()));
 
     /*添加必须包含缺陷添加、资源添加、缺陷 AND 资源关联信息添加，使当前操作在同一个事务中管理，同时回滚提交*/
     protected abstract void insert(FruitDefect.Insert insert);
@@ -72,7 +74,7 @@ public abstract class ServiceDefect implements InterfaceDao {
 
     protected abstract Optional<FruitDefect> findWithBlobs(String uuid);
 
-    protected abstract Page<FruitDefect> findConsumerPage(Consumer<FruitDefectExample> exampleConsumer, int pageNum, int pageSize);
+    public abstract Page<FruitDefect> findConsumerPage(Consumer<FruitDefect.Search> exampleConsumer);
 
     /*修改缺陷、删除添加资源*/
     protected abstract void update(Consumer<FruitDefect.Update> updateConsumer, Consumer<FruitDefectExample> exampleConsumer);
@@ -82,6 +84,8 @@ public abstract class ServiceDefect implements InterfaceDao {
     protected abstract List<FruitProject> findProjectByProjectId(ArrayList<String> projectIds);
 
     protected abstract List<FruitUserDao> findUserByUserIds(ArrayList<String> userIds);
+
+    protected abstract Optional<FruitUserDao> findUserByUserId(Consumer<FruitUserExample> exampleConsumer);
 
     protected abstract List<FruitVersions> findVersionByVersionId(ArrayList<String> versionIds);
 
@@ -95,14 +99,24 @@ public abstract class ServiceDefect implements InterfaceDao {
 
     public abstract ArrayList<DefectComment> findComment(String defectId);
 
+    public abstract DefectDuplicate findDuplicate(String defectId);
+
+    public abstract ArrayList<String> findResourceId(FruitDict.Resource type, String defectId);
+
+
+    /*--------------------- 全局判断 ----------------------*/
+    /*判断用户是否离职，离职返回true*/
+    private final Predicate<String> createUserStill = (userId) -> findUserByUserId(fruitUserExample -> fruitUserExample.createCriteria().andUserIdEqualTo(userId).andStatusEqualTo(FruitDict.UserDict.STILL.name()).andIsDeletedEqualTo(Systems.N.name())).isPresent();
+
     public void beforeInsert(FruitDefect.Insert insert) {
         /*若被当前判断拦截，则说明前端参数未做限制*/
         this.insertCheck(insert);
         /*提取描述中的图片数据*/
         insert.setDescription(FruitResource.Upload.obtainImage(insert.getDescription(), upload -> {
             FruitDefect.Upload defectUpload = new FruitDefect.Upload();
+            defectUpload.setUuid(upload.getUuid());
             defectUpload.setSize(upload.getSize());
-            defectUpload.setDrType(DefectDict.Resource.DESCRIPTION);
+            defectUpload.setDrType(FruitDict.Resource.DESCRIPTION);
             defectUpload.setType(upload.getType());
             defectUpload.setOutputStream(upload.getOutputStream());
             defectUpload.setNowName(defectUpload.getUuid());
@@ -113,88 +127,128 @@ public abstract class ServiceDefect implements InterfaceDao {
         insert.setAfterVersionId(insert.getBeforeVersionId());    //默认和影响版本一致
         insert.setUserId(ApplicationContextUtils.getCurrentUser().getUserId()); //缺陷创建人
         this.insert(insert);
+        /*更新综合查询字段*/
+        this.updateDuplicate(insert.getUuid());
         /*清除insert 文件流，否则保存入数据库长度太长，影响日志查询效率*/
-        insert.getUpload().forEach(upload -> {
-            upload.setOutputStream(null);
-            upload.setEncodeData(null);
-        });
+        Optional.ofNullable(insert.getUpload())
+                .ifPresent(uploads -> uploads.forEach(upload -> {
+                    upload.setOutputStream(null);
+                    upload.setEncodeData(null);
+                }));
     }
 
-    public void beforeUpdate(FruitDefect.Update update) {
-        this.updateCheck(update);
-        /*获取附件，并将附件存入添加资源列表中*/
-        FruitResource.Upload.obtainImage(update.getDescription(), upload -> {
-            FruitDefect.Upload defectUpload = new FruitDefect.Upload();
-            defectUpload.setSize(upload.getSize());
-            defectUpload.setDrType(DefectDict.Resource.DESCRIPTION);
-            defectUpload.setType(upload.getType());
-            defectUpload.setOutputStream(upload.getOutputStream());
-            defectUpload.setNowName(defectUpload.getUuid());
-            defectUpload.setOriginName(upload.getOriginName());
-            Optional.of(update)
-                    .filter(defect -> defect.getUpload() == null)
-                    .ifPresent(defect -> defect.setUpload(Lists.newArrayList()));
-            update.getUpload().add(defectUpload);
-        });
+    public void beforeUpdate(FruitDefect.Update intoUpdate) {
+        this.updateCheck(intoUpdate);
+        intoUpdate.setDescription(
+                /*获取附件，并将附件存入添加资源列表中*/
+                FruitResource.Upload.obtainImage(intoUpdate.getDescription(), upload -> {
+                    FruitDefect.Upload defectUpload = new FruitDefect.Upload();
+                    defectUpload.setUuid(upload.getUuid());
+                    defectUpload.setSize(upload.getSize());
+                    defectUpload.setDrType(FruitDict.Resource.DESCRIPTION);
+                    defectUpload.setType(upload.getType());
+                    defectUpload.setOutputStream(upload.getOutputStream());
+                    defectUpload.setNowName(defectUpload.getUuid());
+                    defectUpload.setOriginName(upload.getOriginName());
+                    Optional.of(intoUpdate)
+                            .filter(intoDefect -> intoDefect.getUpload() == null)
+                            .ifPresent(intoDefect -> intoDefect.setUpload(Lists.newArrayList()));
+                    intoUpdate.getUpload().add(defectUpload);
+                }));
+        /*更新缺陷*/
         this.update(defect -> {
-            defect.setBeforeVersionId(update.getBeforeVersionId());
-            defect.setDefectName(update.getDefectName());
-            defect.setHandlerUserId(update.getHandlerUserId());
-            defect.setDefectType(update.getDefectType());
-            defect.setDefectLevel(update.getDefectLevel());
-            defect.setRiskIndex(update.getRiskIndex());
-            defect.setDescription(update.getDescription());
-            defect.setUpload(update.getUpload());
-            defect.setRemoveResource(update.getRemoveResource());
-            defect.setUuid(update.getUuid());
-        }, fruitDefectExample -> fruitDefectExample.createCriteria().andUuidEqualTo(update.getUuid()).andIsDeletedEqualTo(Systems.N.name()));
+            defect.setBeforeVersionId(intoUpdate.getBeforeVersionId());
+            defect.setDefectName(intoUpdate.getDefectName());
+            defect.setHandlerUserId(intoUpdate.getHandlerUserId());
+            defect.setDefectType(intoUpdate.getDefectType());
+            defect.setDefectLevel(intoUpdate.getDefectLevel());
+            defect.setRiskIndex(intoUpdate.getRiskIndex());
+            defect.setDescription(intoUpdate.getDescription());
+            defect.setUpload(intoUpdate.getUpload());
+            defect.setUuid(intoUpdate.getUuid());
+            defect.setEndDateTime(intoUpdate.getEndDateTime());
+
+            defect.setRemoveResource(intoUpdate.getRemoveResource());
+        }, fruitDefectExample -> fruitDefectExample.createCriteria().andUuidEqualTo(intoUpdate.getUuid()).andIsDeletedEqualTo(Systems.N.name()));
+        /*更新综合查询字段*/
+        this.updateDuplicate(intoUpdate.getUuid());
         /*清除insert 文件流，否则保存入数据库长度太长，影响日志查询效率*/
-        update.getUpload().forEach(upload -> {
-            upload.setOutputStream(null);
-            upload.setEncodeData(null);
-        });
+        Optional.ofNullable(intoUpdate.getUpload())
+                .ifPresent(uploads -> uploads.forEach(upload -> {
+                    upload.setOutputStream(null);
+                    upload.setEncodeData(null);
+                }));
+    }
+
+    private String obtainRemoveResourceId(String removeResource, String description, String defectId) {
+        Optional.ofNullable(defectId)
+                .filter(StringUtils::isNotBlank)
+                .orElseThrow(() -> new CheckException(Check.SYSTEM_NULL.name()));
+        String resourceIdJoin = this.findResourceId(FruitDict.Resource.DESCRIPTION, defectId).stream().filter(id -> StringUtils.isBlank(description) || !description.contains(id))
+                .collect(joining(","));
+        return Optional.ofNullable(removeResource)
+                .filter(StringUtils::isNotBlank)
+                .map(str -> resourceIdJoin + "," + str)
+                .orElse(resourceIdJoin);
+    }
+
+    /*更新综合查询字段*/
+    private void updateDuplicate(String defectId) {
+        DefectDuplicate duplicate = this.findDuplicate(defectId);
+        update(defect -> defect.setDuplicate(MessageFormat.format("{0}{1}{2}{3}",
+                Optional.ofNullable(duplicate.getNumber()).orElse(0),
+                Optional.ofNullable(duplicate.getCreateUserName()).orElse(""),
+                Optional.ofNullable(duplicate.getHandlerUserName()).orElse(""),
+                Optional.ofNullable(duplicate.getDefectName()).orElse(""))
+        ), fruitDefectExample -> fruitDefectExample.createCriteria().andUuidEqualTo(duplicate.getUuid()));
     }
 
     private void updateCheck(FruitDefect.Update update) {
         ofNullable(update)
-                .orElseThrow(() -> new CheckException("info can't null"));
-        this.existsDefect(update.getUuid());
+                .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_UPDATE_NULL.name()));
+        FruitDefect fruitDefect = this.existsDefect(update.getUuid());
         Optional.of(update)
                 .filter(defect -> defect.getDefectName() == null || defect.getDefectName().length() > 0)
-                .orElseThrow(() -> new CheckException("name length can't less then 0"));
+                .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.DEFECT_NAME_NULL.name()));
         Optional.of(update)
                 .filter(defect -> defect.getBeforeVersionId() == null || defect.getBeforeVersionId().length() > 0)
-                .orElseThrow(() -> new CheckException("before version can't null"));
+                .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.DEFECT_BEFORE_NULL.name()));
         Optional.of(update)
                 .filter(defect -> defect.getHandlerUserId() == null || defect.getHandlerUserId().length() > 0)
-                .orElseThrow(() -> new CheckException("handler user can't null"));
+                .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.DEFECT_HANDLER_USER_NULL.name()));
+        ofNullable(update.getHandlerUserId())
+                .filter(StringUtils::isNotBlank)
+                .map(handlerUserId ->   /*如果改变处理人，则需要验证当前用户是不是缺陷创建人、或则创建人离职，如果都不满足，则属于非法操作，立即拒绝当前操作*/
+                        Optional.ofNullable(fruitDefect.getUserId())
+                                .filter(createUserId -> createUserId.equals(ApplicationContextUtils.getCurrentUser().getUserId()) || this.createUserStill.test(createUserId))
+                                .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.DEFECT_CREATE_PERSON.name())));
         Optional.of(update)
                 .filter(defect -> defect.getProjectId() == null || defect.getProjectId().length() > 0)
-                .orElseThrow(() -> new CheckException("project can't null"));
+                .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.DEFECT_PROJECT_NULL.name()));
     }
 
     /*为了满足当时的业务，后期业务有扩展在修改*/
     private void insertCheck(FruitDefect insert) {
         ofNullable(insert)
-                .orElseThrow(() -> new CheckException("info can't null"));
+                .orElseThrow(() -> new CheckException(Check.SYSTEM_NULL.name()));
         ofNullable(insert.getDefectLevel())
-                .orElseThrow(() -> new CheckException("level can't null"));
+                .orElseThrow(() -> new CheckException(Check.DEFECT_LEVEL_NULL.name()));
         ofNullable(insert.getRiskIndex())
-                .orElseThrow(() -> new CheckException("risk index can't null"));
+                .orElseThrow(() -> new CheckException(Check.DEFECT_RISK_INDEX_NULL.name()));
         ofNullable(insert.getDefectType())
-                .orElseThrow(() -> new CheckException("type can't null"));
+                .orElseThrow(() -> new CheckException(Check.DEFECT_TYPE_NULL.name()));
         ofNullable(insert.getDefectName())
                 .filter(StringUtils::isNotBlank)
-                .orElseThrow(() -> new CheckException("name can't null"));
+                .orElseThrow(() -> new CheckException(Check.DEFECT_NAME_NULL.name()));
         ofNullable(insert.getBeforeVersionId())
                 .filter(StringUtils::isNotBlank)
-                .orElseThrow(() -> new CheckException("before version can't null"));
+                .orElseThrow(() -> new CheckException(Check.DEFECT_BEFORE_NULL.name()));
         ofNullable(insert.getHandlerUserId())
                 .filter(StringUtils::isNotBlank)
-                .orElseThrow(() -> new CheckException("handler user can't null"));
+                .orElseThrow(() -> new CheckException(Check.DEFECT_HANDLER_USER_NULL.name()));
         ofNullable(insert.getProjectId())
                 .filter(StringUtils::isNotBlank)
-                .orElseThrow(() -> new CheckException("project can't null"));
+                .orElseThrow(() -> new CheckException(Check.DEFECT_PROJECT_NULL.name()));
     }
 
     /**
@@ -204,53 +258,85 @@ public abstract class ServiceDefect implements InterfaceDao {
      * @param search
      * @return
      */
-    public Page<FruitDefect> finds(FruitDefect.Search search) {
-        Page<FruitDefect> defects = this.findConsumerPage(fruitDefectExample -> {
-            FruitDefectExample.Criteria criteria = fruitDefectExample.createCriteria();
-            ofNullable(search.getProjectId())       //先过滤项目，可以过滤掉大部分数据
-                    .filter(StringUtils::isNotBlank)
-                    .ifPresent(criteria::andProjectIdEqualTo);
-            ofNullable(search.getBeforeVersionId())
-                    .filter(StringUtils::isNotBlank)
-                    .ifPresent(criteria::andBeforeVersionIdEqualTo);
-            Optional.ofNullable(search.getStatus())
-                    .filter(StringUtils::isNotBlank)
-                    .map(status -> status.split(","))
-                    .map(Lists::newArrayList)
-                    .ifPresent(criteria::andDefectStatusIn);
-            Optional.ofNullable(search.getIndex())
+    public Page<FruitDefect> finds(FruitDefect.Search search, UnaryOperator<String> orderBy) {
+        Page<FruitDefect> defects = this.findConsumerPage(intoSearch -> {
+            intoSearch.setPageNum(search.getPageNum());
+            intoSearch.setPageSize(search.getPageSize());
+            intoSearch.setIndexIn(Optional
+                    .ofNullable(search.getIndex())
                     .filter(StringUtils::isNotBlank)
                     .map(index -> index.split(","))
                     .map(Lists::newArrayList)
-                    .ifPresent(criteria::andRiskIndexIn);
-            Optional.ofNullable(search.getType())
+                    .orElseGet(() -> Stream.of(FruitDict.DefectDict.Index.values()).map(Enum::name).collect(toCollection(ArrayList::new))));
+            intoSearch.setLevelIn(Optional
+                    .ofNullable(search.getLevel())
+                    .filter(StringUtils::isNotBlank)
+                    .map(level -> level.split(","))
+                    .map(Lists::newArrayList)
+                    .orElseGet(() -> Stream.of(FruitDict.DefectDict.Level.values()).map(Enum::name).collect(toCollection(ArrayList::new))));
+            intoSearch.setTypeIn(Optional
+                    .ofNullable(search.getType())
                     .filter(StringUtils::isNotBlank)
                     .map(type -> type.split(","))
                     .map(Lists::newArrayList)
-                    .ifPresent(criteria::andDefectTypeIn);
-            Optional.ofNullable(search.getLevel())
+                    .orElseGet(() -> Stream.of(FruitDict.DefectDict.Type.values()).map(Enum::name).collect(toCollection(ArrayList::new))));
+            intoSearch.setStatusIn(Optional
+                    .ofNullable(search.getStatus())
                     .filter(StringUtils::isNotBlank)
-                    .map(type -> type.split(","))
+                    .map(status -> status.split(","))
                     .map(Lists::newArrayList)
-                    .ifPresent(criteria::andDefectLevelIn);
-            ofNullable(search.getUserId())  //由于用户可能会出现跨项目，跨版本的缺陷，所以不应该把用户id放在靠前匹配列
+                    .orElseGet(() -> Stream.of(FruitDict.DefectDict.Status.values()).map(Enum::name).collect(toCollection(ArrayList::new))));
+            intoSearch.setHandlerUserIdIn(Optional
+                    .ofNullable(search.getHandlerUserId())
                     .filter(StringUtils::isNotBlank)
-                    .ifPresent(criteria::andUserIdEqualTo);
-            ofNullable(search.getHandlerUserId())
+                    .map(handlerUser -> handlerUser.split(","))
+                    .map(Lists::newArrayList)
+                    .orElse(null));
+            intoSearch.setUserIdIn(Optional
+                    .ofNullable(search.getUserId())
                     .filter(StringUtils::isNotBlank)
-                    .ifPresent(criteria::andHandlerUserIdEqualTo);
-            Optional.ofNullable(search.getDuplicate())
+                    .map(userId -> userId.split(","))
+                    .map(Lists::newArrayList)
+                    .orElse(null));
+            intoSearch.setBeforeVersionIdIn(Optional
+                    .ofNullable(search.getBeforeVersionId())
+                    .filter(StringUtils::isNotBlank)
+                    .map(versionId -> versionId.split(","))
+                    .map(Lists::newArrayList)
+                    .orElse(null));
+            intoSearch.setProjectIdIn(Optional
+                    .ofNullable(search.getProjectId())
+                    .filter(StringUtils::isNotBlank)
+                    .map(projectId -> projectId.split(","))
+                    .map(Lists::newArrayList)
+                    .orElse(null));
+            intoSearch.setDefectName(Optional
+                    .ofNullable(search.getDefectName())
+                    .filter(StringUtils::isNotBlank)
+                    .map(name -> name + "%")
+                    .orElse(null));
+            intoSearch.setDuplicate(Optional
+                    .ofNullable(search.getDuplicate())
                     .filter(StringUtils::isNotBlank)
                     .map(duplicate -> "%" + duplicate + "%")
-                    .ifPresent(criteria::andDuplicateLike);
-            Optional.of(search)
-                    .filter(defect -> defect.getStartTime() != null)
-                    .filter(defect -> defect.getEndTime() != null)
-                    .ifPresent(defect -> criteria.andCreateDateTimeBetween(Date.from(defect.getStartTime().atZone(ZoneId.systemDefault()).toInstant()), Date.from(defect.getEndTime().atZone(ZoneId.systemDefault()).toInstant())));
-            fruitDefectExample.setOrderByClause("create_date_time desc");
-            if (StringUtils.isNotBlank(search.sortConstrue()))
-                fruitDefectExample.setOrderByClause(search.sortConstrue());
-        }, search.getPageNum(), search.getPageSize());
+                    .orElse(null));
+            Optional.of(search)     /*只包含开始时间时，自动填充结束时间为当前时间*/
+                    .filter(defect -> StringUtils.isNotBlank(defect.getStartTime()) && StringUtils.isBlank(defect.getEndTime()))
+                    .ifPresent(defect -> {
+                        intoSearch.setStartTime(LocalDate.parse(defect.getStartTime()).atTime(0, 0, 0).toString());
+                        intoSearch.setEndTime(LocalDateTime.now().toString());
+                    });
+            Optional.of(search)     /*只包含结束时间时，只查询小于结束时间*/
+                    .filter(defect -> StringUtils.isBlank(defect.getStartTime()) && StringUtils.isNotBlank(defect.getEndTime()))
+                    .ifPresent(defect -> intoSearch.setEndTime(LocalDate.parse(defect.getEndTime()).atTime(23, 59, 59).toString()));
+            Optional.of(search)     /*范围查询，包含开始和结束时间*/
+                    .filter(defect -> StringUtils.isNotBlank(defect.getStartTime()) && StringUtils.isNotBlank(defect.getEndTime()))
+                    .ifPresent(defect -> {
+                        intoSearch.setStartTime(LocalDate.parse(defect.getStartTime()).atTime(0, 0, 0).toString());
+                        intoSearch.setEndTime(LocalDate.parse(defect.getEndTime()).atTime(23, 59, 59).toString());
+                    });
+            intoSearch.setOrderByClause(orderBy.apply(search.sortConstruePro(null, "create_date_time desc")));
+        });
         List<FruitDefect.Info> defectInfo = defects.getResult().stream().map(defect -> (FruitDefect.Info) GsonUtils.newGson().fromJson(GsonUtils.newGson().toJsonTree(defect), TypeToken.of(FruitDefect.Info.class).getType())).collect(toList());
         CompletableFuture.allOf(
                 CompletableFuture
@@ -259,6 +345,7 @@ public abstract class ServiceDefect implements InterfaceDao {
                 CompletableFuture
                         .supplyAsync(this.joinUser(defects))
                         .thenAccept(userMap -> defectInfo.forEach(defect -> {
+
                             ofNullable(defect.getUserId())
                                     .filter(StringUtils::isNotBlank)
                                     .map(userMap::get)
@@ -295,7 +382,7 @@ public abstract class ServiceDefect implements InterfaceDao {
     public FruitDefect.Info find(String uuid) {
         ofNullable(uuid)
                 .filter(StringUtils::isNotBlank)
-                .orElseThrow(() -> new CheckException("defect not exists"));
+                .orElseThrow(() -> new CheckException(Check.SYSTEM_NULL.name()));
         return this.findWithBlobs(uuid)
                 .map(defect -> (FruitDefect.Info) GsonUtils.newGson().fromJson(GsonUtils.newGson().toJsonTree(defect), TypeToken.of(FruitDefect.Info.class).getType()))
                 .map((FruitDefect.Info info) -> {
@@ -358,19 +445,16 @@ public abstract class ServiceDefect implements InterfaceDao {
      * 缺陷转换为已解决
      * 状态限制：新开、重打开、延期处理
      * 用户限制：只有处理人可以切换状态到已解决
+     * 2018年05月23日17:10:54：已解决的修复版本迁移至已关闭时选择
      *
      * @param info
      */
     public void toSolved(ChangeInfo info) {
         FruitDefect defect = this.existsDefect(info.getUuid());
-        this.checkStatus.accept(defect.getDefectStatus(), Status.SOLVED);   //检查状态
         ofNullable(defect.getHandlerUserId())
                 .filter(userId -> userId.equals(ApplicationContextUtils.getCurrentUser().getUserId()))
-                .orElseThrow(() -> new CheckException("current user weren't defect handler person"));
-        this.update(update -> {
-            update.setDefectStatus(Status.SOLVED);
-            update.setAfterVersionId(info.getAfterVersionId());
-        }, fruitDefectExample -> fruitDefectExample.createCriteria().andUuidEqualTo(info.getUuid()).andIsDeletedEqualTo(Systems.N.name()));
+                .orElseThrow(() -> new CheckException(Check.DEFECT_HANDLER_PERSON.name()));
+        this.update(update -> update.setDefectStatus(Status.SOLVED), fruitDefectExample -> fruitDefectExample.createCriteria().andUuidEqualTo(info.getUuid()).andIsDeletedEqualTo(Systems.N.name()));
     }
 
     /**
@@ -382,10 +466,20 @@ public abstract class ServiceDefect implements InterfaceDao {
      */
     public void toClosed(ChangeInfo info) {
         FruitDefect defect = this.existsDefect(info.getUuid());
+        String currentUserId = ApplicationContextUtils.getCurrentUser().getUserId();
         ofNullable(defect.getUserId())
-                .filter(userId -> userId.equals(ApplicationContextUtils.getCurrentUser().getUserId()))
-                .orElseThrow(() -> new CheckException("current user weren't defect create person"));
-        this.update(update -> update.setDefectStatus(Status.CLOSED), fruitDefectExample -> fruitDefectExample.createCriteria().andUuidEqualTo(defect.getUuid()).andIsDeletedEqualTo(Systems.N.name()));
+                .filter(userId -> userId.equals(currentUserId) || createUserStill.test(userId)) //创建人是当前用户 OR 创建人离职
+                .orElseThrow(() -> new CheckException(Check.DEFECT_CREATE_PERSON.name()));
+        ofNullable(defect.getAfterVersionId())
+                .filter(StringUtils::isNotBlank)
+                .orElseThrow(() -> new CheckException(Check.DEFECT_AFTER_NULL.name()));
+        this.update(update -> {
+            update.setDefectStatus(Status.CLOSED);
+            update.setAfterVersionId(info.getAfterVersionId());
+            /*更新入参，配合操作日志的关闭日期*/
+            info.setClosedDateTime(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
+            update.setClosedDateTime(info.getClosedDateTime());
+        }, fruitDefectExample -> fruitDefectExample.createCriteria().andUuidEqualTo(defect.getUuid()).andIsDeletedEqualTo(Systems.N.name()));
     }
 
     /**
@@ -400,7 +494,7 @@ public abstract class ServiceDefect implements InterfaceDao {
         this.checkStatus.accept(defect.getDefectStatus(), Status.DISREGARD);   //检查状态
         ofNullable(defect.getHandlerUserId())
                 .filter(userId -> userId.equals(ApplicationContextUtils.getCurrentUser().getUserId()))
-                .orElseThrow(() -> new CheckException("current user weren't defect handler person"));
+                .orElseThrow(() -> new CheckException(Check.DEFECT_HANDLER_PERSON.name()));
         this.update(update -> update.setDefectStatus(Status.DISREGARD), fruitDefectExample -> fruitDefectExample.createCriteria().andUuidEqualTo(defect.getUuid()).andIsDeletedEqualTo(Systems.N.name()));
     }
 
@@ -416,7 +510,7 @@ public abstract class ServiceDefect implements InterfaceDao {
         this.checkStatus.accept(defect.getDefectStatus(), Status.DELAY);   //检查状态
         ofNullable(defect.getHandlerUserId())
                 .filter(userId -> userId.equals(ApplicationContextUtils.getCurrentUser().getUserId()))
-                .orElseThrow(() -> new CheckException("current user weren't defect handler person"));
+                .orElseThrow(() -> new CheckException(Check.DEFECT_HANDLER_PERSON.name()));
         this.update(update -> update.setDefectStatus(Status.DELAY), fruitDefectExample -> fruitDefectExample.createCriteria().andUuidEqualTo(defect.getUuid()).andIsDeletedEqualTo(Systems.N.name()));
     }
 
@@ -431,8 +525,8 @@ public abstract class ServiceDefect implements InterfaceDao {
         FruitDefect defect = this.existsDefect(info.getUuid());
         this.checkStatus.accept(defect.getDefectStatus(), Status.REOPEN);    //检查状态
         ofNullable(defect.getUserId())
-                .filter(userId -> userId.equals(ApplicationContextUtils.getCurrentUser().getUserId()))
-                .orElseThrow(() -> new CheckException("current user weren't defect create person"));
+                .filter(userId -> userId.equals(ApplicationContextUtils.getCurrentUser().getUserId()) || createUserStill.test(userId))
+                .orElseThrow(() -> new CheckException(Check.DEFECT_CREATE_PERSON.name()));
         this.update(update -> update.setDefectStatus(Status.REOPEN), fruitDefectExample -> fruitDefectExample.createCriteria().andUuidEqualTo(info.getUuid()));
     }
 
@@ -442,7 +536,7 @@ public abstract class ServiceDefect implements InterfaceDao {
                 .filter(StringUtils::isNotBlank)
                 .map(id -> this.findConsumer(fruitDefectExample -> fruitDefectExample.createCriteria().andUuidEqualTo(id).andIsDeletedEqualTo(Systems.N.name())))
                 .flatMap(defects -> defects.stream().findAny())
-                .orElseThrow(() -> new CheckException("defect not exists!"));
+                .orElseThrow(() -> new CheckException(Check.SYSTEM_NOT_EXISTS.name()));
     }
 
     /**
@@ -460,7 +554,7 @@ public abstract class ServiceDefect implements InterfaceDao {
 
     private Supplier<Map<String, FruitVersions>> joinVersion(ArrayList<FruitDefect> defects) {
         return () -> {
-            LinkedHashSet<String> versionIds = Sets.newLinkedHashSet();
+            CopyOnWriteArraySet<String> versionIds = new CopyOnWriteArraySet<>(Sets.newLinkedHashSet());
             defects.parallelStream().forEach(defect -> {
                 ofNullable(defect.getAfterVersionId())
                         .filter(StringUtils::isNotBlank)
@@ -475,7 +569,7 @@ public abstract class ServiceDefect implements InterfaceDao {
 
     private Supplier<Map<String, FruitUser>> joinUser(ArrayList<FruitDefect> defects) {
         return () -> {
-            LinkedHashSet<String> userIds = Sets.newLinkedHashSet();
+            CopyOnWriteArraySet<String> userIds = new CopyOnWriteArraySet<>(Sets.newLinkedHashSet());
             defects.parallelStream().forEach(defect -> {
                 ofNullable(defect.getUserId())
                         .filter(StringUtils::isNotBlank)

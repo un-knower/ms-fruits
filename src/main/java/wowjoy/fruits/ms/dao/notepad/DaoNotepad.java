@@ -7,41 +7,52 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wowjoy.fruits.ms.dao.logs.service.ServiceLogs;
+import wowjoy.fruits.ms.dao.relation.impl.NotepadResourceDaoImpl;
+import wowjoy.fruits.ms.dao.resource.ServiceResource;
 import wowjoy.fruits.ms.dao.team.AbstractDaoTeam;
 import wowjoy.fruits.ms.dao.user.UserDaoImpl;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.logs.FruitLogs;
+import wowjoy.fruits.ms.module.notepad.FruitNotepad;
 import wowjoy.fruits.ms.module.notepad.FruitNotepadDao;
 import wowjoy.fruits.ms.module.notepad.FruitNotepadExample;
 import wowjoy.fruits.ms.module.notepad.mapper.FruitNotepadMapper;
+import wowjoy.fruits.ms.module.relation.entity.NotepadResourceRelation;
+import wowjoy.fruits.ms.module.relation.example.NotepadResourceRelationExample;
+import wowjoy.fruits.ms.module.relation.mapper.NotepadResourceRelationMapper;
 import wowjoy.fruits.ms.module.team.FruitTeamDao;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
 import wowjoy.fruits.ms.module.user.example.FruitUserExample;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
+
+import static java.util.stream.Collectors.toCollection;
 
 /**
  * Created by wangziwen on 2017/8/25.
  */
 @Service
 @Transactional
-public class NotepadDaoImpl extends AbstractDaoNotepad {
+public class DaoNotepad extends ServiceNotepad {
     private final FruitNotepadMapper mapper;
     private final ServiceLogs daoLogs;
     private final UserDaoImpl userDaoImpl;
     private final AbstractDaoTeam daoTeamImpl;
+    private final ServiceResource serviceResource;
+    private final NotepadResourceDaoImpl<NotepadResourceRelation, NotepadResourceRelationExample> notepadResourceDao;
+    private final NotepadResourceRelationMapper notepadResourceRelationMapper;
 
     @Autowired
-    public NotepadDaoImpl(FruitNotepadMapper mapper, ServiceLogs daoLogs, UserDaoImpl userDaoImpl, AbstractDaoTeam daoTeamImpl) {
+    public DaoNotepad(FruitNotepadMapper mapper, ServiceLogs daoLogs, UserDaoImpl userDaoImpl, AbstractDaoTeam daoTeamImpl, ServiceResource serviceResource, NotepadResourceDaoImpl<NotepadResourceRelation, NotepadResourceRelationExample> notepadResourceDao, NotepadResourceRelationMapper notepadResourceRelationMapper) {
         this.mapper = mapper;
         this.daoLogs = daoLogs;
         this.userDaoImpl = userDaoImpl;
         this.daoTeamImpl = daoTeamImpl;
+        this.serviceResource = serviceResource;
+        this.notepadResourceDao = notepadResourceDao;
+        this.notepadResourceRelationMapper = notepadResourceRelationMapper;
     }
 
     public List<FruitNotepadDao> finds(Consumer<FruitNotepadExample> exampleConsumer) {
@@ -51,20 +62,44 @@ public class NotepadDaoImpl extends AbstractDaoNotepad {
     }
 
     @Override
-    public void insert(FruitNotepadDao dao) {
-        mapper.insertSelective(dao);
+    public void insert(FruitNotepad.Insert insert) {
+        this.addResource(insert.getUploads(), insert.getUuid());
+        mapper.insertSelective(insert);
+    }
+
+    /*添加关联资源*/
+    private void addResource(ArrayList<FruitNotepad.Upload> uploads, String notepad) {
+        Optional.ofNullable(uploads)
+                .ifPresent(resources -> resources.stream()
+                        .peek(upload -> Optional.ofNullable(upload)
+                                .filter(resource -> resource.getOutputStream() == null)
+                                .ifPresent(FruitNotepad.Upload::base64ToOutputStream))
+                        .peek(serviceResource::upload)
+                        .forEach(upload -> notepadResourceDao.insert(relation -> {
+                            relation.setNrType(upload.getNrType());
+                            relation.setNotepadId(notepad);
+                            relation.setResourceId(upload.getUuid());
+                        })));
     }
 
     @Override
-    protected void update(FruitNotepadDao dao) {
-        checkUuid(dao.getUuid());
+    protected void update(Consumer<FruitNotepad.Update> updateConsumer, Consumer<FruitNotepadExample> notepadExampleConsumer) {
+        FruitNotepad.Update update = new FruitNotepad.Update();
         FruitNotepadExample example = new FruitNotepadExample();
-        FruitNotepadExample.Criteria criteria = example.createCriteria();
-        if (StringUtils.isNotBlank(dao.getUuid()))
-            criteria.andUuidEqualTo(dao.getUuid());
-        if (criteria.getAllCriteria().isEmpty())
-            throw new CheckException("缺少更新条件");
-        mapper.updateByExampleSelective(dao, example);
+        updateConsumer.accept(update);
+        notepadExampleConsumer.accept(example);
+        Optional.ofNullable(example.getOredCriteria().stream().filter(criteria -> !criteria.getAllCriteria().isEmpty()).collect(toCollection(ArrayList::new)))
+                .filter(predicate -> !predicate.isEmpty())
+                .orElseThrow(() -> new CheckException("search term can't null"));
+        Optional.ofNullable(update.getUuid())
+                .filter(StringUtils::isNotBlank)
+                .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name()));
+        /*删除关联资源*/
+        Optional.ofNullable(update.getRemoveResources())
+                .filter(ids -> !ids.isEmpty())
+                .ifPresent(ids -> notepadResourceDao.deleted(notepadResourceRelationExample -> notepadResourceRelationExample.createCriteria().andResourceIdIn(ids).andNotepadIdEqualTo(update.getUuid()).andIsDeletedEqualTo(FruitDict.Systems.N.name())));
+        this.addResource(update.getUploads(), update.getUuid());
+        mapper.updateByExampleSelective(update, example);
     }
 
     @Override
@@ -109,15 +144,19 @@ public class NotepadDaoImpl extends AbstractDaoNotepad {
     }
 
     private void checkUuid(String uuid) {
-        if (StringUtils.isBlank(uuid))
-            throw new CheckException("uuid");
+        Optional.ofNullable(uuid).filter(StringUtils::isNotBlank).orElseThrow(()->new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name()));
         FruitNotepadExample example = new FruitNotepadExample();
         FruitNotepadExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(uuid))
             criteria.andUuidEqualTo(uuid);
         List<FruitNotepadDao> datas = mapper.selectByExample(example);
         if (datas.isEmpty())
-            throw new CheckException("日志不存在");
+            throw new CheckException(FruitDict.Exception.Check.SYSTEM_NOT_EXISTS.name());
+    }
+
+    @Override
+    protected ArrayList<String> findResourceId(FruitDict.Resource type, String notepadId) {
+        return notepadResourceRelationMapper.selectByNotepadId(type, notepadId);
     }
 
 }

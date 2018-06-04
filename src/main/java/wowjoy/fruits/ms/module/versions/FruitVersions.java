@@ -95,7 +95,16 @@ public class FruitVersions extends AbstractEntity {
 
         private FruitUser user;
         private FruitProject project;
-        private ArrayList<FruitVersions> sons;
+        private ArrayList<FruitVersions.Info> sons;
+        private boolean isUse;
+
+        public boolean isUse() {
+            return isUse;
+        }
+
+        public void setUse(boolean use) {
+            isUse = use;
+        }
 
         public FruitUser getUser() {
             return user;
@@ -113,11 +122,11 @@ public class FruitVersions extends AbstractEntity {
             this.project = project;
         }
 
-        public ArrayList<FruitVersions> getSons() {
+        public ArrayList<Info> getSons() {
             return sons;
         }
 
-        public void setSons(ArrayList<FruitVersions> sons) {
+        public void setSons(ArrayList<Info> sons) {
             this.sons = sons;
         }
     }

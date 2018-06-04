@@ -12,8 +12,10 @@ import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
+import sun.plugin2.message.Message;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.exception.ExceptionSupport;
+import wowjoy.fruits.ms.exception.MessageException;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -41,10 +43,10 @@ public class ArgumentInterceptor implements HandlerMethodArgumentResolver {
         try {
             return toType(data, parameter.getParameterAnnotation(JsonArgument.class).type());
         } catch (ExceptionSupport ex) {
-            throw new CheckException(ex.getMessage());
+            throw new MessageException(ex.getMessage());
         } catch (RuntimeException ex) {
             ex.printStackTrace();
-            throw new CheckException("入参转换发生未知的异常，请联系开发人员");
+            throw new MessageException("入参转换发生未知的异常，请联系开发人员");
         }
     }
 
@@ -58,13 +60,13 @@ public class ArgumentInterceptor implements HandlerMethodArgumentResolver {
             return obj;
         } catch (RuntimeException ex) {
             ex.printStackTrace();
-            throw new CheckException("参数不符合设计需求，请联系接口开发人员核对接口入参");
+            throw new MessageException("参数不符合设计需求，请联系接口开发人员核对接口入参");
         } catch (IllegalAccessException e) {
             e.printStackTrace();
-            throw new CheckException("创建默认实例失败");
+            throw new MessageException("创建默认实例失败");
         } catch (InstantiationException e) {
             e.printStackTrace();
-            throw new CheckException("创建默认实例失败");
+            throw new MessageException("创建默认实例失败");
         }
     }
 

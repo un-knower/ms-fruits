@@ -9,6 +9,7 @@ import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.relation.entity.TaskListRelation;
 import wowjoy.fruits.ms.module.relation.example.TaskListRelationExample;
 import wowjoy.fruits.ms.module.relation.mapper.TaskListRelationMapper;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.module.util.entity.FruitDict.Systems;
 
 import java.text.MessageFormat;
@@ -39,8 +40,8 @@ public class TaskListDaoImpl<T extends TaskListRelation, E extends TaskListRelat
         TaskListRelation taskListRelation = new TaskListRelation();
         tConsumer.accept((T) taskListRelation);
         Optional<TaskListRelation> optional = Optional.of(taskListRelation);
-        optional.map(TaskListRelation::getTaskId).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException("task -> list taskId can't null"));
-        optional.map(TaskListRelation::getListId).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException("task -> list listId can't null"));
+        optional.map(TaskListRelation::getTaskId).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name()));
+        optional.map(TaskListRelation::getListId).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name()));
         mapper.insertSelective(taskListRelation);
     }
 
@@ -86,7 +87,7 @@ public class TaskListDaoImpl<T extends TaskListRelation, E extends TaskListRelat
                 /*检查列表元素是否为空*/
                 .map(criteriaList -> criteriaList.stream().filter(TaskListRelationExample.Criteria::isValid).collect(toList()))
                 .filter(criteriaList -> !criteriaList.isEmpty())
-                .orElseThrow(() -> new CheckException("必须携带条件"));
+                .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_LACK_CRITERIA.name()));
         TaskListRelation.Update taskListRelation = new TaskListRelation.Update();
         taskListRelation.setIsDeleted(Systems.Y.name());
         mapper.updateByExampleSelective(taskListRelation, example);

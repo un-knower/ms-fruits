@@ -51,6 +51,6 @@ public abstract class ServiceResource {
 
                     exportResource.setEncodeData(Base64.getEncoder().encodeToString(download.toByteArray()));
                     return exportResource;
-                }).orElseThrow(() -> new CheckException("resource not exists"));
+                }).orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NOT_EXISTS.name()));
     }
 }

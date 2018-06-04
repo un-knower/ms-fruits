@@ -9,10 +9,10 @@ import wowjoy.fruits.ms.module.logs.FruitLogs;
 import wowjoy.fruits.ms.module.project.FruitProject;
 import wowjoy.fruits.ms.module.resource.FruitResource;
 import wowjoy.fruits.ms.module.user.FruitUser;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.module.util.entity.FruitDict.DefectDict;
 import wowjoy.fruits.ms.module.versions.FruitVersions;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Optional;
@@ -44,6 +44,8 @@ public class FruitDefect extends AbstractEntity {
     private DefectDict.Status defectStatus;
 
     private Date endDateTime;
+
+    private Date closedDateTime;
 
     private String duplicate;       //字段综合查询
 
@@ -97,13 +99,13 @@ public class FruitDefect extends AbstractEntity {
 
     public static class Upload extends FruitResource.Upload {
 
-        private DefectDict.Resource drType;
+        private FruitDict.Resource drType;
 
-        public DefectDict.Resource getDrType() {
+        public FruitDict.Resource getDrType() {
             return drType;
         }
 
-        public void setDrType(DefectDict.Resource drType) {
+        public void setDrType(FruitDict.Resource drType) {
             this.drType = drType;
         }
 
@@ -117,12 +119,94 @@ public class FruitDefect extends AbstractEntity {
 
         private int pageNum;
         private int pageSize;
-        private LocalDateTime startTime;
-        private LocalDateTime endTime;
+        private String startTime;
+        private String endTime;
         private String status;  //状态
         private String level;   //优先级
         private String type;    //类型
         private String index;   //严重程度
+
+        private ArrayList<String> statusIn;  //状态
+        private ArrayList<String> levelIn;   //优先级
+        private ArrayList<String> typeIn;    //类型
+        private ArrayList<String> indexIn;   //严重程度
+        private ArrayList<String> handlerUserIdIn;    //处理人集合
+        private ArrayList<String> userIdIn;    //创建人集合
+        private ArrayList<String> beforeVersionIdIn;    //创建人集合
+        private ArrayList<String> projectIdIn;    //创建人集合
+        private String orderByClause;
+
+        public ArrayList<String> getHandlerUserIdIn() {
+            return handlerUserIdIn;
+        }
+
+        public void setHandlerUserIdIn(ArrayList<String> handlerUserIdIn) {
+            this.handlerUserIdIn = handlerUserIdIn;
+        }
+
+        public ArrayList<String> getUserIdIn() {
+            return userIdIn;
+        }
+
+        public void setUserIdIn(ArrayList<String> userIdIn) {
+            this.userIdIn = userIdIn;
+        }
+
+        public ArrayList<String> getBeforeVersionIdIn() {
+            return beforeVersionIdIn;
+        }
+
+        public void setBeforeVersionIdIn(ArrayList<String> beforeVersionIdIn) {
+            this.beforeVersionIdIn = beforeVersionIdIn;
+        }
+
+        public ArrayList<String> getProjectIdIn() {
+            return projectIdIn;
+        }
+
+        public void setProjectIdIn(ArrayList<String> projectIdIn) {
+            this.projectIdIn = projectIdIn;
+        }
+
+        public String getOrderByClause() {
+            return orderByClause;
+        }
+
+        public ArrayList<String> getStatusIn() {
+            return statusIn;
+        }
+
+        public void setStatusIn(ArrayList<String> statusIn) {
+            this.statusIn = statusIn;
+        }
+
+        public ArrayList<String> getLevelIn() {
+            return levelIn;
+        }
+
+        public void setLevelIn(ArrayList<String> levelIn) {
+            this.levelIn = levelIn;
+        }
+
+        public ArrayList<String> getTypeIn() {
+            return typeIn;
+        }
+
+        public void setTypeIn(ArrayList<String> typeIn) {
+            this.typeIn = typeIn;
+        }
+
+        public ArrayList<String> getIndexIn() {
+            return indexIn;
+        }
+
+        public void setIndexIn(ArrayList<String> indexIn) {
+            this.indexIn = indexIn;
+        }
+
+        public void setOrderByClause(String orderByClause) {
+            this.orderByClause = orderByClause;
+        }
 
         public String getLevel() {
             return level;
@@ -156,19 +240,19 @@ public class FruitDefect extends AbstractEntity {
             this.status = status;
         }
 
-        public LocalDateTime getStartTime() {
+        public String getStartTime() {
             return startTime;
         }
 
-        public void setStartTime(LocalDateTime startTime) {
+        public void setStartTime(String startTime) {
             this.startTime = startTime;
         }
 
-        public LocalDateTime getEndTime() {
+        public String getEndTime() {
             return endTime;
         }
 
-        public void setEndTime(LocalDateTime endTime) {
+        public void setEndTime(String endTime) {
             this.endTime = endTime;
         }
 
@@ -296,6 +380,14 @@ public class FruitDefect extends AbstractEntity {
         public void setComment(String comment) {
             this.comment = comment;
         }
+    }
+
+    public Date getClosedDateTime() {
+        return closedDateTime;
+    }
+
+    public void setClosedDateTime(Date closedDateTime) {
+        this.closedDateTime = closedDateTime;
     }
 
     public String getDuplicate() {

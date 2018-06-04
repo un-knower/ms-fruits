@@ -9,6 +9,7 @@ import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.relation.entity.TaskPlanRelation;
 import wowjoy.fruits.ms.module.relation.example.TaskPlanRelationExample;
 import wowjoy.fruits.ms.module.relation.mapper.TaskPlanRelationMapper;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.module.util.entity.FruitDict.Systems;
 
 import java.text.MessageFormat;
@@ -39,8 +40,8 @@ public class TaskPlanDaoImpl<T extends TaskPlanRelation, E extends TaskPlanRelat
         TaskPlanRelation taskPlanRelation = new TaskPlanRelation();
         tConsumer.accept((T) taskPlanRelation);
         Optional<TaskPlanRelation> optional = Optional.of(taskPlanRelation);
-        optional.map(TaskPlanRelation::getPlanId).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException("task -> plan planId can't null"));
-        optional.map(TaskPlanRelation::getTaskId).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException("task -> plan taskId can't null"));
+        optional.map(TaskPlanRelation::getPlanId).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name()));
+        optional.map(TaskPlanRelation::getTaskId).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name()));
         mapper.insertSelective(taskPlanRelation);
     }
 
@@ -87,7 +88,7 @@ public class TaskPlanDaoImpl<T extends TaskPlanRelation, E extends TaskPlanRelat
                 /*检查列表元素是否为空*/
                 .map(criteriaList -> criteriaList.stream().filter(TaskPlanRelationExample.Criteria::isValid).collect(toList()))
                 .filter(criteriaList -> !criteriaList.isEmpty())
-                .orElseThrow(() -> new CheckException("必须携带条件"));
+                .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_LACK_CRITERIA.name()));
         TaskPlanRelation instance = new TaskPlanRelation.Update();
         instance.setIsDeleted(Systems.Y.name());
         mapper.updateByExampleSelective(instance, example);

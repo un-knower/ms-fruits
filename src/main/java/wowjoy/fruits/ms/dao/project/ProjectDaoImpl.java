@@ -28,7 +28,7 @@ import wowjoy.fruits.ms.module.task.FruitTaskExample;
 import wowjoy.fruits.ms.module.task.FruitTaskProject;
 import wowjoy.fruits.ms.module.task.FruitTaskUser;
 import wowjoy.fruits.ms.module.team.FruitTeamUser;
-import wowjoy.fruits.ms.module.user.example.FruitUserExample;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.module.util.entity.FruitDict.Systems;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;
 
@@ -100,12 +100,10 @@ public class ProjectDaoImpl extends AbstractDaoProject {
     }
 
     @Override
-    public ArrayList<FruitProjectUser> findUserByProjectIds(Consumer<FruitUserExample> exampleConsumer, List<String> ids) {
+    public ArrayList<FruitProjectUser> findUserByProjectIdsAndRole(List<String> ids, ArrayList<FruitDict.UserProjectDict> roles) {
         if (ids.isEmpty())
             throw new CheckException("查询关联用户时，必须提供项目id");
-        FruitUserExample example = new FruitUserExample();
-        exampleConsumer.accept(example);
-        return projectMapper.selectUserByProjectId(example, ids);
+        return projectMapper.selectUserByProjectIdAndRole(ids, roles);
     }
 
     @Override
@@ -132,7 +130,7 @@ public class ProjectDaoImpl extends AbstractDaoProject {
     @Override
     public void delete(String uuid) {
         if (StringUtils.isBlank(uuid))
-            throw new CheckException("【项目】uuid无效。");
+            throw new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name());
         FruitProjectExample example = new FruitProjectExample();
         example.createCriteria().andUuidEqualTo(uuid);
         FruitProjectDao delete = FruitProject.getDao();
@@ -157,7 +155,7 @@ public class ProjectDaoImpl extends AbstractDaoProject {
     @Override
     public List<FruitProjectUser> findAllUserByProjectId(String projectId) {
         return projectMapper.selectAllUserByProjectId(
-                Optional.ofNullable(projectId).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException("projectId can't null"))
+                Optional.ofNullable(projectId).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name()))
         );
     }
 
@@ -248,7 +246,7 @@ public class ProjectDaoImpl extends AbstractDaoProject {
         private Relation removeUserRelation() {
             Dao.getUserRelation(Systems.DELETE).forEach((i) -> {
                 if (StringUtils.isBlank(i.getUserId()))
-                    throw new CheckException("未指明删除的关联用户");
+                    throw new CheckException(FruitDict.Exception.Check.PROJECT_USER_NULL.name());
                 UserDao.deleted(UserProjectRelation.newInstance(Dao.getUuid(), i.getUserId(), StringUtils.isNotBlank(i.getUpRole()) ? i.getUpRole() : null));
             });
             return this;
@@ -269,7 +267,7 @@ public class ProjectDaoImpl extends AbstractDaoProject {
         private Relation removeTeamRelation() {
             Dao.getTeamRelation(Systems.DELETE).forEach((i) -> {
                 if (StringUtils.isBlank(i.getTeamId()))
-                    throw new CheckException("未指明删除的关联团队");
+                    throw new CheckException(FruitDict.Exception.Check.PROJECT_TEAM_NULL.name());
                 TeamDao.deleted(ProjectTeamRelation.newInstance(Dao.getUuid(), i.getTeamId(), StringUtils.isNotBlank(i.getTpRole()) ? i.getTpRole() : null));
             });
             return this;

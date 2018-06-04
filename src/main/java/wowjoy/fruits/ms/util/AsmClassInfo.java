@@ -3,6 +3,7 @@ package wowjoy.fruits.ms.util;
 import com.google.common.collect.Lists;
 import org.objectweb.asm.*;
 import wowjoy.fruits.ms.exception.CheckException;
+import wowjoy.fruits.ms.exception.MessageException;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -22,13 +23,13 @@ public class AsmClassInfo {
             this.classReader = new ClassReader(this.getaClass().getName());
         } catch (IOException e) {
             e.printStackTrace();
-            throw new CheckException("指定类不存在");
+            throw new MessageException("指定类不存在");
         }
     }
 
     private Class getaClass() {
         if (aClass == null)
-            throw new CheckException("class不存在");
+            throw new MessageException("class不存在");
         return aClass;
     }
 
@@ -67,7 +68,7 @@ public class AsmClassInfo {
             return Class.forName(className);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
-            throw new CheckException("class不存在");
+            throw new MessageException("class不存在");
         }
     }
 

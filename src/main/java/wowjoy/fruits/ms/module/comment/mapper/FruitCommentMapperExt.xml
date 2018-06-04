@@ -27,6 +27,7 @@
     fcomment.comment,
     fcomment.parent_id,
     fcomment.user_id,
+    fcomment.create_date_time,
     commentJoin.defect_id
     from fruit_comment fcomment
     right join (select comment_id,defect_id from defect_comment_relation where defect_id = #{defectId}) commentJoin on commentJoin.comment_id = fcomment.uuid

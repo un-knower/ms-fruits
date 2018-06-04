@@ -112,7 +112,7 @@
         ${replace}.is_deleted as ${prefix}is_deleted
     </sql>
 
-    <select id="selectUserByProjectId" resultMap="UserResultMap">
+    <select id="selectUserByProjectIdAndRole" resultMap="UserResultMap">
         select
         <include refid="User_Column_List">
             <property name="replace" value="fuser"/>
@@ -129,6 +129,11 @@
                 #{id}
             </foreach>
             and
+            userJoin.up_role in 
+            <foreach collection="userRoles" open="(" close=")" separator="," item="role">
+                #{role}
+            </foreach>
+            and
             userJoin.is_deleted = 'N'
         </where>
         group by userJoin.user_id,userJoin.project_id,userJoin.up_role
@@ -139,14 +144,6 @@
             <property name="prefix" value=""/>
         </include>
         from fruits_user fuser
-        <trim prefixOverrides="AND | OR" suffixOverrides="AND | OR">
-            <where>
-                <include refid="Example_Where_Clause">
-                    <property name="replace" value="fuser"/>
-                </include>
-                and fuser.is_deleted = 'N'
-            </where>
-        </trim>
         ) fuser on fuser.user_id =
         userJoin.user_id
         where fuser.user_id is not null

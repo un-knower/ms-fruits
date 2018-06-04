@@ -37,20 +37,21 @@
         <result column="plan_id" jdbcType="VARCHAR" property="planId"/>
 
     </resultMap>
-    <resultMap id="TaskResultMap" type="wowjoy.fruits.ms.module.plan.FruitPlanTask">
+
+    <resultMap id="PlanResultMap" type="wowjoy.fruits.ms.module.task.FruitTaskPlan">
         <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
         <result column="title" jdbcType="VARCHAR" property="title"/>
-        <result column="task_status" jdbcType="VARCHAR" property="taskStatus"/>
+        <result column="plan_status" jdbcType="VARCHAR" property="planStatus"/>
         <result column="status_description" jdbcType="VARCHAR" property="statusDescription"/>
-        <result column="task_level" jdbcType="VARCHAR" property="taskLevel"/>
-        <result column="estimated_end_date" jdbcType="DATE" property="estimatedEndDate"/>
+        <result column="percent" jdbcType="INTEGER" property="percent"/>
+        <result column="estimated_start_date" jdbcType="TIMESTAMP" property="estimatedStartDate"/>
+        <result column="estimated_end_date" jdbcType="TIMESTAMP" property="estimatedEndDate"/>
         <result column="end_date" jdbcType="TIMESTAMP" property="endDate"/>
-        <result column="description" jdbcType="VARCHAR" property="description"/>
+        <result column="parent_id" jdbcType="VARCHAR" property="parentId"/>
         <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
         <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
         <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
-
-        <result column="plan_id" jdbcType="VARCHAR" property="planId"/>
+        <result column="task_id" jdbcType="VARCHAR" property="taskId"/>
     </resultMap>
     <sql id="Example_Where_Clause">
         <foreach collection="example.oredCriteria" item="criteria" separator="or">
@@ -184,34 +185,6 @@
         order by fuser.user_id = #{userId} desc
     </select>
 
-    <select id="selectTaskByPlanIds" resultMap="TaskResultMap">
-        select
-        taskPlanRelation.plan_id as plan_id
-        ,
-        <include refid="Task_Column_List">
-            <property name="replace" value="ftask"/>
-            <property name="prefix" value=""/>
-        </include>
-        from fruits_task ftask
-        right join (
-        select task_id,plan_id from task_plan_relation
-        where is_deleted = 'N'
-        and plan_id in
-        <foreach collection="planIds" item="id" open="(" close=")" separator=",">
-            #{id}
-        </foreach>
-        ) taskPlanRelation on taskPlanRelation.task_id = ftask.uuid
-        <trim>
-            <where>
-                <include refid="Example_Where_Clause">
-                    <property name="replace" value="ftask"/>
-                </include>
-                AND
-                ftask.is_deleted = 'N'
-            </where>
-        </trim>
-    </select>
-
     <select id="selectUserByPlanExampleAndUserIdOrProjectId" resultMap="UserResultMap">
         select
         <include refid="User_Column_List">
@@ -260,5 +233,26 @@
         </include>
         from fruits_user fuser where fuser.is_deleted = 'N') fuser on fuser.user_id = userSon.user_id
         where fuser.user_id is not null
+    </select>
+
+    <select id="selectPlanByTask" resultMap="PlanResultMap">
+        select
+        <include refid="Base_Column_List">
+            <property name="replace" value="fplan"/>
+        </include>
+        ,taskJoin.task_id
+        from fruits_plan fplan
+        right join (select task_id,plan_id from task_plan_relation where is_deleted = 'N') taskJoin on taskJoin.plan_id
+        = fplan.uuid
+        right join (select ftask.uuid from fruits_task ftask
+        <where>
+            ftask.uuid in
+            <foreach collection="taskIn" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+            and ftask.is_deleted = 'N'
+        </where>
+        ) ftask on ftask.uuid = taskJoin.task_id
+        where fplan.uuid is not null and fplan.is_deleted = 'N';
     </select>
 </mapper>

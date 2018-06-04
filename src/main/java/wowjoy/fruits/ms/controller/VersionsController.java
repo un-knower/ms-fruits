@@ -52,28 +52,35 @@ public class VersionsController {
     }
 
     /**
-     * @api {put} /v1/versions/page 查询版本列表 (分页)
+     * @api {get} /v1/versions/project/{projectId} 查询版本列表 (分页)
      * @apiVersion 3.0.0
      * @apiGroup versions
      */
-    @RequestMapping(value = "/page", method = RequestMethod.GET)
-    public RestResult findPage(@JsonArgument(type = FruitVersions.Search.class) FruitVersions.Search search) {
-        return RestResult.newSuccess().setData(this.serviceVersions.findVersions(search).toPageInfo());
+    @RequestMapping(value = "/project/{projectId}", method = RequestMethod.GET)
+    public RestResult findPage(@PathVariable("projectId") String projectId, @JsonArgument(type = FruitVersions.Search.class) FruitVersions.Search search) {
+        search.setProjectId(projectId);
+        return RestResult.newSuccess().setData(this.serviceVersions.findPage(search));
     }
 
     /**
-     * @api {put} /v1/versions 查询版本列表
+     * @api {get} /v1/versions/project/sons/{projectId} 子版本列表查询
      * @apiVersion 3.0.0
      * @apiGroup versions
      */
-    @RequestMapping(method = RequestMethod.GET)
-    public RestResult finds(@JsonArgument(type = FruitVersions.Search.class) FruitVersions.Search search) {
-        return RestResult.newSuccess().setData(this.serviceVersions.findVersions(search));
-    }
-
-    @RequestMapping(value = "/project/{projectId}", method = RequestMethod.GET)
+    @RequestMapping(value = "/project/sons/{projectId}", method = RequestMethod.GET)
     public RestResult findSons(@PathVariable("projectId") String projectId) {
         return RestResult.newSuccess().setData(this.serviceVersions.findSons(projectId));
+    }
+
+    @RequestMapping(value = "{uuid}", method = RequestMethod.GET)
+    public RestResult find(@PathVariable("uuid") String uuid) {
+        return RestResult.newSuccess().setData(this.serviceVersions.find(uuid));
+    }
+
+    @RequestMapping(value = "{uuid}", method = RequestMethod.DELETE)
+    public RestResult remove(@PathVariable("uuid") String uuid) {
+        this.serviceVersions.remove(uuid);
+        return RestResult.newSuccess().setData(uuid);
     }
 
 }

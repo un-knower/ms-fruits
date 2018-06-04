@@ -3,13 +3,12 @@ package wowjoy.fruits.ms.dao.list;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
-import wowjoy.fruits.ms.exception.ExceptionSupport;
-import wowjoy.fruits.ms.exception.ServiceException;
 import wowjoy.fruits.ms.module.list.FruitList;
 import wowjoy.fruits.ms.module.list.FruitListDao;
 import wowjoy.fruits.ms.module.list.FruitListExample;
 import wowjoy.fruits.ms.module.list.FruitListVo;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
+import wowjoy.fruits.ms.module.util.entity.FruitDict.Exception.Check;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,24 +25,19 @@ public abstract class AbstractDaoList implements InterfaceDao {
 
     protected abstract List<FruitList> finds(Consumer<FruitListExample> exampleConsumer);
 
-    protected abstract void delete(FruitListDao dao);
+    public abstract void delete(String listId);
+
+    public abstract int findTaskCountByListId(String listId);
 
     protected abstract List<FruitList> findByProjectId(String projectId, Consumer<FruitListExample> unaryOperator);
 
     public final void insertProject(FruitListVo vo) {
-        try {
-            FruitListDao dao = insertTemplate(vo);
-            dao.setProjectRelation(vo.getProjectRelation());
-            dao.setlType(FruitDict.Parents.PROJECT.name());
-            if (dao.getProjectRelation(FruitDict.Systems.ADD).isEmpty())
-                throw new CheckException("添加项目列表时，必须绑定项目id");
-            this.insert(dao);
-        } catch (ExceptionSupport ex) {
-            throw ex;
-        } catch (RuntimeException ex) {
-            ex.printStackTrace();
-            throw new CheckException("项目列表添加失败");
-        }
+        FruitListDao dao = insertTemplate(vo);
+        dao.setProjectRelation(vo.getProjectRelation());
+        dao.setlType(FruitDict.Parents.PROJECT.name());
+        if (dao.getProjectRelation(FruitDict.Systems.ADD).isEmpty())
+            throw new CheckException(Check.LIST_PROJECT_NULL.name());
+        this.insert(dao);
     }
 
     /**
@@ -54,7 +48,7 @@ public abstract class AbstractDaoList implements InterfaceDao {
      */
     private FruitListDao insertTemplate(FruitListVo vo) {
         if (StringUtils.isBlank(vo.getTitle()))
-            throw new CheckException("列表标题不能为空");
+            throw new CheckException(Check.LIST_TITLE_NULL.name());
         FruitListDao dao = FruitList.getDao();
         dao.setUuid(vo.getUuid());
         dao.setTitle(vo.getTitle());
@@ -68,38 +62,28 @@ public abstract class AbstractDaoList implements InterfaceDao {
      * @param vo
      */
     public final void update(FruitListVo vo) {
-        try {
-            if (!checkByUUID(vo.getUuidVo()).isPresent())
-                throw new CheckException("列表不存在，操作被拒绝");
-            FruitListDao dao = FruitList.getDao();
-            dao.setUuid(vo.getUuidVo());
-            dao.setTitle(vo.getTitle());
-            dao.setDescription(vo.getDescription());
-            this.update(dao);
-        } catch (ExceptionSupport ex) {
-            throw ex;
-        } catch (RuntimeException ex) {
-            ex.printStackTrace();
-            throw new ServiceException("列表修改失败");
-        }
+        if (!checkByUUID(vo.getUuidVo()).isPresent())
+            throw new CheckException(Check.SYSTEM_NULL.name());
+        FruitListDao dao = FruitList.getDao();
+        dao.setUuid(vo.getUuidVo());
+        dao.setTitle(vo.getTitle());
+        dao.setDescription(vo.getDescription());
+        this.update(dao);
     }
 
     /**
      * 删除列表
      *
-     * @param vo
+     * @param listId
      */
-    public final void delete(FruitListVo vo) {
-        try {
-            FruitListDao dao = FruitList.getDao();
-            dao.setUuid(vo.getUuidVo());
-            this.delete(dao);
-        } catch (ExceptionSupport ex) {
-            throw ex;
-        } catch (RuntimeException ex) {
-            ex.printStackTrace();
-            throw new ServiceException("列表删除失败");
-        }
+    public final void beforeDelete(String listId) {
+        Optional.ofNullable(listId)
+                .filter(StringUtils::isNotBlank)
+                .orElseThrow(() -> new CheckException(Check.SYSTEM_NULL.name()));
+        Optional.of(this.findTaskCountByListId(listId))
+                .filter(count -> count == 0)
+                .orElseThrow(() -> new CheckException(Check.LIST_EXISTS_TASK.name()));
+        this.delete(listId);
     }
 
     private Optional<FruitList> checkByUUID(String uuid) {

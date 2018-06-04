@@ -154,7 +154,13 @@ class ApiDataFactory {
             FruitTaskList exportList = new FruitTaskList();
             exportList.setTitle(list.getTitle());
             exportList.setUuid(list.getUuid());
-            exportList.setTasks(Optional.ofNullable(list.getTasks()).map(tasks -> tasks.parallelStream().map(findTaskInfo).collect(toCollection(ArrayList::new))).orElse(null));
+            Optional.ofNullable(list.getTasks())
+                    .map(tasks->tasks.getList().parallelStream().map(findTaskInfo).collect(toCollection(ArrayList::new)))
+                    .ifPresent(tasks->{
+                        list.getTasks().getList().clear();
+                        list.getTasks().getList().addAll(tasks);
+                        exportList.setTasks(list.getTasks());
+                    });
             return exportList;
         }).collect(toCollection(ArrayList::new));
     }

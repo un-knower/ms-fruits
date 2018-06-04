@@ -13,6 +13,10 @@ import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.text.MessageFormat;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Consumer;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * Created by wangziwen on 2017/9/12.
@@ -50,6 +54,20 @@ public class ProjectListDaoImpl<T extends ProjectListRelation, E extends Project
         ProjectListRelation.Update deleted = new ProjectListRelation.Update();
         deleted.setIsDeleted(FruitDict.Systems.Y.name());
         mapper.updateByExampleSelective(deleted, removeTemplate(relation));
+    }
+
+    @Override
+    public void deleted(Consumer<E> tConsumer) {
+        ProjectListRelationExample example = new ProjectListRelationExample();
+        tConsumer.accept((E) example);
+        Optional.of(example.getOredCriteria())
+                /*检查列表元素是否为空*/
+                .map(criteriaList -> criteriaList.stream().filter(ProjectListRelationExample.Criteria::isValid).collect(toList()))
+                .filter(criteriaList -> !criteriaList.isEmpty())
+                .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_LACK_CRITERIA.name()));
+        ProjectListRelation.Update listRelation = new ProjectListRelation.Update();
+        listRelation.setIsDeleted(FruitDict.Systems.Y.name());
+        mapper.updateByExampleSelective(listRelation, example);
     }
 
     private ProjectListRelationExample removeTemplate(ProjectListRelation relation) {

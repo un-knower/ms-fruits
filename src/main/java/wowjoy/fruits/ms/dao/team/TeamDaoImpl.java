@@ -22,6 +22,7 @@ import wowjoy.fruits.ms.module.team.FruitTeamUser;
 import wowjoy.fruits.ms.module.team.mapper.FruitTeamMapper;
 import wowjoy.fruits.ms.module.user.example.FruitUserExample;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
+import wowjoy.fruits.ms.module.util.entity.FruitDict.Exception.Check;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -82,7 +83,7 @@ public class TeamDaoImpl extends AbstractDaoTeam {
     @Override
     public void update(FruitTeamDao data) {
         if (StringUtils.isBlank(data.getUuid()))
-            throw new CheckException("Team id not is null");
+            throw new CheckException(Check.SYSTEM_NULL.name());
         FruitTeamExample example = new FruitTeamExample();
         example.createCriteria().andUuidEqualTo(data.getUuid());
         mapper.updateByExampleSelective(data, example);
@@ -92,7 +93,7 @@ public class TeamDaoImpl extends AbstractDaoTeam {
     @Override
     public void delete(FruitTeamDao data) {
         if (StringUtils.isBlank(data.getUuid()))
-            throw new CheckException("Team id not is null");
+            throw new CheckException(Check.SYSTEM_NULL.name());
         FruitTeamExample example = new FruitTeamExample();
         example.createCriteria().andUuidEqualTo(data.getUuid());
         FruitTeamDao delete = FruitTeam.getDao();

@@ -43,7 +43,7 @@ public class DefectResourceDaoImpl<T extends DefectResourceRelation, E extends D
                 /*检查列表元素是否为空*/
                 .map(criteriaList -> criteriaList.stream().filter(DefectResourceRelationExample.Criteria::isValid).collect(toList()))
                 .filter(criteriaList -> !criteriaList.isEmpty())
-                .orElseThrow(() -> new CheckException("lack deleted predicate"));
+                .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_LACK_CRITERIA.name()));
         DefectResourceRelation.Update relation = new DefectResourceRelation.Update();
         relation.setIsDeleted(FruitDict.Systems.Y.name());
         relationMapper.updateByExampleSelective(relation, example);

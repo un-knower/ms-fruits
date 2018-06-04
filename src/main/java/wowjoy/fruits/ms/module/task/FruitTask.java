@@ -18,6 +18,7 @@ import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -277,16 +278,41 @@ public class FruitTask extends AbstractEntity {
             setIsDeleted(null);
         }
 
-        /*列表名称查询*/
-        private String listTitle;
         /*日期范围查询*/
         private Date beginDateTime;   //开始时间
         private Date endDateTime;     //结束时间
         /*根据列表ID查询，支持多列表查询*/
         private String lists;   //多个逗号隔开
+        private ArrayList<String> listIn;
+        private ArrayList<FruitDict.TaskDict> statusIn;
+        private String projectId;
         /*分页*/
         private int pageNum;    //页码
         private int pageSize;   //行数
+
+        public String getProjectId() {
+            return projectId;
+        }
+
+        public void setProjectId(String projectId) {
+            this.projectId = projectId;
+        }
+
+        public ArrayList<FruitDict.TaskDict> getStatusIn() {
+            return statusIn;
+        }
+
+        public void setStatusIn(ArrayList<FruitDict.TaskDict> statusIn) {
+            this.statusIn = statusIn;
+        }
+
+        public ArrayList<String> getListIn() {
+            return listIn;
+        }
+
+        public void setListIn(ArrayList<String> listIn) {
+            this.listIn = listIn;
+        }
 
         public Date getBeginDateTime() {
             return beginDateTime;
@@ -328,13 +354,6 @@ public class FruitTask extends AbstractEntity {
             this.lists = lists;
         }
 
-        public String getListTitle() {
-            return listTitle;
-        }
-
-        public void setListTitle(String listTitle) {
-            this.listTitle = listTitle;
-        }
     }
 
     public Info toInfo() {

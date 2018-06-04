@@ -27,9 +27,11 @@ import wowjoy.fruits.ms.module.relation.entity.DefectCommentRelation;
 import wowjoy.fruits.ms.module.relation.entity.DefectResourceRelation;
 import wowjoy.fruits.ms.module.relation.example.DefectCommentRelationExample;
 import wowjoy.fruits.ms.module.relation.example.DefectResourceRelationExample;
+import wowjoy.fruits.ms.module.relation.mapper.DefectResourceRelationMapper;
 import wowjoy.fruits.ms.module.resource.FruitResource;
 import wowjoy.fruits.ms.module.resource.mapper.FruitResourceMapper;
 import wowjoy.fruits.ms.module.user.FruitUserDao;
+import wowjoy.fruits.ms.module.user.example.FruitUserExample;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.module.versions.FruitVersions;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;
@@ -39,6 +41,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+
+import static java.util.stream.Collectors.toCollection;
 
 /**
  * Created by ${汪梓文} on ${2018年03月20日15:45:02}.
@@ -58,9 +62,10 @@ public class DaoDefect extends ServiceDefect {
     private final ServiceLogs serviceLogs;
     private final DefectCommentDaoImpl<DefectCommentRelation, DefectCommentRelationExample> defectCommentDao;
     private final ServiceComment serviceComment;
+    private final DefectResourceRelationMapper defectResourceRelationMapper;
 
     @Autowired
-    public DaoDefect(FruitDefectMapper defectMapper, DefectResourceDaoImpl<DefectResourceRelation, DefectResourceRelationExample> defectResourceRelation, DefectStatusCountMapper countMapper, ServiceResource serviceResource, ProjectDaoImpl projectDao, UserDaoImpl userDao, DaoVersions daoVersions, FruitResourceMapper resourceMapper, ServiceLogs serviceLogs, DefectCommentDaoImpl<DefectCommentRelation, DefectCommentRelationExample> defectCommentDao, ServiceComment serviceComment) {
+    public DaoDefect(FruitDefectMapper defectMapper, DefectResourceDaoImpl<DefectResourceRelation, DefectResourceRelationExample> defectResourceRelation, DefectStatusCountMapper countMapper, ServiceResource serviceResource, ProjectDaoImpl projectDao, UserDaoImpl userDao, DaoVersions daoVersions, FruitResourceMapper resourceMapper, ServiceLogs serviceLogs, DefectCommentDaoImpl<DefectCommentRelation, DefectCommentRelationExample> defectCommentDao, ServiceComment serviceComment, DefectResourceRelationMapper defectResourceRelationMapper) {
         this.defectMapper = defectMapper;
         this.defectResourceRelation = defectResourceRelation;
         this.countMapper = countMapper;
@@ -72,6 +77,7 @@ public class DaoDefect extends ServiceDefect {
         this.serviceLogs = serviceLogs;
         this.defectCommentDao = defectCommentDao;
         this.serviceComment = serviceComment;
+        this.defectResourceRelationMapper = defectResourceRelationMapper;
     }
 
     @Override
@@ -111,11 +117,11 @@ public class DaoDefect extends ServiceDefect {
     }
 
     @Override
-    public Page<FruitDefect> findConsumerPage(Consumer<FruitDefectExample> exampleConsumer, int pageNum, int pageSize) {
-        FruitDefectExample example = new FruitDefectExample();
-        exampleConsumer.accept(example);
-        PageHelper.startPage(Optional.of(pageNum).filter(i -> i > 0).orElse(1), Optional.of(pageSize).filter(i -> i > 0).orElse(10));
-        return (Page<FruitDefect>) defectMapper.selectByExample(example);
+    public Page<FruitDefect> findConsumerPage(Consumer<FruitDefect.Search> exampleConsumer) {
+        FruitDefect.Search search = new FruitDefect.Search();
+        exampleConsumer.accept(search);
+        PageHelper.startPage(Optional.of(search.getPageNum()).filter(i -> i > 0).orElse(1), Optional.of(search.getPageSize()).filter(i -> i > 0).orElse(10));
+        return (Page<FruitDefect>) defectMapper.selectByExampleExt(search);
     }
 
     @Override
@@ -144,6 +150,11 @@ public class DaoDefect extends ServiceDefect {
     @Override
     public List<FruitUserDao> findUserByUserIds(ArrayList<String> userIds) {
         return userDao.findExample(example -> example.createCriteria().andUserIdIn(userIds));
+    }
+
+    @Override
+    public Optional<FruitUserDao> findUserByUserId(Consumer<FruitUserExample> exampleConsumer) {
+        return Optional.ofNullable(userDao.findExample(exampleConsumer)).flatMap(users -> users.stream().findAny());
     }
 
     @Override
@@ -183,7 +194,10 @@ public class DaoDefect extends ServiceDefect {
     public void insertComment(FruitComment.Insert insert, String defectId) {
         Optional.ofNullable(defectId)
                 .filter(StringUtils::isNotBlank)
-                .orElseThrow(() -> new CheckException("defectId can't is empty"));
+                .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name()));
+        Optional.ofNullable(insert.getComment())
+                .filter(StringUtils::isNotBlank)
+                .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.COMMENT_CONTENT_NULL.name()));
         insert.setUserId(ApplicationContextUtils.getCurrentUser().getUserId());
         serviceComment.insert(insert);
         defectCommentDao.insert(defectCommentRelation -> {
@@ -195,5 +209,15 @@ public class DaoDefect extends ServiceDefect {
     @Override
     public ArrayList<DefectComment> findComment(String defectId) {
         return serviceComment.commentTree(serviceComment.joinUser(() -> serviceComment.findDefect(defectId)));
+    }
+
+    @Override
+    public DefectDuplicate findDuplicate(String defectId) {
+        return defectMapper.selectDuplicate(defectId);
+    }
+
+    @Override
+    public ArrayList<String> findResourceId(FruitDict.Resource type, String defectId) {
+        return defectResourceRelationMapper.selectByDefectId(type, defectId).stream().map(DefectResourceRelation::getResourceId).collect(toCollection(ArrayList::new));
     }
 }

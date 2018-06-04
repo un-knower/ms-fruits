@@ -16,6 +16,7 @@ import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.user.FruitUser;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
+import wowjoy.fruits.ms.module.util.entity.FruitDict.Exception.Check;
 import wowjoy.fruits.ms.util.ApplicationContextUtils;
 import wowjoy.fruits.ms.util.JsonArgument;
 import wowjoy.fruits.ms.util.RestResult;
@@ -23,6 +24,8 @@ import wowjoy.fruits.ms.util.RestResult;
 import java.lang.reflect.Method;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
 /**
@@ -32,6 +35,11 @@ import java.util.stream.Stream;
 @Component
 @Order(1)
 public class AspectjLogsPro implements InterfaceDao {
+    private static final ExecutorService executorService = Executors.newCachedThreadPool(r -> {
+        Thread thread = new Thread(r);
+        thread.setDaemon(true);
+        return thread;
+    });
     private final ServiceLogs serviceLogs;
 
     @Autowired
@@ -45,18 +53,18 @@ public class AspectjLogsPro implements InterfaceDao {
 
     @Around("myAnnotation() && @annotation(annotation)")
     public Object around(ProceedingJoinPoint point, LogInfo annotation) {
+
         try {
             Object result = point.proceed();
             if (((RestResult) result).getSuccess()) {
                 FruitUser currentUser = ApplicationContextUtils.getCurrentUser();
-                DaoThread.getFixed().execute(() -> {
+                executorService.submit(() -> {
                     try {
                         logRecord(point, annotation, currentUser);
                     } catch (Throwable throwable) {
                         logger.error(throwable.getMessage());
                     }
-                    return true;
-                });
+                }, obtainExecutor.apply(1));
             }
             return result;
         } catch (Throwable throwable) {
@@ -72,13 +80,9 @@ public class AspectjLogsPro implements InterfaceDao {
      * @param annotation
      * @param currentUser
      */
-    public void logRecord(ProceedingJoinPoint point, LogInfo annotation, FruitUser currentUser) throws Throwable {
-        Optional<? extends AbstractEntity> currentData = LogsWriteTemplate.getTypeFunction(annotation.type(), obtainOperateType(point).orElseGet(annotation::operateType)).apply(this.uuid(point).orElseThrow(() -> {
-            throw new CheckException("【日志记录】无法获取uuid");
-        }));
-        currentData.orElseThrow(() -> {
-            throw new CheckException("【日志记录】未找到最新保存的数据，日志记录失败");
-        });
+    public void logRecord(ProceedingJoinPoint point, LogInfo annotation, FruitUser currentUser) {
+        Optional<? extends AbstractEntity> currentData = LogsWriteTemplate.getTypeFunction(annotation.type(), obtainOperateType(point).orElseGet(annotation::operateType)).apply(this.uuid(point).orElseThrow(() -> new CheckException(Check.ASPECT_LOGS_OBTAIN_UUID.name())));
+        currentData.orElseThrow(() -> new CheckException(Check.ASPECT_LOGS_NOT_EXISTS.name()));
 
         serviceLogs.insertVo(logsVo -> {
             logsVo.setJsonObject(new Gson().toJsonTree(currentData.get()).toString());

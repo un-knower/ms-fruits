@@ -7,10 +7,14 @@ import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import java.text.MessageFormat;
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.joining;
 
 /**
  * 实体类基类
@@ -35,8 +39,19 @@ public abstract class AbstractEntity implements InterfaceEntity {
     private String isDeleted;
     private String description;
 
+    @Deprecated
     private String desc;
+    @Deprecated
     private String asc;
+    private String orderBy;
+
+    public String getOrderBy() {
+        return orderBy;
+    }
+
+    public void setOrderBy(String orderBy) {
+        this.orderBy = orderBy;
+    }
 
     public void setCreateDateTime(Date createDateTime) {
         this.createDateTime = createDateTime;
@@ -100,18 +115,31 @@ public abstract class AbstractEntity implements InterfaceEntity {
         return isDeleted;
     }
 
+    @Deprecated
     public String sortConstrue(String prefix) {
         LinkedList<String> sorts = Lists.newLinkedList();
         if (StringUtils.isNotBlank(this.getDesc())) for (String desc : this.getDesc().split(","))
-            sorts.add(MessageFormat.format("{0}{1} desc", prefix, toMysqlField(desc)));
+            sorts.add(MessageFormat.format("{0}`{1}` desc", prefix, toMysqlField(desc)));
         if (StringUtils.isNotBlank(this.getAsc())) for (String asc : this.getAsc().split(","))
-            sorts.add(MessageFormat.format("{0}{1} asc", prefix, toMysqlField(asc)));
+            sorts.add(MessageFormat.format("{0}`{1}` asc", prefix, toMysqlField(asc)));
         if (sorts.isEmpty()) return null;
         return StringUtils.join(sorts, ",");
     }
 
+    @Deprecated
     public String sortConstrue() {
         return sortConstrue("");
+    }
+
+    public String sortConstruePro(String prefix, String defaultOrder) {
+        return Optional.ofNullable(this.getOrderBy())
+                .filter(StringUtils::isNotBlank)
+                .map(orderBy -> orderBy.split(","))
+                .map(orderBys -> Stream.of(orderBys)
+                        .map(orderBy -> orderBy.split(" "))
+                        .filter(fields -> fields.length == 2)
+                        .map(fields -> MessageFormat.format("{0}`{1}` {2}", Optional.ofNullable(prefix).filter(StringUtils::isNotBlank).map(pre -> pre + ".").orElse(""), toMysqlField(fields[0]), fields[1]))
+                        .collect(joining(","))).orElse(defaultOrder);
     }
 
     private String toMysqlField(String field) {

@@ -6,8 +6,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import wowjoy.fruits.ms.aspectj.LogInfo;
-import wowjoy.fruits.ms.dao.notepad.AbstractDaoNotepad;
+import wowjoy.fruits.ms.dao.notepad.ServiceNotepad;
 import wowjoy.fruits.ms.exception.CheckException;
+import wowjoy.fruits.ms.module.notepad.FruitNotepad;
 import wowjoy.fruits.ms.module.notepad.FruitNotepadVo;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.JsonArgument;
@@ -24,10 +25,10 @@ import java.time.format.DateTimeParseException;
 @RequestMapping("/v1/notepad")
 public class NotepadController {
 
-    private final AbstractDaoNotepad daoNotepad;
+    private final ServiceNotepad daoNotepad;
 
     @Autowired
-    public NotepadController(AbstractDaoNotepad daoNotepad) {
+    public NotepadController(ServiceNotepad daoNotepad) {
         this.daoNotepad = daoNotepad;
     }
 
@@ -43,9 +44,9 @@ public class NotepadController {
      */
     @LogInfo(uuid = "uuid", type = FruitDict.Parents.NOTEPAD, operateType = FruitDict.LogsDict.ADD)
     @RequestMapping(method = RequestMethod.POST)
-    public RestResult insert(@JsonArgument(type = FruitNotepadVo.class) FruitNotepadVo vo) {
-        daoNotepad.insert(vo);
-        return RestResult.newSuccess().setData(vo.getUuid());
+    public RestResult insert(@JsonArgument(type = FruitNotepad.Insert.class) FruitNotepad.Insert insert) {
+        daoNotepad.beforeInsert(insert);
+        return RestResult.newSuccess().setData(insert.getUuid());
     }
 
     /**
@@ -57,12 +58,12 @@ public class NotepadController {
      * "content":"今天我很生气，我要吃鸡"
      * }
      */
-    @LogInfo(uuid = "uuidVo", type = FruitDict.Parents.NOTEPAD, operateType = FruitDict.LogsDict.UPDATE)
+    @LogInfo(uuid = "uuid", type = FruitDict.Parents.NOTEPAD, operateType = FruitDict.LogsDict.UPDATE)
     @RequestMapping(value = "{uuid}", method = RequestMethod.PUT)
-    public RestResult update(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitNotepadVo.class) FruitNotepadVo vo) {
-        vo.setUuidVo(uuid);
-        daoNotepad.update(vo);
-        return RestResult.newSuccess().setData(vo.getUuidVo());
+    public RestResult update(@PathVariable("uuid") String uuid, @JsonArgument(type = FruitNotepad.Update.class) FruitNotepad.Update vo) {
+        vo.setUuid(uuid);
+        daoNotepad.beforeUpdate(vo);
+        return RestResult.newSuccess().setData(vo.getUuid());
     }
 
     /**

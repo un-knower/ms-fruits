@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.exception.ExceptionSupport;
 import wowjoy.fruits.ms.exception.MessageException;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.RestResult;
 
 import java.sql.SQLException;
@@ -37,8 +38,10 @@ public class ExceptionAspectj {
         try {
             return joinPoint.proceed();
         } catch (ExceptionSupport ex) {
-            if (ex instanceof CheckException)
-                return RestResult.newError(500, ex.getMessage());
+            if (ex instanceof CheckException) {
+                FruitDict.Exception.Check check = FruitDict.Exception.Check.valueOf(ex.getMessage());
+                return RestResult.newError(403, check.name(), check.getValue());
+            }
             if (ex instanceof MessageException)
                 return RestResult.newError(412, "服务器驳回请求", () -> {
                     try {

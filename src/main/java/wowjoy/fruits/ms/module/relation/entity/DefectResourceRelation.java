@@ -1,12 +1,13 @@
 package wowjoy.fruits.ms.module.relation.entity;
 
 import wowjoy.fruits.ms.module.AbstractEntity;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.module.util.entity.FruitDict.DefectDict;
 
 public class DefectResourceRelation extends AbstractEntity {
     private String defectId;
     private String resourceId;
-    private DefectDict.Resource drType;
+    private FruitDict.Resource drType;
 
     public static class Update extends DefectResourceRelation {
         public Update() {
@@ -30,11 +31,11 @@ public class DefectResourceRelation extends AbstractEntity {
         this.resourceId = resourceId;
     }
 
-    public DefectDict.Resource getDrType() {
+    public FruitDict.Resource getDrType() {
         return drType;
     }
 
-    public void setDrType(DefectDict.Resource drType) {
+    public void setDrType(FruitDict.Resource drType) {
         this.drType = drType;
     }
 }

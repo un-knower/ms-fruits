@@ -22,7 +22,6 @@ import wowjoy.fruits.ms.module.task.FruitTaskProject;
 import wowjoy.fruits.ms.module.task.FruitTaskUser;
 import wowjoy.fruits.ms.module.team.FruitTeamUser;
 import wowjoy.fruits.ms.module.user.FruitUser;
-import wowjoy.fruits.ms.module.user.example.FruitUserExample;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.module.util.entity.FruitDict.ProjectTeamDict;
 import wowjoy.fruits.ms.module.util.entity.FruitDict.Systems;
@@ -62,7 +61,7 @@ public abstract class AbstractDaoProject implements InterfaceDao {
 
     protected abstract List<FruitProject> finds(Consumer<FruitProjectExample> exampleConsumer);
 
-    protected abstract ArrayList<FruitProjectUser> findUserByProjectIds(Consumer<FruitUserExample> exampleConsumer, List<String> ids);
+    public abstract ArrayList<FruitProjectUser> findUserByProjectIdsAndRole(List<String> ids, ArrayList<FruitDict.UserProjectDict> roles);
 
     protected abstract List<FruitProjectTeam> findTeamByProjectIds(List<String> ids);
 
@@ -94,22 +93,15 @@ public abstract class AbstractDaoProject implements InterfaceDao {
      *******************************/
 
     public final void delete(FruitProjectVo vo) {
-        try {
-            if (!this.finds(example -> example.createCriteria().andUuidEqualTo(vo.getUuidVo()).andIsDeletedEqualTo(Systems.N.name())).stream().findAny().isPresent())
-                throw new CheckException("项目不存在");
-            delete(vo.getUuidVo());
-        } catch (ExceptionSupport ex) {
-            throw ex;
-        } catch (RuntimeException ex) {
-            ex.printStackTrace();
-            throw new CheckException("删除项目出错");
-        }
+        if (!this.finds(example -> example.createCriteria().andUuidEqualTo(vo.getUuidVo()).andIsDeletedEqualTo(Systems.N.name())).stream().findAny().isPresent())
+            throw new CheckException(FruitDict.Exception.Check.SYSTEM_NOT_EXISTS.name());
+        delete(vo.getUuidVo());
     }
 
     public final void add(FruitProjectVo vo) {
         try {
             if (StringUtils.isBlank(vo.getTitle()))
-                throw new CheckException("项目标题不能为空");
+                throw new CheckException(FruitDict.Exception.Check.PROJECT_TITLE_NULL.name());
             this.addCheckJoinTeam(vo).addCheckJoinUser(vo);
             this.insert(dao -> {
                 dao.setUuid(vo.getUuid());
@@ -131,19 +123,19 @@ public abstract class AbstractDaoProject implements InterfaceDao {
 
     private AbstractDaoProject addCheckJoinTeam(FruitProjectVo vo) {
         if (!vo.getTeamRelation().isPresent() || !vo.getTeamRelation().get().containsKey(Systems.ADD))
-            throw new CheckException("未检测到负责团队");
+            throw new CheckException(FruitDict.Exception.Check.PROJECT_PRINCIPAL_TEAM_NULL.name());
         Map<String, Long> roleCount = vo.getTeamRelation().get().get(Systems.ADD).parallelStream().collect(groupingBy(ProjectTeamRelation::getTpRole, counting()));
         if (!roleCount.containsKey(ProjectTeamDict.PRINCIPAL.name()) || roleCount.get(ProjectTeamDict.PRINCIPAL.name()) != 1)
-            throw new CheckException("必须绑定负责团队，并且只能绑定一个负责团队");
+            throw new CheckException(FruitDict.Exception.Check.PROJECT_PRINCIPAL_TEAM_NULL.name());
         return this;
     }
 
     private void addCheckJoinUser(FruitProjectVo vo) {
         if (!vo.getUserRelation().isPresent() || !vo.getUserRelation().get().containsKey(Systems.ADD))
-            throw new CheckException("未检测到负责人");
+            throw new CheckException(FruitDict.Exception.Check.PROJECT_PRINCIPAL_USER_NULL.name());
         Map<String, Long> roleCount = vo.getUserRelation().get().get(Systems.ADD).parallelStream().collect(groupingBy(UserProjectRelation::getUpRole, counting()));
         if (!roleCount.containsKey(FruitDict.UserProjectDict.PRINCIPAL.name()) || roleCount.get(FruitDict.UserProjectDict.PRINCIPAL.name()) != 1)
-            throw new CheckException("必须绑定负责人，并且只能绑定一位负责人");
+            throw new CheckException(FruitDict.Exception.Check.PROJECT_PRINCIPAL_TEAM_NULL.name());
     }
 
     /**
@@ -153,10 +145,10 @@ public abstract class AbstractDaoProject implements InterfaceDao {
     public final FruitProject.Info find(FruitProjectVo vo) {
         Optional<FruitProject> project = this.finds(example -> example.createCriteria().andUuidEqualTo(vo.getUuidVo()).andIsDeletedEqualTo(Systems.N.name())).stream().findAny();
         if (!project.isPresent())
-            throw new CheckException("项目不存在");
+            throw new CheckException(FruitDict.Exception.Check.SYSTEM_NOT_EXISTS.name());
         FruitProject.Info exportInfo = GsonUtils.newGson().fromJson(GsonUtils.newGson().toJsonTree(project.get()), TypeToken.of(FruitProject.Info.class).getType());
         CompletableFuture.allOf(
-                CompletableFuture.supplyAsync(this.plugUserSupplier(Lists.newArrayList(exportInfo.getUuid())))
+                CompletableFuture.supplyAsync(this.plugUserSupplier(Lists.newArrayList(exportInfo.getUuid()), Lists.newArrayList(FruitDict.UserProjectDict.values())))
                         .thenAccept(userMap -> Optional.ofNullable(userMap.get(exportInfo.getUuid()))
                                 .filter(users -> !users.isEmpty())
                                 .ifPresent(users -> {
@@ -201,12 +193,14 @@ public abstract class AbstractDaoProject implements InterfaceDao {
                         Optional.of(markList).flatMap(marks -> marks.stream().filter(mark -> mark.getProjectId().equals(project.getUuid())).findAny()).ifPresent(exportInfo::setMarkProject);
                         return exportInfo;
                     }).collect(toList());
-                    exportProjects.sort((l, r) -> l.isMark() ? -1 : 1);
-                    exportProjects.sort((l, r) -> Optional.ofNullable(l.getMarkProject()).map(markL -> Optional.ofNullable(r.getMarkProject()).map(markR -> markL.getCreateDateTime().compareTo(markR.getCreateDateTime())).orElse(0)).orElse(0));
-                    return exportProjects;
+                    Map<Boolean, List<FruitProject.Info>> markMap = exportProjects.stream().collect(partitioningBy(FruitProject.Info::isMark));
+                    markMap.get(true).sort((l, r) -> Optional.ofNullable(l.getMarkProject()).map(ll -> Optional.ofNullable(r.getMarkProject()).map(rr -> ll.getCreateDateTime().compareTo(rr.getCreateDateTime())).orElse(0)).orElse(0));
+                    ArrayList<FruitProject.Info> exportInfo = Lists.newArrayList(markMap.get(true));
+                    exportInfo.addAll(markMap.get(false));
+                    return exportInfo;
                 }).join();
         CompletableFuture.allOf(
-                CompletableFuture.supplyAsync(this.plugUserSupplier(exportProject.stream().map(FruitProject::getUuid).collect(toList())))
+                CompletableFuture.supplyAsync(this.plugUserSupplier(exportProject.stream().map(FruitProject::getUuid).collect(toList()), Lists.newArrayList(FruitDict.UserProjectDict.PRINCIPAL)))
                         .thenAccept(userMap -> exportProject.parallelStream()
                                 .filter(project -> userMap.containsKey(project.getUuid()))
                                 .forEach(project -> {
@@ -228,11 +222,10 @@ public abstract class AbstractDaoProject implements InterfaceDao {
         return exportProject;
     }
 
-    private Supplier<Map<String, List<FruitProjectUser>>> plugUserSupplier(List<String> projectIds) {
+    private Supplier<Map<String, List<FruitProjectUser>>> plugUserSupplier(List<String> projectIds, ArrayList<FruitDict.UserProjectDict> roles) {
         return () -> Optional.ofNullable(projectIds)
                 .filter(ids -> !ids.isEmpty())
-                .map(ids -> this.findUserByProjectIds(example -> {
-                }, ids))
+                .map(ids -> this.findUserByProjectIdsAndRole(ids, roles))
                 .map(users -> users.stream()
                         .collect(groupingBy(FruitProjectUser::getProjectId)))
                 .orElseGet(Maps::newHashMap);
@@ -253,26 +246,19 @@ public abstract class AbstractDaoProject implements InterfaceDao {
      * @param vo
      */
     public final void modify(FruitProject.Update vo) {
-        try {
-            if (!this.finds(example -> example.createCriteria().andUuidEqualTo(vo.getUuid())).stream().findAny().isPresent())
-                throw new CheckException("不存在的项目");
-            /*检查成员目标、任务完成情况*/
-            this.modifyCheckJoinUser(vo);
-            this.update(dao -> {
-                dao.setUuid(vo.getUuid());
-                dao.setTitle(vo.getTitle());
-                dao.setDescription(vo.getDescription());
-                dao.setPredictStartDate(vo.getPredictStartDate());
-                dao.setPredictEndDate(vo.getPredictEndDate());
-                dao.setTeamRelation(vo.getTeamRelation());
-                dao.setUserRelation(vo.getUserRelation());
-            }, example -> example.createCriteria().andUuidEqualTo(vo.getUuid()));
-        } catch (ExceptionSupport ex) {
-            throw ex;
-        } catch (RuntimeException ex) {
-            ex.printStackTrace();
-            throw new ServiceException("修改项目是发生错误");
-        }
+        if (!this.finds(example -> example.createCriteria().andUuidEqualTo(vo.getUuid())).stream().findAny().isPresent())
+            throw new CheckException(FruitDict.Exception.Check.SYSTEM_NOT_EXISTS.name());
+        /*检查成员目标、任务完成情况*/
+        this.modifyCheckJoinUser(vo);
+        this.update(dao -> {
+            dao.setUuid(vo.getUuid());
+            dao.setTitle(vo.getTitle());
+            dao.setDescription(vo.getDescription());
+            dao.setPredictStartDate(vo.getPredictStartDate());
+            dao.setPredictEndDate(vo.getPredictEndDate());
+            dao.setTeamRelation(vo.getTeamRelation());
+            dao.setUserRelation(vo.getUserRelation());
+        }, example -> example.createCriteria().andUuidEqualTo(vo.getUuid()));
     }
 
     private void modifyCheckJoinUser(FruitProject.Update vo) {
@@ -340,32 +326,24 @@ public abstract class AbstractDaoProject implements InterfaceDao {
     }
 
     public final void complete(FruitProjectVo vo) {
-        try {
-            Optional<FruitProject> projectDao = this.finds(example -> example.createCriteria().andUuidEqualTo(vo.getUuidVo())).stream().findAny();
-            if (!projectDao.isPresent())
-                throw new CheckException("项目不存在");
-            if (FruitDict.ProjectDict.COMPLETE.name().equals(projectDao.get().getProjectStatus()))
-                throw new CheckException("项目已完成");
-            this.update(dao -> {
-                /*使用系统默认时间*/
-                dao.setEndDate(LocalDateTime.now());
-                dao.setProjectStatus(FruitDict.ProjectDict.COMPLETE.name());
-                dao.setEndDate(LocalDateTime.now());
-                dao.setStatusDescription(vo.getStatusDescription());
-            }, example -> example.createCriteria().andUuidEqualTo(vo.getUuidVo()));
-        } catch (ExceptionSupport ex) {
-            throw ex;
-        } catch (RuntimeException ex) {
-            ex.printStackTrace();
-            throw new ServiceException("变更项目状态时出错");
-        }
+        Optional<FruitProject> projectDao = this.finds(example -> example.createCriteria().andUuidEqualTo(vo.getUuidVo())).stream().findAny();
+        if (!projectDao.isPresent())
+            throw new CheckException(FruitDict.Exception.Check.SYSTEM_NOT_EXISTS.name());
+        if (FruitDict.ProjectDict.COMPLETE.name().equals(projectDao.get().getProjectStatus()))
+            throw new CheckException(FruitDict.Exception.Check.PROJECT_COMPLETE.name());
+        this.update(dao -> {
+            /*使用系统默认时间*/
+            dao.setEndDate(LocalDateTime.now());
+            dao.setProjectStatus(FruitDict.ProjectDict.COMPLETE.name());
+            dao.setEndDate(LocalDateTime.now());
+            dao.setStatusDescription(vo.getStatusDescription());
+        }, example -> example.createCriteria().andUuidEqualTo(vo.getUuidVo()));
     }
 
     private Optional<ArrayList<FruitProjectUser>> findUserByProjectId(String projectId) {
         if (StringUtils.isBlank(projectId))
-            throw new CheckException("项目id不存在");
-        return Optional.ofNullable(this.findUserByProjectIds(example -> {
-        }, Lists.newArrayList(projectId)));
+            throw new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name());
+        return Optional.ofNullable(this.findUserByProjectIdsAndRole(Lists.newArrayList(projectId), Lists.newArrayList(FruitDict.UserProjectDict.values())));
     }
 
     /**

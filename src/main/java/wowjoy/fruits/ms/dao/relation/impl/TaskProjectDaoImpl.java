@@ -9,6 +9,7 @@ import wowjoy.fruits.ms.exception.CheckException;
 import wowjoy.fruits.ms.module.relation.entity.TaskProjectRelation;
 import wowjoy.fruits.ms.module.relation.example.TaskProjectRelationExample;
 import wowjoy.fruits.ms.module.relation.mapper.TaskProjectRelationMapper;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.module.util.entity.FruitDict.Systems;
 
 import java.text.MessageFormat;
@@ -39,8 +40,8 @@ public class TaskProjectDaoImpl<T extends TaskProjectRelation, E extends TaskPro
         TaskProjectRelation taskProjectRelation = new TaskProjectRelation();
         tConsumer.accept((T) taskProjectRelation);
         Optional<TaskProjectRelation> optional = Optional.of(taskProjectRelation);
-        optional.map(TaskProjectRelation::getTaskId).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException("task -> project taskId can't null"));
-        optional.map(TaskProjectRelation::getProjectId).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException("task -> project projectId can't null"));
+        optional.map(TaskProjectRelation::getTaskId).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name()));
+        optional.map(TaskProjectRelation::getProjectId).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name()));
         mapper.insertSelective(taskProjectRelation);
     }
 
@@ -86,7 +87,7 @@ public class TaskProjectDaoImpl<T extends TaskProjectRelation, E extends TaskPro
                 /*检查列表元素是否为空*/
                 .map(criteriaList -> criteriaList.stream().filter(TaskProjectRelationExample.Criteria::isValid).collect(toList()))
                 .filter(criteriaList -> !criteriaList.isEmpty())
-                .orElseThrow(() -> new CheckException("必须携带条件"));
+                .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_LACK_CRITERIA.name()));
         TaskProjectRelation instance = new TaskProjectRelation.Update();
         instance.setIsDeleted(Systems.Y.name());
         mapper.updateByExampleSelective(instance, example);

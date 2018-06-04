@@ -115,11 +115,6 @@ public class FruitTaskVo extends FruitTask {
         this.listRelation = listRelation;
     }
 
-    public void checkUuid() {
-        if (StringUtils.isBlank(this.getUuidVo()))
-            throw new CheckException("uuid不存在");
-    }
-
     public static class TaskTransferVo extends FruitTaskVo {
         private String reason;
 
@@ -137,12 +132,6 @@ public class FruitTaskVo extends FruitTask {
 
         public LinkedList<TransferUserRelation> getTransferUser() {
             return transferUser;
-        }
-
-        public TaskTransferVo checkTransferUser() {
-            if (transferUser == null || transferUser.isEmpty())
-                throw new CheckException("未检查到任务接收人");
-            return this;
         }
 
         public String getReason() {

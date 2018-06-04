@@ -17,6 +17,8 @@ import wowjoy.fruits.ms.util.ApplicationContextUtils;
 import wowjoy.fruits.ms.util.JsonArgument;
 import wowjoy.fruits.ms.util.RestResult;
 
+import java.io.File;
+
 /**
  * Created by ${汪梓文} on ${2018年03月20日15:45:02}.
  */
@@ -52,21 +54,21 @@ public class DefectController {
     @RequestMapping(value = "project/{projectId}", method = RequestMethod.GET)
     public RestResult finds(@PathVariable("projectId") String projectId, @JsonArgument(type = Search.class) Search search) {
         search.setProjectId(projectId);
-        return RestResult.newSuccess().setData(serviceDefect.finds(search).toPageInfo());
+        return RestResult.newSuccess().setData(serviceDefect.finds(search, order -> order + ",`number` desc").toPageInfo());
     }
 
     /*当前用户创建的缺陷*/
     @RequestMapping(value = "current/create", method = RequestMethod.GET)
     public RestResult currentCreate(@JsonArgument(type = Search.class) Search search) {
         search.setUserId(ApplicationContextUtils.getCurrentUser().getUserId());
-        return RestResult.newSuccess().setData(serviceDefect.finds(search).toPageInfo());
+        return RestResult.newSuccess().setData(serviceDefect.finds(search, order -> order + ",`status` asc").toPageInfo());
     }
 
     /*当前用户处理的缺陷*/
     @RequestMapping(value = "current/handler", method = RequestMethod.GET)
     public RestResult currentHandler(@JsonArgument(type = Search.class) Search search) {
         search.setHandlerUserId(ApplicationContextUtils.getCurrentUser().getUserId());
-        return RestResult.newSuccess().setData(serviceDefect.finds(search).toPageInfo());
+        return RestResult.newSuccess().setData(serviceDefect.finds(search, order -> order + ",`status` asc").toPageInfo());
     }
 
     /*详情接口*/

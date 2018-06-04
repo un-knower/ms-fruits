@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import wowjoy.fruits.ms.aspectj.LogInfo;
 import wowjoy.fruits.ms.dao.list.AbstractDaoList;
-import wowjoy.fruits.ms.module.list.FruitList;
 import wowjoy.fruits.ms.module.list.FruitListVo;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 import wowjoy.fruits.ms.util.JsonArgument;
@@ -47,10 +46,8 @@ public class ListController {
     @LogInfo(uuid = "uuid", type = FruitDict.Parents.List, operateType = FruitDict.LogsDict.DELETE)
     @RequestMapping(value = "{uuid}", method = RequestMethod.DELETE)
     public RestResult delete(@PathVariable("uuid") String uuid) {
-        FruitListVo vo = FruitList.getVo();
-        vo.setUuidVo(uuid);
-        listDao.delete(vo);
-        return RestResult.newSuccess().setData(vo.getUuidVo());
+        listDao.beforeDelete(uuid);
+        return RestResult.newSuccess().setData(uuid);
     }
 
     /**
@@ -58,12 +55,12 @@ public class ListController {
      * @apiVersion 0.1.0
      * @apiGroup list
      * @apiExample {json} 项目添加示例
-     *
-    {
-        "title":"测试列表添加日志记录功能",
-        "description":"测试列表添加日志记录功能",
-        "projectRelation":{"ADD":["e41e0c03ee704b31b56f2ec1076609b5"]}
-    }
+     * <p>
+     * {
+     * "title":"测试列表添加日志记录功能",
+     * "description":"测试列表添加日志记录功能",
+     * "projectRelation":{"ADD":["e41e0c03ee704b31b56f2ec1076609b5"]}
+     * }
      */
     @LogInfo(uuid = "uuid", type = FruitDict.Parents.List, operateType = FruitDict.LogsDict.ADD)
     @RequestMapping(value = "project", method = RequestMethod.POST)

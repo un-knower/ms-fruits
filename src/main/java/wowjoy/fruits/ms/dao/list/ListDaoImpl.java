@@ -11,9 +11,12 @@ import wowjoy.fruits.ms.module.list.FruitListDao;
 import wowjoy.fruits.ms.module.list.FruitListExample;
 import wowjoy.fruits.ms.module.list.mapper.FruitListMapper;
 import wowjoy.fruits.ms.module.relation.entity.ProjectListRelation;
+import wowjoy.fruits.ms.module.relation.example.ProjectListRelationExample;
+import wowjoy.fruits.ms.module.task.mapper.FruitTaskMapper;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -23,7 +26,8 @@ import java.util.function.Consumer;
 @Transactional(rollbackFor = CheckException.class)
 public class ListDaoImpl extends AbstractDaoList {
     private final FruitListMapper mapper;
-    private final ProjectListDaoImpl listDao;
+    private final ProjectListDaoImpl<ProjectListRelation, ProjectListRelationExample> listDao;
+    private final FruitTaskMapper taskMapper;
     private final static Consumer<FruitListExample> afterExample = (listExample) -> {
         if (listExample.getOredCriteria().isEmpty())
             listExample.getOredCriteria().forEach((criteria) -> criteria.andIsDeletedEqualTo(FruitDict.Systems.N.name()));
@@ -32,9 +36,10 @@ public class ListDaoImpl extends AbstractDaoList {
     };
 
     @Autowired
-    public ListDaoImpl(FruitListMapper mapper, ProjectListDaoImpl listDao) {
+    public ListDaoImpl(FruitListMapper mapper, ProjectListDaoImpl listDao, FruitTaskMapper taskMapper) {
         this.mapper = mapper;
         this.listDao = listDao;
+        this.taskMapper = taskMapper;
     }
 
     /**
@@ -63,17 +68,21 @@ public class ListDaoImpl extends AbstractDaoList {
     }
 
     @Override
-    public void delete(FruitListDao dao) {
+    public void delete(String listId) {
+        Optional.ofNullable(listId)
+                .filter(StringUtils::isNotBlank)
+                .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name()));
         FruitListExample example = new FruitListExample();
-        FruitListExample.Criteria criteria = example.createCriteria();
-        if (StringUtils.isNotBlank(dao.getUuid()))
-            criteria.andUuidEqualTo(dao.getUuid());
-        if (criteria.getAllCriteria().isEmpty())
-            throw new CheckException("缺少删除条件");
+        example.createCriteria().andUuidEqualTo(listId);
         FruitListDao delete = FruitList.getDao();
         delete.setIsDeleted(FruitDict.Systems.Y.name());
         mapper.updateByExampleSelective(delete, example);
-        Relation.newProject(listDao, dao).removeProjects();
+        listDao.deleted(relationExample -> relationExample.createCriteria().andIsDeletedEqualTo(FruitDict.Systems.N.name()).andListIdEqualTo(listId));
+    }
+
+    @Override
+    public int findTaskCountByListId(String listId) {
+        return taskMapper.taskCountByListId(listId);
     }
 
     public List<FruitList> findByProjectId(String projectId, Consumer<FruitListExample> unaryOperator) {
@@ -83,6 +92,7 @@ public class ListDaoImpl extends AbstractDaoList {
         return mapper.selectByProjectId(example, projectId);
     }
 
+    @Deprecated
     private static class Relation {
         private final ProjectListDaoImpl projectListDao;
         private final FruitListDao dao;

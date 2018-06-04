@@ -30,7 +30,7 @@ public class RelationTransfer<T extends TransferUserRelation, E extends Transfer
         if (StringUtils.isBlank(relation.getTransferId())
                 || StringUtils.isBlank(relation.getUserId())
                 || StringUtils.isBlank(relation.getStatus()))
-            throw new CheckException("用户转交记录参数不完整，无法关联");
+            throw new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name());
         mapper.insertSelective(relation);
     }
 

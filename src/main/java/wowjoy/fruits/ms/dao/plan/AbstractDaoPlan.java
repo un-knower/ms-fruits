@@ -8,9 +8,7 @@ import com.google.gson.JsonObject;
 import org.apache.commons.lang.StringUtils;
 import wowjoy.fruits.ms.dao.InterfaceDao;
 import wowjoy.fruits.ms.exception.CheckException;
-import wowjoy.fruits.ms.exception.ExceptionSupport;
 import wowjoy.fruits.ms.exception.MessageException;
-import wowjoy.fruits.ms.exception.ServiceException;
 import wowjoy.fruits.ms.module.logs.FruitLogs;
 import wowjoy.fruits.ms.module.logs.FruitLogsVo;
 import wowjoy.fruits.ms.module.plan.FruitPlan;
@@ -77,7 +75,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
      *******************************/
 
     public final void delete(FruitPlanVo vo) {
-        this.findByUUID(vo.getUuidVo()).orElseThrow(() -> new CheckException("计划不存在，删除失败"));
+        this.findByUUID(vo.getUuidVo()).orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NOT_EXISTS.name()));
         delete(vo.getUuidVo());
     }
 
@@ -260,7 +258,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
 
     public ArrayList<FruitPlan> findList(FruitPlan.Query query) {
         if (StringUtils.isBlank(query.getProjectId()))
-            throw new CheckException("必须填写项目id");
+            throw new CheckException(FruitDict.Exception.Check.PLAN_PROJECT_NULL.name());
         this.getStartTimeAndEndTime(query);
         return this.findByProjectId(example -> {
             FruitPlanExample.Criteria criteria = example.createCriteria();
@@ -288,7 +286,7 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
 
     public final FruitPlan findInfo(String planId) {
         final FruitUser currentUser = ApplicationContextUtils.getCurrentUser();
-        FruitPlan.Info planInfo = this.findByUUID(planId).map(FruitPlan::toInfo).orElseThrow(() -> new CheckException("计划不存在"));
+        FruitPlan.Info planInfo = this.findByUUID(planId).map(FruitPlan::toInfo).orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NOT_EXISTS.name()));
         CompletableFuture.allOf(
                 CompletableFuture.supplyAsync(this.plugUser(Lists.newArrayList(planInfo.getUuid()), currentUser.getUserId())) //查询用户信息
                         .thenAccept(userMap -> Optional.ofNullable(userMap.get(planInfo.getUuid()))
@@ -316,48 +314,34 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
      * 添加【项目】计划
      */
     public final void addJoinProject(FruitPlan.Insert insert) {
-        try {
-            Optional<FruitPlan.Insert> optionalVo = Optional.ofNullable(insert);
-            optionalVo.filter(plan -> StringUtils.isNotBlank(plan.getTitle())).orElseThrow(() -> new CheckException("标题不能为空"));
-            optionalVo.filter(plan -> plan.getEstimatedEndDate() != null).orElseThrow(() -> new CheckException("必须填写预计结束时间"));
-            optionalVo.filter(plan -> plan.getUserRelation().containsKey(FruitDict.Systems.ADD))
-                    .filter(plan -> !plan.getUserRelation().get(FruitDict.Systems.ADD).isEmpty())
-                    .orElseThrow(() -> new CheckException("必须添加至少一个关联用户"));
-            optionalVo.filter(plan -> plan.getProjectRelation().containsKey(FruitDict.Systems.ADD))
-                    .filter(plan -> !plan.getProjectRelation().get(FruitDict.Systems.ADD).isEmpty())
-                    .orElseThrow(() -> new CheckException("一个计划只能关联一个项目"));
-            insert.setPlanStatus(PlanDict.STAY_PENDING.name());
-            insert.setEstimatedStartDate(insert.getEstimatedStartDate() != null ? insert.getEstimatedStartDate() : new Date());
-            this.insert(insert);
-        } catch (ExceptionSupport ex) {
-            throw ex;
-        } catch (RuntimeException ex) {
-            ex.printStackTrace();
-            throw new ServiceException("添加计划出错");
-        }
+        Optional<FruitPlan.Insert> optionalVo = Optional.ofNullable(insert);
+        optionalVo.filter(plan -> StringUtils.isNotBlank(plan.getTitle())).orElseThrow(() -> new CheckException(FruitDict.Exception.Check.PLAN_TITLE_NULL.name()));
+        optionalVo.filter(plan -> plan.getEstimatedEndDate() != null).orElseThrow(() -> new CheckException(FruitDict.Exception.Check.PLAN_ESTIMATED_END_DATE.name()));
+        optionalVo.filter(plan -> plan.getUserRelation().containsKey(FruitDict.Systems.ADD))
+                .filter(plan -> !plan.getUserRelation().get(FruitDict.Systems.ADD).isEmpty())
+                .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.PLAN_ADD_LEAST_ONE_USER.name()));
+        optionalVo.filter(plan -> plan.getProjectRelation().containsKey(FruitDict.Systems.ADD))
+                .filter(plan -> !plan.getProjectRelation().get(FruitDict.Systems.ADD).isEmpty())
+                .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.PLAN_ADD_CAN_BUT_ONE_PROJECT.name()));
+        insert.setPlanStatus(PlanDict.STAY_PENDING.name());
+        insert.setEstimatedStartDate(insert.getEstimatedStartDate() != null ? insert.getEstimatedStartDate() : new Date());
+        this.insert(insert);
     }
 
     /**
      * 修改计划
      */
     public final void modify(FruitPlan.Update update) {
-        try {
-            this.findByUUID(update.getUuid()).orElseThrow(() -> new CheckException("计划不存在，拒绝修改"));
-            this.update(dao -> {
-                dao.setUuid(update.getUuid());
-                dao.setTitle(update.getTitle());
-                dao.setDescription(update.getDescription());
-                dao.setEstimatedStartDate(update.getEstimatedStartDate());
-                dao.setEstimatedEndDate(update.getEstimatedEndDate());
-                dao.setPercent(update.getPercent());
-                dao.setUserRelation(update.getUserRelation());
-            }, fruitPlanExample -> fruitPlanExample.createCriteria().andUuidEqualTo(update.getUuid()));
-        } catch (ExceptionSupport ex) {
-            throw ex;
-        } catch (RuntimeException ex) {
-            ex.printStackTrace();
-            throw new ServiceException("修改计划错误");
-        }
+        this.findByUUID(update.getUuid()).orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NOT_EXISTS.name()));
+        this.update(dao -> {
+            dao.setUuid(update.getUuid());
+            dao.setTitle(update.getTitle());
+            dao.setDescription(update.getDescription());
+            dao.setEstimatedStartDate(update.getEstimatedStartDate());
+            dao.setEstimatedEndDate(update.getEstimatedEndDate());
+            dao.setPercent(update.getPercent());
+            dao.setUserRelation(update.getUserRelation());
+        }, fruitPlanExample -> fruitPlanExample.createCriteria().andUuidEqualTo(update.getUuid()));
     }
 
     /**
@@ -366,12 +350,12 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
     public final void end(FruitPlan.Update intoUpdate) {
         Optional<FruitPlan> optionalPlan = Optional.ofNullable(intoUpdate.getUuid())
                 .filter(StringUtils::isNotBlank)
-                .map(this::findByUUID).orElseThrow(() -> new CheckException("planId can't null Or plan not exists"));
+                .map(this::findByUUID).orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NOT_EXISTS.name()));
         optionalPlan.map(FruitPlan::getPlanStatus)
                 .filter(status -> !PlanDict.END.name().equals(status))
                 .filter(status -> !PlanDict.COMPLETE.name().equals(status))
-                .orElseThrow(() -> new CheckException("plan can't change status"));
-        Optional.of(intoUpdate).filter(plan -> StringUtils.isNotBlank(plan.getStatusDescription())).orElseThrow(() -> new CheckException("状态描述不能为空"));
+                .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.PLAN_NO_TO_END.name()));
+        Optional.of(intoUpdate).filter(plan -> StringUtils.isNotBlank(plan.getStatusDescription())).orElseThrow(() -> new CheckException(FruitDict.Exception.Check.PLAN_END_STATUS.name()));
         /*校验是否是批量终止*/
         final FruitUser currentUser = ApplicationContextUtils.getCurrentUser();
         final LocalDateTime endDate = LocalDateTime.now();
@@ -434,20 +418,20 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
      */
     public final void complete(FruitPlan.Update intoUpdate) {
         Optional<FruitPlan> optionalPlan = this.findByUUID(intoUpdate.getUuid());
-        optionalPlan.orElseThrow(() -> new CheckException("计划不存在"));
+        optionalPlan.orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NOT_EXISTS.name()));
         /*若结束时间不为空，那么结束时间必须小于等于当前*/
         Optional.of(intoUpdate).filter(plan -> !(plan.getEndDate() != null && Duration.between(LocalDate.now().atTime(0, 0, 0), LocalDateTime.ofInstant(plan.getEndDate().toInstant(), ZoneId.systemDefault()).withHour(0).withMinute(0).withSecond(0)).toDays() > 0))
-                .orElseThrow(() -> new CheckException("实际结束时间不能大于今天"));
+                .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.PLAN_END_DATE_GREATER_NOW.name()));
         /*等于已终止、已完成、待执行都拒绝执行*/
         optionalPlan.map(FruitPlan::getPlanStatus)
                 .filter(status -> !PlanDict.END.name().equals(status))
                 .filter(status -> !PlanDict.COMPLETE.name().equals(status))
                 .filter(status -> !PlanDict.STAY_PENDING.name().equals(status))
-                .orElseThrow(() -> new CheckException("当前目标状态无法切换到已完成"));
+                .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.PLAN_NO_TO_COMPLETE.name()));
         /*如果延期，必须填写延期说明*/
         final FruitPlan.Info planInfo = optionalPlan.map(FruitPlan::toInfo)
                 .filter(plan -> !(plan.computeDays().getDays() < 0 && StringUtils.isBlank(intoUpdate.getStatusDescription())))
-                .orElseThrow(() -> new CheckException("计划延期完成，需要填写延期说明"));
+                .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.PLAN_DELAY_COMPLETE_REASON.name()));
 
         this.checkThePlanInToBeCompleteTasks(Lists.newArrayList(planInfo.getUuid()), ApplicationContextUtils.getCurrentUser().getUserId()); //检查计划中是否有未完成或未终止的任务
         this.update(update -> {
@@ -477,11 +461,11 @@ public abstract class AbstractDaoPlan implements InterfaceDao {
      * 待进行 -> 进行中
      */
     public final void pending(String uuid) {
-        Optional<FruitPlan> optionalPlanDao = Optional.ofNullable(uuid).filter(StringUtils::isNotBlank).map(this::findByUUID).orElseThrow(() -> new CheckException("planId can't null Or plan not exists"));
+        Optional<FruitPlan> optionalPlanDao = Optional.ofNullable(uuid).filter(StringUtils::isNotBlank).map(this::findByUUID).orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NOT_EXISTS.name()));
         /*不等于待执行的状态都拒绝*/
         optionalPlanDao.map(FruitPlan::getPlanStatus)
                 .filter(status -> PlanDict.STAY_PENDING.name().equals(status))
-                .orElseThrow(() -> new CheckException("plan can but will status be 'STAY_PENDING' change to 'PENDING'"));
+                .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.PLAN_STAY_PENDING_TO_PENDING.name()));
         this.update(update -> {
             update.setPlanStatus(PlanDict.PENDING.name());
             update.setStartDate(new Date());

@@ -82,4 +82,9 @@ public class PatternTest {
         }
 
     }
+
+    @Test
+    public void requestStatic() {
+        System.out.println(Pattern.compile("/static/(.*?)",Pattern.CASE_INSENSITIVE).matcher("/static1/qrqwrqweqweqwe/qweqweqweqwe").find());;
+    }
 }

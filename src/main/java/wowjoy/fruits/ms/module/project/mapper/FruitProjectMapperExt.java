@@ -6,7 +6,7 @@ import wowjoy.fruits.ms.module.project.FruitProjectDao;
 import wowjoy.fruits.ms.module.project.FruitProjectExample;
 import wowjoy.fruits.ms.module.project.FruitProjectTeam;
 import wowjoy.fruits.ms.module.project.FruitProjectUser;
-import wowjoy.fruits.ms.module.user.example.FruitUserExample;
+import wowjoy.fruits.ms.module.util.entity.FruitDict;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +16,7 @@ import java.util.List;
  */
 @Mapper
 public interface FruitProjectMapperExt {
-    ArrayList<FruitProjectUser> selectUserByProjectId(@Param("example") FruitUserExample example, @Param("projectIds") List<String> ids);
+    ArrayList<FruitProjectUser> selectUserByProjectIdAndRole(@Param("projectIds") List<String> ids, @Param("userRoles") ArrayList<FruitDict.UserProjectDict> roles);
 
     List<FruitProjectTeam> selectTeamByProjectId(@Param("projectIds") List<String> ids);
 

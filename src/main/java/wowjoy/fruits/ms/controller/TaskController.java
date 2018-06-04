@@ -11,6 +11,7 @@ import wowjoy.fruits.ms.module.task.FruitTask;
 import wowjoy.fruits.ms.module.task.FruitTaskVo;
 import wowjoy.fruits.ms.module.task.FruitTaskVo.TaskTransferVo;
 import wowjoy.fruits.ms.module.util.entity.FruitDict;
+import wowjoy.fruits.ms.util.ApplicationContextUtils;
 import wowjoy.fruits.ms.util.JsonArgument;
 import wowjoy.fruits.ms.util.RestResult;
 
@@ -151,7 +152,20 @@ public class TaskController {
     @RequestMapping(value = "/project/{uuid}", method = RequestMethod.GET)
     public RestResult findJoinProject(@PathVariable("uuid") String uuid,
                                       @JsonArgument(type = FruitTask.Search.class) FruitTask.Search search) {
-        return newSuccess().setData(ApiDataFactory.TaskController.findJoinProject.apply(daoTask.findJoinProjects(uuid, search)));
+        search.setProjectId(uuid);
+        return newSuccess().setData(ApiDataFactory.TaskController.findJoinProject.apply(daoTask.findByListPages(search)));
+    }
+
+    /**
+     * @api {get} /v1/task/list/{listId} 查询指定列表分页
+     * @apiVersion 0.1.0
+     * @apiGroup task
+     * @apiParam {String} listId 列表uuid
+     */
+    @RequestMapping(value = "/list/{listId}", method = RequestMethod.GET)
+    public RestResult findByListId(@PathVariable("listId") String listId,
+                                   @JsonArgument(type = FruitTask.Search.class) FruitTask.Search search) {
+        return newSuccess().setData(daoTask.findPage(listId, search, ApplicationContextUtils.getCurrentUser().getUserId()).toPageInfo());
     }
 
     /**
@@ -194,8 +208,8 @@ public class TaskController {
      * @apiGroup task
      */
     @RequestMapping(value = "/current", method = RequestMethod.GET)
-    public RestResult myTask(@JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
-        return newSuccess().setData(daoTask.myTask(vo));
+    public RestResult myTask(@JsonArgument(type = FruitTask.Search.class) FruitTask.Search search) {
+        return newSuccess().setData(daoTask.myTask(search));
     }
 
     /**
@@ -204,8 +218,8 @@ public class TaskController {
      * @apiGroup task
      */
     @RequestMapping(value = "/current_create", method = RequestMethod.GET)
-    public RestResult userFinds(@JsonArgument(type = FruitTaskVo.class) FruitTaskVo vo) {
-        return newSuccess().setData(daoTask.myCreateTask(vo));
+    public RestResult userFinds(@JsonArgument(type = FruitTask.Search.class) FruitTask.Search search) {
+        return newSuccess().setData(daoTask.myCreateTask(search));
     }
 
 }
