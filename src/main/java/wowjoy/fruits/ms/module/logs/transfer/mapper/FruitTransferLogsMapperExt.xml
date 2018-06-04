@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="wowjoy.fruits.ms.module.logs.transfer.mapper.FruitTransferLogsMapperExt">
+    <resultMap id="TransferUserMap" type="wowjoy.fruits.ms.module.logs.transfer.FruitTransferUser">
+        <result column="uuid" jdbcType="VARCHAR" property="uuid"/>
+        <result column="user_id" jdbcType="VARCHAR" property="userId"/>
+        <result column="user_name" jdbcType="VARCHAR" property="userName"/>
+        <result column="birthday" jdbcType="TIMESTAMP" property="birthday"/>
+        <result column="user_email" jdbcType="VARCHAR" property="userEmail"/>
+        <result column="user_sex" jdbcType="VARCHAR" property="userSex"/>
+        <result column="job_title" jdbcType="VARCHAR" property="jobTitle"/>
+        <result column="description" jdbcType="VARCHAR" property="description"/>
+        <result column="modify_date_time" jdbcType="TIMESTAMP" property="modifyDateTime"/>
+        <result column="create_date_time" jdbcType="TIMESTAMP" property="createDateTime"/>
+        <result column="is_deleted" jdbcType="VARCHAR" property="isDeleted"/>
+        <result column="status" jdbcType="VARCHAR" property="status"/>
+        <result column="transfer_id" jdbcType="VARCHAR" property="transferId"/>
+    </resultMap>
+    <sql id="User_Column_List">
+        ${replace}.uuid,
+        ${replace}.user_id,
+        ${replace}.user_name,
+        ${replace}.birthday,
+        ${replace}.user_email,
+        ${replace}.user_sex,
+        ${replace}.job_title,
+        ${replace}.description,
+        ${replace}.modify_date_time,
+        ${replace}.create_date_time,
+        ${replace}.is_deleted
+    </sql>
+    <select id="selectUserByTransferId" resultMap="TransferUserMap">
+        SELECT
+        <include refid="User_Column_List">
+            <property name="replace" value="fuser"/>
+        </include>
+        ,
+        tur.status,
+        tur.transfer_id
+        FROM
+        fruits_user fuser
+        right join (select user_id,transfer_id,status from transfer_user_relation where transfer_id in
+        <foreach collection="transferIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach> and is_deleted
+        = 'N') tur on tur.user_id = fuser.user_id
+        where fuser.is_deleted = 'N' and fuser.user_id is not null
+    </select>
+</mapper>

@@ -7,7 +7,7 @@ spring:
         service-id: config
         enabled: false
     discovery:
-      enabled: true
+      enabled: false
 eureka:
   client:
     service-url:
