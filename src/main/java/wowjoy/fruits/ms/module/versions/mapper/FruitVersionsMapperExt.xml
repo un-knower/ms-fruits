@@ -82,7 +82,7 @@
         union
         select uuid from fruits_versions where  project_id = #{projectId} and parent_id is null and is_deleted = 'N' and versions like #{version}
         ) versionJoin on versionJoin.uuid = fversion.uuid
-        order by fversion.versions desc
+        order by fversion.create_date_time desc
     </select>
 
     <!--index：cover_index-->
@@ -93,6 +93,6 @@
             #{id}
         </foreach>
         and is_deleted = 'N' and versions like #{version}
-        order by versions desc
+        order by create_date_time desc
     </select>
 </mapper>
