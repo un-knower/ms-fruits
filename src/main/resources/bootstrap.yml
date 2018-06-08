@@ -26,4 +26,3 @@ eureka:
       defaultZone: http://wangziwen:wangziwen@bb-eureka:8761/eureka/
   instance:
       prefer-ip-address: true
-      ip-address: fruits
