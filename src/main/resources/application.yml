@@ -1,6 +1,6 @@
 spring:
   application:
-    name: fruits
+    name: ms-fruits
   http:
     multipart:
       max-file-size: 100MB
