@@ -667,62 +667,6 @@ public class FruitDict extends AbstractEntity {
         }
     }
 
-    public static class Mime {
-        private static final HashMap<String, String> keyValue = Maps.newHashMapWithExpectedSize(3);
-
-        static {
-            keyValue.put(Image.PNG.key, Image.PNG.value);
-            keyValue.put(Image.JPEG.key, Image.JPEG.value);
-            keyValue.put(Image.GIF.key, Image.GIF.value);
-            keyValue.put(Application.PDF.key, Application.PDF.value);
-        }
-
-        /**
-         * 前20位字节即可
-         *
-         * @param header
-         * @return
-         */
-        public static String obtainMimeType(byte[] header) {
-            if (header.length > 20) throw new ServiceException("file length can't more than 20");
-            StringBuffer headerStr = new StringBuffer();
-            for (int i = 0; i < header.length; i++)
-                headerStr.append(" ").append(Integer.toHexString(header[i] & 0xFF));
-            Predicate<String> predicate = (key) -> headerStr.toString().trim().toUpperCase().contains(key);
-            return keyValue.keySet().stream().filter(predicate).map(keyValue::get).findAny().orElse("");
-        }
-
-        public enum Image {
-            PNG("89 50 4E 47 D A 1A A", "image/png"),
-            JPEG("FF D8 FF E0 0 10 4A 46 49 46", "image/jpeg"),
-            GIF("47 49 46 38 39 61", "image/gif");
-
-            private String parentCode;
-            private String key;
-            private String value;
-
-            Image(String key, String value) {
-                this.parentCode = Parents.MIME.name();
-                this.key = key;
-                this.value = value;
-            }
-        }
-
-        public enum Application {
-            PDF("25 50 44 46 2D 31", "application/pdf");
-
-            private String parentCode;
-            private String key;
-            private String value;
-
-            Application(String key, String value) {
-                this.parentCode = Parents.MIME.name();
-                this.key = key;
-                this.value = value;
-            }
-        }
-    }
-
     /*缺陷资源类型*/
     public enum Resource {
         DESCRIPTION("描述附带资源"),

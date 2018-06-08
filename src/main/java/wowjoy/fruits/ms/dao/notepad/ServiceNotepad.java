@@ -58,10 +58,6 @@ public abstract class ServiceNotepad implements InterfaceDao {
             throw new CheckException(FruitDict.Exception.Check.NOTEPAD_ADD_CONTENT.name());
         if (insert.getEstimatedSubmitDate() == null)
             throw new CheckException(FruitDict.Exception.Check.NOTEPAD_ESTIMATED_SUBMIT_DATE.name());
-        Optional.ofNullable(insert.getEstimatedSubmitDate())
-                .map(date -> this.finds(example -> example.createCriteria().andEstimatedSubmitDateEqualTo(date).andUserIdEqualTo(ApplicationContextUtils.getCurrentUser().getUserId())))
-                .filter(notepads -> !notepads.stream().findAny().isPresent())
-                .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.NOTEPAD_DUPLICATE.name()));
         insert.setContent(FruitResource.Upload.obtainImage(insert.getContent(), upload -> {
             FruitNotepad.Upload defectUpload = new FruitNotepad.Upload();
             defectUpload.setUuid(upload.getUuid());

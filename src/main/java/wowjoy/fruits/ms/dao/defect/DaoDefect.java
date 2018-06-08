@@ -91,9 +91,6 @@ public class DaoDefect extends ServiceDefect {
     private void addResource(ArrayList<FruitDefect.Upload> uploads, String defectId) {
         Optional.ofNullable(uploads)
                 .ifPresent(resources -> resources.stream()
-                        .peek(upload -> Optional.ofNullable(upload)
-                                .filter(resource -> resource.getOutputStream() == null)
-                                .ifPresent(FruitResource.Upload::base64ToOutputStream))
                         .peek(serviceResource::upload)
                         .forEach(upload -> defectResourceRelation.insert(relation -> {
                             relation.setDrType(upload.getDrType());

@@ -220,7 +220,7 @@ public abstract class ServiceDefect implements InterfaceDao {
                 .filter(StringUtils::isNotBlank)
                 .map(handlerUserId ->   /*如果改变处理人，则需要验证当前用户是不是缺陷创建人、或则创建人离职，如果都不满足，则属于非法操作，立即拒绝当前操作*/
                         Optional.ofNullable(fruitDefect.getUserId())
-                                .filter(createUserId -> createUserId.equals(ApplicationContextUtils.getCurrentUser().getUserId()) || this.createUserStill.test(createUserId))
+                                .filter(createUserId -> createUserId.equals(ApplicationContextUtils.getCurrentUser().getUserId()) || handlerUserId.equals(ApplicationContextUtils.getCurrentUser().getUserId()) || this.createUserStill.test(createUserId))
                                 .orElseThrow(() -> new CheckException(FruitDict.Exception.Check.DEFECT_CREATE_PERSON.name())));
         Optional.of(update)
                 .filter(defect -> defect.getProjectId() == null || defect.getProjectId().length() > 0)

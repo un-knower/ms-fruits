@@ -6,6 +6,7 @@ import wowjoy.fruits.ms.module.AbstractEntity;
 import wowjoy.fruits.ms.module.EntityUtils;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;

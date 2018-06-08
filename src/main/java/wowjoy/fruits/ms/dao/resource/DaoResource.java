@@ -7,7 +7,7 @@ import wowjoy.fruits.ms.module.resource.FruitResource;
 import wowjoy.fruits.ms.module.resource.FruitResourceExample;
 import wowjoy.fruits.ms.module.resource.mapper.FruitResourceMapper;
 
-import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -35,11 +35,6 @@ public class DaoResource extends ServiceResource {
     @Override
     public Boolean upload(FruitResource.Upload update, String jwt) {
         return interfaceFile.upload(update, jwt);
-    }
-
-    @Override
-    public ByteArrayOutputStream download(String nowName, String jwt) {
-        return interfaceFile.download(nowName, jwt);
     }
 
     @Override

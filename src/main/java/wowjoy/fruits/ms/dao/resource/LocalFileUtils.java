@@ -3,10 +3,7 @@ package wowjoy.fruits.ms.dao.resource;
 import org.springframework.stereotype.Service;
 import wowjoy.fruits.ms.module.resource.FruitResource;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
@@ -30,25 +27,5 @@ public class LocalFileUtils implements InterfaceFile {
             e.printStackTrace();
         }
         return true;
-    }
-
-    @Override
-    public ByteArrayOutputStream download(String resourceId, String jwt) {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        try {
-            RandomAccessFile randomAccessFile = new RandomAccessFile("/Users/wangziwen/Downloads/resource/" + resourceId, "r");
-            ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
-            FileChannel channel = randomAccessFile.getChannel();
-            while (channel.read(byteBuffer) != -1) {
-                byteBuffer.flip();
-                outputStream.write(byteBuffer.array());
-            }
-            randomAccessFile.close();
-        } catch (FileNotFoundException e) {
-            return outputStream;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return outputStream;
     }
 }

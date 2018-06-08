@@ -12,7 +12,7 @@ eureka:
   client:
     service-url:
 #     defaultZone: http://wangziwen:wangziwen@effiy.cn:8761/eureka/
-      defaultZone: http://wangziwen:wangziwen@buckball.cn:8761/eureka/
+      defaultZone: http://wangziwen:wangziwen@localhost:8761/eureka/
   instance:
     prefer-ip-address: true
 
@@ -26,4 +26,4 @@ eureka:
       defaultZone: http://wangziwen:wangziwen@bb-eureka:8761/eureka/
   instance:
       prefer-ip-address: true
-      ip-address: ms-fruits
+      ip-address: fruits

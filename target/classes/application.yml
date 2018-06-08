@@ -1,12 +1,12 @@
 spring:
   application:
-    name: ms-fruits
+    name: fruits
   http:
     multipart:
       max-file-size: 100MB
       max-request-size: 100MB
 server:
-  port: 9002
+  port: 8018
 
 pagehelper:
   helper-dialect: mysql

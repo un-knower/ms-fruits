@@ -1,13 +1,17 @@
 package wowjoy.fruits.ms.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import wowjoy.fruits.ms.dao.resource.ServiceResource;
+import wowjoy.fruits.ms.module.resource.FruitResource;
 import wowjoy.fruits.ms.util.RestResult;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.FileInputStream;
 import java.io.IOException;
 
 /**

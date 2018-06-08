@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wowjoy.fruits.ms.dao.logs.service.ServiceLogs;
@@ -63,8 +64,12 @@ public class DaoNotepad extends ServiceNotepad {
 
     @Override
     public void insert(FruitNotepad.Insert insert) {
+        try {
+            this.mapper.insertSelective(insert);
+        } catch (DuplicateKeyException duplicate) {
+            throw new CheckException(FruitDict.Exception.Check.NOTEPAD_DUPLICATE.name());
+        }
         this.addResource(insert.getUploads(), insert.getUuid());
-        mapper.insertSelective(insert);
     }
 
     /*添加关联资源*/
@@ -144,7 +149,7 @@ public class DaoNotepad extends ServiceNotepad {
     }
 
     private void checkUuid(String uuid) {
-        Optional.ofNullable(uuid).filter(StringUtils::isNotBlank).orElseThrow(()->new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name()));
+        Optional.ofNullable(uuid).filter(StringUtils::isNotBlank).orElseThrow(() -> new CheckException(FruitDict.Exception.Check.SYSTEM_NULL.name()));
         FruitNotepadExample example = new FruitNotepadExample();
         FruitNotepadExample.Criteria criteria = example.createCriteria();
         if (StringUtils.isNotBlank(uuid))
